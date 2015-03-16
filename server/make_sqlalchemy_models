@@ -1,0 +1,2 @@
+
+sqlacodegen --outfile app/alchemy_models.py mysql://root:stormy@localhost/projects 
