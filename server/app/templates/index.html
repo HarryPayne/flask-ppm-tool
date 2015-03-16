@@ -1,0 +1,37 @@
+<!-- extend base layout -->
+{% extends "base.html" %}
+
+{% block future %}
+  <form ng-app="projectNav" ng-controller="NavController as nav"
+    action="" method="post" name="post">
+      {{ nav.hidden_tag() }}
+      <h3>Select a Project</h3>
+      <table>
+           <tr>
+            <td>Jump directly to project</td>
+            <td>
+              <select name="projectID" ng-model="nav.projectID"
+                ng-options="opt as opt.label for opt in nav.options">
+              </select>
+            </td>
+            <td><input type="submit" value="Go"></td>
+          </tr>
+      </table>
+  </form>
+{% endblock %}
+
+{% block content %}
+  <form action="" method="post" name="post">
+      {{ form.hidden_tag() }}
+      <table>
+          <tr>
+              <td>Select a project:</td>
+          </tr>
+          <tr>
+            <td>{{ form.projectID.label }}</td>
+            <td>{{ form.projectID }}</td>
+            <td><input type="submit" value="Go"></td>
+          </tr>
+      </table>
+  </form>
+{% endblock %}
