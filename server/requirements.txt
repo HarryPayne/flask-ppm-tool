@@ -18,6 +18,7 @@ inflect==0.2.5
 intervals==0.3.1
 itsdangerous==0.24
 python-ldap==2.4.19
+simplejson==3.6.5
 simpleldap==0.8
 six==1.9.0
 sqlacodegen==1.1.5

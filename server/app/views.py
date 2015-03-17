@@ -1,9 +1,11 @@
-from flask import render_template, flash, redirect, session, url_for, request, g
+from flask import (render_template, flash, redirect, session, url_for, request, 
+                   g, jsonify)
 from flask.ext.login import login_user, logout_user, current_user, login_required
 from datetime import datetime
 from flask.ext.wtf import Form
 from wtforms.ext.sqlalchemy.orm import model_form
 from wtforms import StringField, BooleanField, TextAreaField, SelectField
+from simplejson import dumps
 
 from app import app, db, lm #, oid
 from .forms import Description, SelectForm, LoginForm  # ProjectViewForm, LoginForm, EditForm, PostForm
@@ -73,6 +75,18 @@ def index():
                            title='Select',
                            form=form)
 
+@app.route("/getBriefDescriptions")
+def get_brief_descriptions():
+    """ return list of project descriptions """
+    columns = ["projectID", "name", "description"]
+    descriptions = []
+    for item in alch.Description.query.all():
+        d = {}
+        for col in columns:
+            d[col] = getattr(item, col)
+        descriptions.append(d)
+    return dumps(descriptions)
+    
 @app.route("/projectView", methods=["GET", "POST"])
 def projectView():
     projectID = request.values.get("projectID", None, int)
