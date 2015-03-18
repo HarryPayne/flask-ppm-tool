@@ -64,10 +64,6 @@ def internal_error(error):
 @app.route('/index', methods=['GET', 'POST'])
 def index():
     form = SelectForm()
-    choices = []
-    for row in alch.Description.query.all():
-        choices.append((row.projectID, str(row.projectID) + u": " + row.name))
-    form.projectID.choices = choices
     projectID = request.form.get("projectID", None, int)
     if form.validate_on_submit():
         return redirect(url_for('projectView', projectID=projectID))
@@ -78,9 +74,9 @@ def index():
 @app.route("/getBriefDescriptions")
 def get_brief_descriptions():
     """ return list of project descriptions """
-    columns = ["projectID", "name", "description"]
+    columns = ["projectID", "name", "description", "finalID"]
     descriptions = []
-    for item in alch.Description.query.all():
+    for item in alch.Description.query.order_by("projectID").all():
         d = {}
         for col in columns:
             d[col] = getattr(item, col)
@@ -110,6 +106,7 @@ def projectView():
         return render_template("view.html",
                                title=title,
                                projectID=projectID,
+                               projectName=p.name,
                                form=form,
                                attributes=attributes)
 

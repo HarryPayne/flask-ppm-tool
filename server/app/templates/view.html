@@ -4,7 +4,7 @@
   {% if not current_user.is_anonymous() %}
       <a href="{{ url_for('projectEdit') }}?projectID={{ projectID }}">Edit</a>
   {% endif %}
-  <h1>{{ projectID}}: {{form.name.data}}</h1>
+  <h1>{{ projectID}}: {{projectName}}</h1>
   <span>
     <div name="descriptionHeaderItem" id="descriptionHeaderItem">
       <h3>Description Attributes</h3>

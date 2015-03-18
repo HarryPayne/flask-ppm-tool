@@ -1,37 +1,61 @@
 <!-- extend base layout -->
 {% extends "base.html" %}
 
-{% block future %}
-  <form ng-app="projectNav" ng-controller="NavController as nav"
-    action="" method="post" name="post">
-      {{ nav.hidden_tag() }}
-      <h3>Select a Project</h3>
-      <table>
-           <tr>
-            <td>Jump directly to project</td>
-            <td>
-              <select name="projectID" ng-model="nav.projectID"
-                ng-options="opt as opt.label for opt in nav.options">
-              </select>
-            </td>
-            <td><input type="submit" value="Go"></td>
-          </tr>
-      </table>
-  </form>
-{% endblock %}
-
 {% block content %}
-  <form action="" method="post" name="post">
-      {{ form.hidden_tag() }}
-      <table>
-          <tr>
-              <td>Select a project:</td>
-          </tr>
-          <tr>
-            <td>{{ form.projectID.label }}</td>
-            <td>{{ form.projectID }}</td>
-            <td><input type="submit" value="Go"></td>
-          </tr>
-      </table>
-  </form>
+<h3>Select a Project</h3>
+<div ng-app="SelectApp" ng-controller="selectController as sel">
+  <ul>
+    <li>
+      <form action="/projectView" method="post" novalidate>
+        <label> Jump directly to project </label> 
+        <select name="projectID" ng-model="projectID"
+          ng-options="item.name for item in projects track by item.projectID"
+          onchange="submit();">
+        </select>
+        &nbsp;
+        <button type="submit"> Go </button>
+      </form>
+    </li>
+    
+    <li>
+      <form action="/projectView" method="post" novalidate>
+        <label for="projectID"> Jump directly to project ID </label>
+        <input type="text" name="projectID" id="projectID" ng-model="projectID">
+        &nbsp;
+        <button type="submit"> Go </button>
+      </form>
+    </li>
+    
+    <li>
+      <form action="/projectView" method="post" novalidate>
+        <label for="searchText"> Search in project names and descriptions </label>
+        <input type="text" name="searchText" id="searchText" ng-model="searchText"><br/>
+
+        Join words: &nbsp;&nbsp;
+        <input type="radio" name="nameLogic" id="nameLogic_or" value="or" ng-model="nameLogic">
+        <label for="nameLogic_or">with 'or'</label>, &nbsp;&nbsp;
+        <input type="radio" name="nameLogic" id="nameLogic_and" value="and" ng-model="nameLogic"> 
+        <label for="nameLogic_and"> with 'and'</label>, or &nbsp;&nbsp;
+        <input type="radio" name="nameLogic" id="nameLogic_phrase" value="phrase" ng-model="nameLogic">
+        <label for="nameLogic_phrase"> as a phrase</label>.<br/>
+
+        Search scope: &nbsp;&nbsp;
+        <label> <input type="radio" value="0" name="finalID" ng-model="finalID"> active projects </label>, &nbsp;&nbsp;
+        <label> <input type="radio" value="" name="finalID" ng-model="finalID"> all projects</label>.
+
+        {% raw %}
+        <div ng-show="searchText">
+          <dl ng-repeat="project in projects | nameSearch:searchText:nameLogic:finalID ">
+            <dt>
+              {{project.projectID}}. <button class="link" onclick="submit();">{{project.name}}</button>
+            </dt>
+            <dd>{{project.description}}</dd>
+          </dl>
+        </div>
+        {% endraw %}
+      </form>
+    </li>
+    
+  </ul>
+</div>
 {% endblock %}
