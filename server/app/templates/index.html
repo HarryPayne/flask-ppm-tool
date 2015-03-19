@@ -28,6 +28,7 @@
     
     <li>
       <form action="/projectView" method="post" novalidate>
+        <input type="hidden" name="projectID" value="">
         <label for="searchText"> Search in project names and descriptions </label>
         <input type="text" name="searchText" id="searchText" ng-model="searchText"><br/>
 
@@ -47,7 +48,7 @@
         <div ng-show="searchText">
           <dl ng-repeat="project in projects | nameSearch:searchText:nameLogic:finalID ">
             <dt>
-              {{project.projectID}}. <button class="link" onclick="submit();">{{project.name}}</button>
+              {{project.projectID}}. <a href="/projectView?projectID={{project.projectID}}">{{project.name}}</a>
             </dt>
             <dd>{{project.description}}</dd>
           </dl>
