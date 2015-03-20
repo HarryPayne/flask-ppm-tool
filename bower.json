@@ -1,0 +1,19 @@
+{
+  "name": "flask-ppm-tool",
+  "version": "0.0.0",
+  "main": "server/app/static/main.js",
+  "homepage": "https://github.com/HarryPayne/flask-ppm-tool",
+  "authors": [
+    "Harry Payne <payne@nfdc.net>"
+  ],
+  "description": "Flask Project Portfolio Management tool",
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

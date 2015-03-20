@@ -13,7 +13,8 @@
       } 
     </style>
 
-    <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet" media="screen">
+    <link href="{{ url_for('static', filename='bootstrap.min.css') }}" rel="stylesheet" media="screen">
+    <link href="{{ url_for('static', filename='angular-readmore-style.css') }}" rel="stylesheet" media="screen">
     <style>     
        button.link {
           display:inline-block;
@@ -27,21 +28,33 @@
       }
     </style>
     
-    <script src="http://cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.10/angular.min.js"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='jquery.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='angular.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='readmore.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='ng-focus-on.min.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='main.js') }}"></script>
   </head>
-  <body>
+  <body class="container">
     <h2>Project Portfolio Tool</h2>
-    <div>
-        <a href="{{ url_for('index') }}">Home</a>
+
+    <div style="float: right;">
+      {% if current_user.is_anonymous() %}
+          <a href="{{ url_for('login') }}">Login</a>
+      {% else %}
+          Logged in as {{ current_user.name }}
+          <a href="{{ url_for('logout')}}">Logout</a>
+      {% endif %}
     </div>
-    {% if current_user.is_anonymous() %}
-        <a href="{{ url_for('login') }}">Login</a>
-    {% else %}
-        Logged in as {{ current_user.name }}
-        <a href="{{ url_for('logout')}}">Logout</a>
-    {% endif %}
-    <hr>
+
+    <ul class="nav nav-tabs">
+      <li role="presentation" class="active"><a href="{{ url_for('index') }}">Home</a></li>
+      <li role="presentation"><a href="#">Filter Builder</a></li>
+      <li role="presentation"><a href="#">Browse</a></li>
+      <li role="presentation"><a href="#">Project</a></li>
+      <li role="presentation"><a href="#">Previous</a></li>
+      <li role="presentation"><a href="#">Next</a></li>
+    </ul>    
+
     {% with messages = get_flashed_messages() %}
     {% if messages %}
     <ul>

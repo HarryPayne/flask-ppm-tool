@@ -7,6 +7,15 @@
   <ul>
     <li>
       <form action="/projectView" method="post" novalidate>
+        <label for="projectID"> Jump directly to project ID </label>
+        <input type="text" name="projectID" id="projectID" ng-model="projectID" focus-on="focusMe">
+        &nbsp;
+        <button type="submit"> Go </button>
+      </form>
+    </li>
+    
+    <li>
+      <form action="/projectView" method="post" novalidate>
         <label> Jump directly to project </label> 
         <select name="projectID" ng-model="projectID"
           ng-options="item.name for item in projects track by item.projectID"
@@ -19,16 +28,6 @@
     
     <li>
       <form action="/projectView" method="post" novalidate>
-        <label for="projectID"> Jump directly to project ID </label>
-        <input type="text" name="projectID" id="projectID" ng-model="projectID">
-        &nbsp;
-        <button type="submit"> Go </button>
-      </form>
-    </li>
-    
-    <li>
-      <form action="/projectView" method="post" novalidate>
-        <input type="hidden" name="projectID" value="">
         <label for="searchText"> Search in project names and descriptions </label>
         <input type="text" name="searchText" id="searchText" ng-model="searchText"><br/>
 
@@ -50,7 +49,7 @@
             <dt>
               {{project.projectID}}. <a href="/projectView?projectID={{project.projectID}}">{{project.name}}</a>
             </dt>
-            <dd>{{project.description}}</dd>
+            <dd read-more ng-model="project.description" words="false" length="200" style="width: 800px;"></dd>
           </dl>
         </div>
         {% endraw %}

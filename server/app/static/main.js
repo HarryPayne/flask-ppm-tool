@@ -2,10 +2,10 @@
   
   "use strict";
   
-  var selectApp = angular.module('SelectApp',[]);
+  var selectApp = angular.module('SelectApp',['readMore', 'focusOn']);
   
-  selectApp.controller('selectController', ['$scope', '$http', 
-  function($scope, $http){
+  selectApp.controller('selectController', ['$scope', '$http', 'focus',
+  function($scope, $http, focus){
     $scope.nameLogic = "or";
     $scope.finalID = "0";
     
@@ -13,6 +13,8 @@
       success(function(results){
         $scope.projects = results;
       });
+    
+    focus('focusMe');
   }
   
   ]);
