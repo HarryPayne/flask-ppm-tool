@@ -1,70 +1,65 @@
-(function() {
-  
   "use strict";
   
-  var selectApp = angular.module('SelectApp',['readMore', 'focusOn']);
-  
-  selectApp.controller('selectController', ['$scope', '$http', 'focus',
-  function($scope, $http, focus){
-    $scope.nameLogic = "or";
-    $scope.finalID = "0";
+  var app = angular.module('PPTApp', ['ui.router', 'ngResource', 'ui.bootstrap', 'readMore', 'focusOn']);
+  app.config(['$stateProvider', '$urlRouterProvider', function($stateProvider, $urlRouterProvider) {
+    $urlRouterProvider.otherwise('/');
     
-    $http.get('/getBriefDescriptions').
-      success(function(results){
-        $scope.projects = results;
+    $stateProvider
+      .state('select', {
+        name: 'select',
+        url: '/',
+        controller: 'selectController',
+        templateUrl: '/selectView'
+      })
+      .state('filter', {
+        name: 'filter',
+        url: '/filter',
+        controller: 'filterController',
+        templateUrl: '/filterView'
+      })
+      .state('project', {
+          name: 'project',
+          url: '/project',
+          conroller: 'projectController',
+          templateUrl: '/projectView'
+      })
+      .state('project.detail', {
+          name: 'project',
+          url: '/project/:projectID',
+          conroller: 'projectController',
+          templateUrl: '/projectView/:projectID'
       });
-    
-    focus('focusMe');
-  }
-  
-  ]);
-  
-  selectApp.filter("nameSearch", function() {
-    return function(projects, searchText, nameLogic, finalID) {
-      /* return everything if no search string */
-      if (!searchText) return projects;
+    }
+  ])
+  .run(['$state', function ($state) {
+    $state.transitionTo('select');
+  }]);
 
-      var projlen = projects.length || 0;
-      var st = (searchText || "").toLowerCase();
-      var words = st.split(" ");
-      var wordslen = words.length;
-      var bailout, j;
+  /**
+   *  Save projectID model state for use across tabs.
+   *  Following http://stackoverflow.com/questions/12940974/maintain-model-of-scope-when-changing-between-views-in-angularjs/16559855#16559855
+   */ 
+  app.factory('projectListService', ['$rootScope', function($rootScope) {
+    
+    var service = {
+      model: {
+        index: -1,
+        list: [],
+        previous: -1,
+        next: -1
+      },
       
-      var out = [];
+      SaveState: function () {
+        sessionStorage.projectListService = angular.toJson(service.model);
+      },
       
-      for (var i = 0; i < projects.length; i++ ) {
-        if (nameLogic == "phrase") {
-          /* stop if no match */
-          if (!(projects[i].name+" "+projects[i].description).toLowerCase().match(st)) continue;
-        }
-        else if (nameLogic == "and") {
-          /* stop after the first non-match */
-          bailout = false;
-          for ( j = 0; j < wordslen; j++ ) {
-            if (!(projects[i].name+" "+projects[i].description).toLowerCase().match(words[j])) {
-              bailout = true;
-              break;
-            }
-          }
-          if (bailout) continue;
-        }
-        else if (nameLogic == "or") {
-          /* stop after the first match */
-          bailout = true;
-          for ( j = 0; j < wordslen; j++ ) {
-            if ((projects[i].name+" "+projects[i].description).toLowerCase().match(words[j])) {
-              bailout = false;
-              break;
-            }
-          }
-          if (bailout) continue;
-        }
-        if (finalID == "0" && projects[i].finalID != 0) continue;
-        out.push(projects[i]);
+      RestoreState: function () {
+        service.model = angular.fromJson(sessionStorage.projectListService);
       }
-      
-      return out;
     };
-  });
-  
-}());
+    
+    $rootScope.$on("savestate, service.SaveState");
+    $rootScope.$on("restorestate, service.RestoreState");
+    
+    return service;    
+  }]);

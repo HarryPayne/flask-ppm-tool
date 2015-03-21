@@ -1,35 +1,38 @@
-{% extends "base.html" %}
-
-{% block content %}
-  {% if not current_user.is_anonymous() %}
-      <a href="{{ url_for('projectEdit') }}?projectID={{ projectID }}">Edit</a>
-  {% endif %}
-  <h1>{{ projectID}}: {{projectName}}</h1>
-  <span>
-    <div name="descriptionHeaderItem" id="descriptionHeaderItem">
-      <h3>Description Attributes</h3>
-    </div>
-  </span>
-  <form>
-    <table>
-      {% for attr in attributes %}
-        {% if form[attr.name].data not in [0, None] %}
-        <tr>
-          <td style="text-align: right;vertical-align: top;">
-            {{ attr.label.capitalize() }}&nbsp;:&nbsp;
-          </td>
-          {% if attr.format == "multipleSelect" %}
-            {% for item in form[attr.name].choices %}
-              {% if item[0] == form[attr.name].data %}
-                <td>{{ item[1] }}</td>
+<html>
+  <head></head>
+  <body >
+    <div ng-app="PPTApp" ng-controller="projectController as proj">
+      {% if not current_user.is_anonymous() %}
+          <a href="{{ url_for('projectEdit') }}">Edit</a>
+      {% endif %}
+      <h1>{{ projectID}}: {{projectName}}</h1>
+      <span>
+        <div name="descriptionHeaderItem" id="descriptionHeaderItem">
+          <h3>Description Attributes</h3>
+        </div>
+      </span>
+      <!--form>
+        <table>
+          {% for attr in attributes %}
+            {% if form[attr.name].data not in [0, None] %}
+            <tr>
+              <td style="text-align: right;vertical-align: top;">
+                {{ attr.label.capitalize() }}&nbsp;:&nbsp;
+              </td>
+              {% if attr.format == "multipleSelect" %}
+                {% for item in form[attr.name].choices %}
+                  {% if item[0] == form[attr.name].data %}
+                    <td>{{ item[1] }}</td>
+                  {% endif %}
+                {% endfor %}
+              {% else %}
+                <td>{{ form[attr.name].data }}</td>
               {% endif %}
-            {% endfor %}
-          {% else %}
-            <td>{{ form[attr.name].data }}</td>
-          {% endif %}
-        </tr>
-        {% endif %}
-      {% endfor %}
-    </table>
-  </form>
-{% endblock %}
+            </tr>
+            {% endif %}
+          {% endfor %}
+        </table>
+      </form -->
+    </div>
+  </body>
+</html>

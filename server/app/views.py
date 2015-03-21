@@ -63,13 +63,13 @@ def internal_error(error):
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/index', methods=['GET', 'POST'])
 def index():
-    form = SelectForm()
-    projectID = request.form.get("projectID", None, int)
-    if form.validate_on_submit():
-        return redirect(url_for('projectView', projectID=projectID))
     return render_template('index.html',
-                           title='Select',
-                           form=form)
+                           title='Home')
+
+@app.route('/selectView')
+def selectView():
+    return render_template('select.html',
+                           title='Select')
 
 @app.route("/getBriefDescriptions")
 def get_brief_descriptions():
@@ -139,7 +139,18 @@ def projectEdit():
                                projectID=projectID,
                                form=form,
                                attributes=attributes)
-    
+
+@app.route("/filterView", methods=["GET", "POST"])
+def filterView(): 
+    attributes = []
+    for row in alch.Attributelist.query.filter_by(table="description").all():
+        attributes.append({"name": row.attributeName,
+                           "label": row.label,
+                           "format": row.format,
+                           "help": row.help})
+    return render_template("filter.html",
+                            attributes=attributes) 
+
       
 # @app.route('/login', methods=['GET', 'POST'])
 # @oid.loginhandler
