@@ -1,16 +1,21 @@
 <html>
   <head></head>
   <body >
-    <div ng-app="PPTApp" ng-controller="projectController as proj">
-      {% if not current_user.is_anonymous() %}
-          <a href="{{ url_for('projectEdit') }}">Edit</a>
-      {% endif %}
-      <h1>{{ projectID}}: {{projectName}}</h1>
+    {% if not current_user.is_anonymous() %}
+        <a href="{{ url_for('projectEdit') }}">Edit</a>
+    {% endif %}
+
+    {% raw %}
+    <div ng-controller="projectController as proj">
+      
+      <h1>{{ projectID}}: {{attributes.projectName}}</h1>
       <span>
         <div name="descriptionHeaderItem" id="descriptionHeaderItem">
           <h3>Description Attributes</h3>
         </div>
       </span>
+    </div>
+    {% endraw %}
       <!--form>
         <table>
           {% for attr in attributes %}
@@ -33,6 +38,5 @@
           {% endfor %}
         </table>
       </form -->
-    </div>
   </body>
 </html>

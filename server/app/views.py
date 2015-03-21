@@ -82,33 +82,60 @@ def get_brief_descriptions():
             d[col] = getattr(item, col)
         descriptions.append(d)
     return dumps(descriptions)
+
+@app.route("/getProjectList", methods=["GET", "POST"]) 
+def getProjectList():
+    model = {}
+    dlist = alch.Description.query.order_by("projectID")
+    plist = [item.projectID for item in dlist.all()]
+    if list:
+        model["list"] = plist
+        model["index"] = 0
+        model["previous"] = -1
+        model["next"] = plist[1] or -1
+        model["description"] = "all projects"
+    else:
+        model = {"list": [], "index": -1, "previous": -1, "next": -1}
+    return dumps(model)
+
+@app.route("/getProjectAttributes/<projectID>")
+def getProjectAttributesJSON(projectID):
+    attributes = getProjectAttributes(projectID)
     
+    return dumps(attributes)
+
+def getProjectAttributes(projectID):
+    p = alch.Description.query.filter_by(projectID=projectID).first_or_404()
+    form = Description(request.form, p)
+    #form.maturity.widget = ChoicesSelect(choices=alch.MATURITY_CHOICES)
+    #form.maturity.default = p.maturityID
+    #form.host.default = p.hostID
+    title = "PPT {id}: {name}".format(
+        id = p.projectID,
+        name = p.name
+        )
+    attributes = []
+    for row in alch.Attributelist.query.filter_by(table="description").all():
+        attributes.append({"name": row.attributeName,
+                           "label": row.label,
+                           "format": row.format})
+    return {"title": title,
+            "projectID": projectID,
+            "projectName": p.name,
+            "form": form,
+            "attributes": attributes}
+
 @app.route("/projectView", methods=["GET", "POST"])
 def projectView():
-    projectID = request.values.get("projectID", None, int)
+    projectID = 1
     if projectID:
-#         import pydevd
-#         pydevd.settrace()
-        p = alch.Description.query.filter_by(projectID=projectID).first_or_404()
-        form = Description(request.form, p)
-        #form.maturity.widget = ChoicesSelect(choices=alch.MATURITY_CHOICES)
-        #form.maturity.default = p.maturityID
-        #form.host.default = p.hostID
-        title = "PPT {id}: {name}".format(
-            id = p.projectID,
-            name = p.name
-            )
-        attributes = []
-        for row in alch.Attributelist.query.filter_by(table="description").all():
-            attributes.append({"name": row.attributeName,
-                               "label": row.label,
-                               "format": row.format})
+        attrs = getProjectAttributes(projectID)
         return render_template("view.html",
-                               title=title,
+                               title=attrs["title"],
                                projectID=projectID,
-                               projectName=p.name,
-                               form=form,
-                               attributes=attributes)
+                               projectName=attrs["projectName"],
+                               form=attrs["form"],
+                               attributes=attrs["attributes"])
 
 @app.route("/projectEdit", methods=["GET", "POST"])
 @login_required

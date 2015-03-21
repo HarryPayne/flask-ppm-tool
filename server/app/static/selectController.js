@@ -2,26 +2,38 @@
   
   "use strict";
   
-  app.controller('selectController', ['$scope', '$http', 'focus', 'projectListService',
-  function($scope, $http, focus, projectListService){
-    
-    focus('focusMe');
-    $scope.projectList = projectListService;
-
-    $scope.nameLogic = "or";
-    $scope.finalID = "0";
-
-    $scope.jumptoproject = function(projectID) {
-      $scope.projectList.index = 0;
-      $scope.projectList.list = [projectID];
-    };
-    
-    $http.get('/getBriefDescriptions').
-      success(function(results){
-        $scope.projects = results;
-      });
-  }
+  app.controller('selectController', ['$scope', '$http', '$state', 'focus', 'projectListService',
+    'selectStateService',
+    function($scope, $http, $state, focus, projectListService, selectStateService){
+      
+      focus('focusMe');
+      $scope.projectList = projectListService;
+      $scope.selectState = selectStateService;
   
+      $scope.jumptoproject = function(projectID) {
+        $scope.projectList.model.index = 0;
+        $scope.projectList.model.list = [projectID];
+        $scope.projectList.model.previous = -1;
+        $scope.projectList.model.next = -1;
+        $scope.projectList.model.description = "select jumptoproject";
+        $state.go('project');
+      };
+      
+      $scope.jumptoselectedproject = function(option) {
+        var projectID = option.projectID;
+        $scope.projectList.model.index = 0;
+        $scope.projectList.model.list = [projectID];
+        $scope.projectList.model.previous = -1;
+        $scope.projectList.model.next = -1;
+        $scope.projectList.model.description = "select jumptoproject";
+        $state.go('project');
+      };
+      
+      $http.get('/getBriefDescriptions')
+        .success(function(results){
+          $scope.projects = results;
+        });
+    }
   ]);
   
   app.filter("nameSearch", function() {
