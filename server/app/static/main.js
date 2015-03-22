@@ -21,13 +21,15 @@
           name: 'project',
           url: '/project',
           conroller: 'projectController',
-          templateUrl:"/projectView"
+          templateUrl:"/projectTemplate"
       })
       .state('project.detail', {
           name: 'project',
           url: '/project/:projectID',
-          conroller: 'projectController',
-          templateUrl: "/projectView"
+          controller: function ($stateParams) {
+            console.log($stateParams);
+          },
+          templateUrl: "/projectTemplate"
       });
     }
   ])
@@ -62,6 +64,10 @@
     $rootScope.$on("savestate, service.SaveState");
     $rootScope.$on("restorestate, service.RestoreState");
     
+    window.onbeforeunload = function (event) {
+      $rootScope.$broadcast('savestate');
+    };
+
     return service;    
   }]);
 
@@ -100,3 +106,4 @@
     
     return service;    
   }]);
+  

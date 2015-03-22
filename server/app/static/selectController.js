@@ -16,17 +16,7 @@
         $scope.projectList.model.previous = -1;
         $scope.projectList.model.next = -1;
         $scope.projectList.model.description = "select jumptoproject";
-        $state.go('project');
-      };
-      
-      $scope.jumptoselectedproject = function(option) {
-        var projectID = option.projectID;
-        $scope.projectList.model.index = 0;
-        $scope.projectList.model.list = [projectID];
-        $scope.projectList.model.previous = -1;
-        $scope.projectList.model.next = -1;
-        $scope.projectList.model.description = "select jumptoproject";
-        $state.go('project');
+        $state.go('project.detail', {projectID: projectID});
       };
       
       $http.get('/getBriefDescriptions')

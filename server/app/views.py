@@ -122,10 +122,14 @@ def getProjectAttributes(projectID):
     return {"title": title,
             "projectID": projectID,
             "projectName": p.name,
-            "form": form,
+            #"form": form,
             "attributes": attributes}
 
-@app.route("/projectView", methods=["GET", "POST"])
+@app.route("/projectTemplate")
+def projectTemplate():
+    return render_template("view.html")
+
+@app.route("/projectView/<projectID>", methods=["GET", "POST"])
 def projectView():
     projectID = 1
     if projectID:
