@@ -7,22 +7,13 @@
     function($scope, $http, $state, focus, projectListService, selectStateService){
       
       focus('focusMe');
-      $scope.projectList = projectListService;
-      $scope.selectState = selectStateService;
-  
-      $scope.jumptoproject = function(projectID) {
-        $scope.projectList.model.index = 0;
-        $scope.projectList.model.list = [projectID];
-        $scope.projectList.model.previous = -1;
-        $scope.projectList.model.next = -1;
-        $scope.projectList.model.description = "select jumptoproject";
-        $state.go('project.detail', {projectID: projectID});
-      };
+      $scope.projectList = projectListService.model;  
+      $scope.jumpToProject = projectListService.jumpToProject;
+      $scope.selectState = selectStateService.model;
       
-      $http.get('/getBriefDescriptions')
-        .success(function(results){
-          $scope.projects = results;
-        });
+      $scope.$on("projectListBroadcast", function() {
+        $scope.projectList = projectListService.model;
+      });
     }
   ]);
   
