@@ -173,32 +173,22 @@ app.factory('projectListService', ['$rootScope', '$http', '$state', '$stateParam
     };
 
     service.jumpToProject =  function(projectID) {
+      projectID = parseInt(projectID);
       var index = service.model.list.indexOf(projectID);
       if (service.model.list.indexOf(projectID) > -1) {
         service.jumpToProjectInList(projectID, service.model.list);
         $state.go('project.detail', {projectID: projectID});
+        return;
       }
-      else if (service.model.allProjects.indexOf(projectID) > -1) {
-        projectIDlist = service.getIDListFromAllProjects();
+      var projectIDlist = service.getIDListFromAllProjects();
+      if (projectIDlist.indexOf(projectID) > -1) {
         service.jumpToProjectInList(projectID, projectIDlist);
         $state.go('project.detail', {projectID: projectID});
+        return;
       }
-      else {
-        alert("Can't find a project to display.");
-      }
+      alert("Can't find a project to display.");
     };
     
-    service.RestoreState();
-    if (typeof(service.model) == "undefined") {
-      service.initModel();
-    };
-
-    /* get fresh project list */
-    $http.get('/getBriefDescriptions')
-      .success(function(results){
-        service.getAllProjectResults(results);
-      });
-      
     service.init = function(projectID, description, projectName){
       var allProjects = [];
   
@@ -216,35 +206,21 @@ app.factory('projectListService', ['$rootScope', '$http', '$state', '$stateParam
       };
     };
     
-    service.update = function(projectID, description, projectName) {
-      if (typeof(projectName) == "undefined") projectName = "";
-      if (typeof(description) == "undefined") description = "";
-      if (service.model.list == []) {
-        var index = -1;
-        var all = service.model.allProjects;
-        for ( var i = 0; i < all.length; i++ ) {
-          if (all[i].projectID == projectID) {
-            index = i;
-            break;
-          }
-        }
-        if (index > -1) {
-          service.model.list = all;
-          service.model.description = description;
-          if (index > 0) {
-            service.model.previous = all[index-1].projectID;
-          }
-          if (index < all.length) {
-            service.model.next = all[index+1].projectID;
-          }
-        }
-      }
-      service.broadcast();
+    service.updateAllProjects = function() {
+      /* get fresh project list */
+      $http.get('/getBriefDescriptions')
+        .success(function(results){
+          service.getAllProjectResults(results);
+        });
     };
     
-    //$rootScope.$off("savestate");
+    service.RestoreState();
+    if (typeof(service.model) == "undefined") {
+      service.initModel();
+    };
+    service.updateAllProjects();
+
     $rootScope.$on("savestate", service.SaveState);
-    //$rootScope.$off("restorestate");
     $rootScope.$on("restorestate", service.RestoreState);
     
     return service;    
