@@ -1,61 +1,84 @@
-<!-- extend base layout -->
-{% extends "base.html" %}
+<html ng-app="PPTApp">
+  <head>
+    {% if title %}
+    <title>{{ title }} - PPT</title>
+    {% else %}
+    <title>PPT</title>
+    {% endif %}
+    <meta name="viewport" content="initial-scale=1.0">
+    <style>
+      @-ms-viewport{
+          width: extend-to-zoom;
+          zoom: 1.0;
+      } 
+    </style>
 
-{% block content %}
-<h3>Select a Project</h3>
-<div ng-app="SelectApp" ng-controller="selectController as sel">
-  <ul>
-    <li>
-      <form action="/projectView" method="post" novalidate>
-        <label for="projectID"> Jump directly to project ID </label>
-        <input type="text" name="projectID" id="projectID" ng-model="projectID" focus-on="focusMe">
-        &nbsp;
-        <button type="submit"> Go </button>
-      </form>
-    </li>
+    <link href="{{ url_for('static', filename='bootstrap.min.css') }}" rel="stylesheet" media="screen">
+    <link href="{{ url_for('static', filename='angular-readmore-style.css') }}" rel="stylesheet" media="screen">
+    <style>     
+       button.link {
+          display:inline-block;
+          position:relative;
+          background-color: transparent;
+          cursor: pointer;
+          border:0;
+          padding:0;
+          color:#00f;
+          text-decoration:underline;
+      }
+    </style>
     
-    <li>
-      <form action="/projectView" method="post" novalidate>
-        <label> Jump directly to project </label> 
-        <select name="projectID" ng-model="projectID"
-          ng-options="item.name for item in projects track by item.projectID"
-          onchange="submit();">
-        </select>
-        &nbsp;
-        <button type="submit"> Go </button>
-      </form>
-    </li>
-    
-    <li>
-      <form action="/projectView" method="post" novalidate>
-        <label for="searchText"> Search in project names and descriptions </label>
-        <input type="text" name="searchText" id="searchText" ng-model="searchText"><br/>
-
-        Join words: &nbsp;&nbsp;
-        <input type="radio" name="nameLogic" id="nameLogic_or" value="or" ng-model="nameLogic">
-        <label for="nameLogic_or">with 'or'</label>, &nbsp;&nbsp;
-        <input type="radio" name="nameLogic" id="nameLogic_and" value="and" ng-model="nameLogic"> 
-        <label for="nameLogic_and"> with 'and'</label>, or &nbsp;&nbsp;
-        <input type="radio" name="nameLogic" id="nameLogic_phrase" value="phrase" ng-model="nameLogic">
-        <label for="nameLogic_phrase"> as a phrase</label>.<br/>
-
-        Search scope: &nbsp;&nbsp;
-        <label> <input type="radio" value="0" name="finalID" ng-model="finalID"> active projects </label>, &nbsp;&nbsp;
-        <label> <input type="radio" value="" name="finalID" ng-model="finalID"> all projects</label>.
-
-        {% raw %}
-        <div ng-show="searchText">
-          <dl ng-repeat="project in projects | nameSearch:searchText:nameLogic:finalID ">
-            <dt>
-              {{project.projectID}}. <a href="/projectView?projectID={{project.projectID}}">{{project.name}}</a>
-            </dt>
-            <dd read-more ng-model="project.description" words="false" length="200" style="width: 800px;"></dd>
-          </dl>
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.6/angular.js"></script>
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.6/angular-resource.min.js"></script>
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.6/angular-animate.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.9.0/ui-bootstrap.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.9.0/ui-bootstrap-tpls.min.js"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='angular-ui-router.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='readmore.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='ng-focus-on.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='main.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='selectController.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='filterController.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='projectController.js') }}"></script>
+  </head>
+  <body>
+    <div id="page">
+      <header class="container">
+        <div class="navbar navbar-default" id="menu">
+            <div class="navbar-header">
+              <button class="btn btn-success navbar-toggle"></button>
+              <div id="logo"><h2>Project Portfolio Tool</h2></div>
+            </div>
+              <div id="top_menu" class="navbar-right">
+                {% if current_user.is_anonymous() %}
+                    <a href="{{ url_for('login') }}">Login</a>
+                {% else %}
+                    Logged in as {{ current_user.name }}
+                    <a href="{{ url_for('logout')}}">Logout</a>
+                {% endif %}
+              </div>
+            <div class="navbar-collapse collapse" style="clear: both;">
+              {% raw %} 
+                <ul class="nav navbar-nav navbar-right">
+                  <li role="presentation" class="active"><a ui-sref="select">Select</a></li>
+                  <li role="presentation"><a ui-sref="filter">Filter Builder</a></li>
+                  <li role="presentation"><a ui-sref="browse">Browse</a></li>
+                  <li role="presentation"><a ui-sref="project">Project</a></li>
+                  <li role="presentation"><a href="#">Previous</a></li>
+                  <li role="presentation"><a href="#">Next</a></li>
+                </ul>
+              {% endraw %}
+            </div>
         </div>
-        {% endraw %}
-      </form>
-    </li>
-    
-  </ul>
-</div>
-{% endblock %}
+      </header>
+      <section class="container" id="body">
+          <div ui-view></div>
+      </section>
+ 
+      <hr/>
+ 
+      <footer class="container">
+      </footer>
+    </div>
+  </body>
+</html>
