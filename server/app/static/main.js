@@ -119,7 +119,7 @@ app.factory('projectListService', ['$rootScope', '$http', '$state', '$stateParam
         projectIDList.push(all[i].projectID);
       }
       return projectIDList;
-    }
+    };
 
     service.getAllProjectResults = function(results) {
       service.model.allProjects = results;
