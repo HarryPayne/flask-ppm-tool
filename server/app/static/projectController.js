@@ -9,7 +9,6 @@
       
       $scope.$on("projectListBroadcast", function() {
         $scope.projectList = projectListService.model;
-        //projectListService.update($scope.projectID, "from url");
       });
 
     } 
