@@ -1,5 +1,6 @@
 import os
 from flask import Flask
+from flask_jwt import JWT, jwt_required
 import sqlalchemy as sa
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.login import LoginManager
@@ -15,6 +16,7 @@ db = SQLAlchemy(app)
 
 lm = LoginManager()
 lm.init_app(app)
+jwt = JWT(app)
 
 # lm.login_view = 'login'
 # oid = OpenID(app, os.path.join(basedir, 'tmp'))
