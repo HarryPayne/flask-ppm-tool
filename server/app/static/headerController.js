@@ -2,7 +2,9 @@
   
   "use strict";
   
-  app.controller('headerController', ['$scope', '$rootScope', '$state', 'projectListService',
+  var headerCtl = angular.module("app.header", ['ui.router']);
+  
+  headerCtl.controller('headerController', ['$scope', '$rootScope', '$state', 'projectListService',
     function($scope, $rootScope, $state, projectListService) {
       
       $scope.projectList = projectListService.model;

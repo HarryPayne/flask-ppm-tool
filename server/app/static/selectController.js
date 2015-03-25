@@ -2,7 +2,19 @@
   
   "use strict";
   
-  app.controller('selectController', ['$scope', '$http', '$state', 'focus', 'projectListService',
+  var selectCtl = angular.module("app.select", ["ui.router", 'focusOn', 'readMore']);
+  
+  selectCtl.config(function($stateProvider) {
+    $stateProvider
+      .state('select', {
+        name: 'select',
+        url: '/',
+        controller: 'selectController',
+        templateUrl: '/selectView'
+      });
+  });
+  
+  selectCtl.controller('selectController', ['$scope', '$http', '$state', 'focus', 'projectListService',
     'selectStateService',
     function($scope, $http, $state, focus, projectListService, selectStateService){
       
@@ -20,7 +32,7 @@
     }
   ]);
   
-  app.filter("nameSearch", function() {
+  selectCtl.filter("nameSearch", function() {
     return function(projects, searchText, nameLogic, finalID) {
       /* return everything if no search string */
       if (!searchText) return projects;
@@ -68,4 +80,37 @@
     };
   });
   
+  /**
+   *  Create a service for passing/saving/restoring select tab state
+   *  Following http://stackoverflow.com/questions/12940974/maintain-model-of
+   *       -scope-when-changing-between-views-in-angularjs/16559855#16559855
+   */
+  selectCtl.factory("selectStateService", ['$rootScope', function($rootScope) {
+      
+    var service = {
+      model: {
+        searchText: "",
+        nameLogic: "or",
+        finalID: "0"
+      },
+      
+      SaveState: function () {
+        sessionStorage.selectStateService = angular.toJson(service.model);
+      },
+      
+      RestoreState: function () {
+        service.model = angular.fromJson(sessionStorage.selectStateService);
+      }
+    };
+    
+    $rootScope.$on("savestate, service.SaveState");
+    $rootScope.$on("restorestate, service.RestoreState");
+    
+    window.onbeforeunload = function (event) {
+      $rootScope.$broadcast('savestate');
+    };
+  
+    return service;    
+  }]);
+
 }());

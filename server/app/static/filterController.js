@@ -2,7 +2,19 @@
   
   "use strict";
   
-  app.controller('filterController', ['$scope', '$http', 'projectListService',
+  var filtertCtl = angular.module("app.filter", []);
+  
+  filtertCtl.config(function($stateProvider) {
+    $stateProvider
+    .state('filter', {
+      name: 'filter',
+      url: '/filter',
+      controller: 'filterController',
+      templateUrl: '/filterView'
+    });
+  });
+  
+  filtertCtl.controller('filterController', ['$scope', '$http', 'projectListService',
     'selectStateService',
     function($scope, $http, projectListService, selectStateService){
       

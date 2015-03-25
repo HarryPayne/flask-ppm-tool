@@ -1,6 +1,6 @@
 import os
 from flask import Flask
-from flask_jwt import JWT, jwt_required
+from flask_jwt import JWT
 import sqlalchemy as sa
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.login import LoginManager

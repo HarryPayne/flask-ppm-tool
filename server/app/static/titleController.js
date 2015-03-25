@@ -2,7 +2,9 @@
   
   "use strict";
   
-  app.controller('TitleController', ['$scope', '$rootScope', '$state', 'projectListService',
+  var titleCtl = angular.module("app.title", ['ui.router']);
+  
+  titleCtl.controller('TitleController', ['$scope', '$rootScope', '$state', 'projectListService',
     function($scope, $rootScope, $state, projectListService){
 
       $scope.projectList = projectListService.model;

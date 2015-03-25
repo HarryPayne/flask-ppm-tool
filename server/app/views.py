@@ -1,5 +1,6 @@
 from flask import (render_template, flash, redirect, session, url_for, request, 
                    g, jsonify)
+from flask_jwt import jwt_required
 from flask.ext.login import login_user, logout_user, current_user, login_required
 from datetime import datetime
 from flask.ext.wtf import Form
@@ -7,16 +8,26 @@ from wtforms.ext.sqlalchemy.orm import model_form
 from wtforms import StringField, BooleanField, TextAreaField, SelectField
 from simplejson import dumps
 
-from app import app, db, lm #, oid
+from app import app, db, lm, jwt #, oid
 from .forms import Description, SelectForm, LoginForm  # ProjectViewForm, LoginForm, EditForm, PostForm
 from .models import User
 from widgets import ChoicesSelect
 import alchemy_models as alch
 
+@jwt.authentication_handler
+def authenticate(username, password):
+    user = User(uid=username, passwd=password)
+    if user.active is not False:
+        return user
 
-@lm.user_loader
+@jwt.user_handler
 def load_user(userid):
     return User(uid=userid)
+
+@app.route("/protected")
+@jwt_required()
+def protected():
+    return "Success"
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -38,6 +49,7 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for("index"))
+
 
 
 # @app.before_request
