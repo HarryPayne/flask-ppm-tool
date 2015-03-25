@@ -17,6 +17,12 @@ app.config(['$stateProvider', '$urlRouterProvider', function($stateProvider, $ur
       controller: 'filterController',
       templateUrl: '/filterView'
     })
+    .state('browse', {
+      name: 'browse',
+      url: '/browse',
+      controller: 'browseController',
+      templateUrl: '/browseView'
+    })
     .state('project', {
         name: 'project',
         url: '/project',
@@ -135,18 +141,24 @@ app.factory('projectListService', ['$rootScope', '$http', '$state', '$stateParam
       }
       if (projectID) {
         service.model.projectID = projectID;
-        projectIDList = service.getIDListFromAllProjects();
-        index = projectIDList.indexOf(projectID);
+        var projectIDList = service.getIDListFromAllProjects();
+        var index = projectIDList.indexOf(projectID);
         if (index > -1) {
           //service.model.list = all;
           service.model.index = index;
-          service.model.projectName = all[index].name;
+          service.model.projectName = results[index].name;
           service.model.description = "from url";
           if (index > 0) {
-            service.model.previous = all[index-1].projectID;
+            service.model.previous = projectIDList[index-1];
+          } 
+          else {
+            service.model.previous = -1;
           }
-          if (index < all.length) {
-            service.model.next = all[index+1].projectID;
+          if (index < results.length) {
+            service.model.next = projectIDList[index+1];
+          }
+          else {
+            service.model.next = -1;
           }
           if (typeof(service.model.list[0]) == "undefined") { /* ?? */
             service.model.list = projectIDList;
@@ -161,10 +173,16 @@ app.factory('projectListService', ['$rootScope', '$http', '$state', '$stateParam
       service.model.index = index;
       service.model.projectID = projectID;
       if (index > 0) {
-        service.model.previous = list[index-1].projectID;
+        service.model.previous = list[index-1];
+      }
+      else {
+        service.model.previous = -1;
       }
       if (index < list.length) {
-        service.model.next = list[index+1].projectID;
+        service.model.next = list[index+1];
+      }
+      else {
+        service.model.next = -1;
       }
       var projectIDList = service.getIDListFromAllProjects();
       index = projectIDList.indexOf(projectID);

@@ -5,12 +5,6 @@ from hashlib import md5
 from app import db
 from config import LDAP_HOST, LDAP_SEARCH_BASE
 
-class User(UserMixin):
-    def __init__(self, uid=None, name=None, passwd=None):
-        
-        self.active = False
-        ldapres = ldap_fetch(uid=uid, name=name, passwd=passwd)
-
 def ldap_fetch(uid=None, name=None, passwd=None):
     try:
         if uid is not None and passwd is not None:

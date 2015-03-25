@@ -7,8 +7,11 @@
     function($scope, $http, $state, focus, projectListService, selectStateService){
       
       focus('focusMe');
+      
+      projectListService.updateAllProjects();
       $scope.projectList = projectListService.model;  
       $scope.jumpToProject = projectListService.jumpToProject;
+
       $scope.selectState = selectStateService.model;
       
       $scope.$on("projectListBroadcast", function() {
