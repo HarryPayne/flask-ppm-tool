@@ -17,6 +17,12 @@ app.config(['$stateProvider', '$urlRouterProvider', function($stateProvider, $ur
       controller: 'filterController',
       templateUrl: '/filterView'
     })
+    .state('browse', {
+      name: 'browse',
+      url: '/browse',
+      controller: 'browseController',
+      templateUrl: '/browseView'
+    })
     .state('project', {
         name: 'project',
         url: '/project',

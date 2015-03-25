@@ -48,7 +48,7 @@
           <div ng-show="selectState.searchText">
             <p>There are {{ filtered.length }} matches:</p>
             <dl ng-repeat="project in filtered = (projectList.allProjects | nameSearch:selectState.searchText:selectState.nameLogic:selectState.finalID)"> 
-              <dt>{{project.projectID}}. <a ng-click="jumpToProject(project.projectID)">{{project.name}}</a>
+              <dt>{{project.projectID}}. <a class="ppt_link" ng-click="jumpToProject(project.projectID)">{{project.name}}</a>
               </dt>
               <dd read-more ng-model="project.description" words="false" length="200" style="width: 800px;"></dd>
             </dl>

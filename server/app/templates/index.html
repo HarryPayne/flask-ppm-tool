@@ -1,10 +1,8 @@
-<html ng-app="PPTApp">
-  <head>
-    {% if title %}
-    <title>{{ title }} - PPT</title>
-    {% else %}
-    <title>PPT</title>
-    {% endif %}
+<html ng-app="PPTApp" ng-cloak>
+  <head ng-controller="TitleController">
+    {% raw %}
+    <title>{{ pageTitle }}</title>
+    {% endraw %}
     <meta name="viewport" content="initial-scale=1.0">
     <style>
       @-ms-viewport{
@@ -16,15 +14,19 @@
     <link href="{{ url_for('static', filename='bootstrap.min.css') }}" rel="stylesheet" media="screen">
     <link href="{{ url_for('static', filename='angular-readmore-style.css') }}" rel="stylesheet" media="screen">
     <style>     
-       button.link {
-          display:inline-block;
-          position:relative;
-          background-color: transparent;
-          cursor: pointer;
-          border:0;
-          padding:0;
-          color:#00f;
-          text-decoration:underline;
+      button.link {
+        display:inline-block;
+        position:relative;
+        background-color: transparent;
+        cursor: pointer;
+        border:0;
+        padding:0;
+        color:#00f;
+        text-decoration:underline;
+      }
+      
+      .ppt_link {
+        cursor: pointer
       }
     </style>
     
@@ -41,6 +43,7 @@
     <script type="text/javascript" src="{{ url_for('static', filename='filterController.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='projectController.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='headerController.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='titleController.js') }}"></script>
   </head>
   <body>
     <div id="page">
