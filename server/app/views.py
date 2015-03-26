@@ -2,13 +2,14 @@ from flask import (render_template, flash, redirect, session, url_for, request,
                    g, jsonify)
 from flask_jwt import jwt_required
 from flask.ext.login import login_user, logout_user, current_user, login_required
+from flask.ext.cors import cross_origin
 from datetime import datetime
 from flask.ext.wtf import Form
 from wtforms.ext.sqlalchemy.orm import model_form
 from wtforms import StringField, BooleanField, TextAreaField, SelectField
 from simplejson import dumps
 
-from app import app, db, lm, jwt #, oid
+from app import app, db, lm, jwt #, cors 
 from .forms import Description, SelectForm, LoginForm  # ProjectViewForm, LoginForm, EditForm, PostForm
 from .models import User
 from widgets import ChoicesSelect
@@ -24,10 +25,12 @@ def authenticate(username, password):
 def load_user(userid):
     return User(uid=userid)
 
-@app.route("/protected")
+@app.route("/getUser/<id>")
+@cross_origin(headers=['Content-Type','Authorization'])
 @jwt_required()
-def protected():
-    return "Success"
+def getUser(id):
+    user = User(uid=id)
+    return dumps(user.get_user())
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -49,7 +52,6 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for("index"))
-
 
 
 # @app.before_request

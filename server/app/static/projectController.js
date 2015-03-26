@@ -10,7 +10,10 @@
           name: 'project',
           url: '/project',
           conroller: 'projectController',
-          templateUrl:"/projectTemplate"
+          templateUrl:"/projectTemplate",
+          data: {
+            requiresLogin: false
+          }
       })  
       .state('project.detail', {
           name: 'project',
@@ -18,7 +21,10 @@
           controller: function ($stateParams) {
             console.log($stateParams);
           },
-          templateUrl: "/projectTemplate"
+          templateUrl: "/projectTemplate",
+          data: {
+            requiresLogin: false
+          }
       });
   });
   

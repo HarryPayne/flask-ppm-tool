@@ -2,20 +2,28 @@
   
   "use strict";
   
-  var selectCtl = angular.module("app.select", ["ui.router", 'focusOn', 'readMore']);
+  var selectCtl = angular.module("app.select", [
+    "ui.router", 
+    'focusOn', 
+    'readMore'
+  ]);
   
-  selectCtl.config(function($stateProvider) {
+  selectCtl.config(['$stateProvider', function($stateProvider) {
     $stateProvider
       .state('select', {
         name: 'select',
         url: '/',
         controller: 'selectController',
-        templateUrl: '/selectView'
+        templateUrl: '/selectView',
+        data: {
+          requiresLogin: false
+        }
       });
-  });
+    }
+  ]);
   
-  selectCtl.controller('selectController', ['$scope', '$http', '$state', 'focus', 'projectListService',
-    'selectStateService',
+  selectCtl.controller('selectController', ['$scope', '$http', '$state', 'focus', 
+    'projectListService', 'selectStateService',
     function($scope, $http, $state, focus, projectListService, selectStateService){
       
       focus('focusMe');
@@ -85,32 +93,34 @@
    *  Following http://stackoverflow.com/questions/12940974/maintain-model-of
    *       -scope-when-changing-between-views-in-angularjs/16559855#16559855
    */
-  selectCtl.factory("selectStateService", ['$rootScope', function($rootScope) {
+  selectCtl.factory("selectStateService", ['$rootScope', 
+    function($rootScope) {
       
-    var service = {
-      model: {
-        searchText: "",
-        nameLogic: "or",
-        finalID: "0"
-      },
+      var service = {
+        model: {
+          searchText: "",
+          nameLogic: "or",
+          finalID: "0"
+        },
+        
+        SaveState: function () {
+          sessionStorage.selectStateService = angular.toJson(service.model);
+        },
+        
+        RestoreState: function () {
+          service.model = angular.fromJson(sessionStorage.selectStateService);
+        }
+      };
       
-      SaveState: function () {
-        sessionStorage.selectStateService = angular.toJson(service.model);
-      },
+      $rootScope.$on("savestate, service.SaveState");
+      $rootScope.$on("restorestate, service.RestoreState");
       
-      RestoreState: function () {
-        service.model = angular.fromJson(sessionStorage.selectStateService);
-      }
-    };
+      window.onbeforeunload = function (event) {
+        $rootScope.$broadcast('savestate');
+      };
     
-    $rootScope.$on("savestate, service.SaveState");
-    $rootScope.$on("restorestate, service.RestoreState");
-    
-    window.onbeforeunload = function (event) {
-      $rootScope.$broadcast('savestate');
-    };
-  
-    return service;    
-  }]);
+      return service;    
+    }
+  ]);
 
 }());

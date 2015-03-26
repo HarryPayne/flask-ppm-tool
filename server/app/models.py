@@ -3,14 +3,15 @@ import simpleldap
 
 from hashlib import md5
 from app import db
-from config import LDAP_HOST, LDAP_SEARCH_BASE
+from config import LDAP_HOST, LDAP_SEARCH_BASE, LDAP_GROUP_SEARCH_BASE, LDAP_OBJECTS_DN, LDAP_GROUP_OBJECT_FILTER, LDAP_GROUP_MEMBERS_FIELD
 
 def ldap_fetch(uid=None, name=None, passwd=None):
     try:
         if uid is not None and passwd is not None:
-            l = simpleldap.Connection(LDAP_HOST,
-                dn='uid={0},{1}'.format(uid, LDAP_SEARCH_BASE), password=passwd)
+            dn = "uid={0},{1}".format(uid, LDAP_SEARCH_BASE)
+            l = simpleldap.Connection(LDAP_HOST, dn=dn, password=passwd)
             r = l.search('uid={0}'.format(uid), base_dn=LDAP_SEARCH_BASE)
+            g = l.search("(&({0})({1}={2}))".format(LDAP_GROUP_OBJECT_FILTER, LDAP_GROUP_MEMBERS_FIELD, dn), base_dn=LDAP_GROUP_SEARCH_BASE)
         else:
             l = simpleldap.Connection(LDAP_HOST)
             r = l.search('uid={0}'.format(uid), base_dn=LDAP_SEARCH_BASE)
@@ -18,7 +19,8 @@ def ldap_fetch(uid=None, name=None, passwd=None):
         return {
             'uid': r[0]['uid'][0],
             'name': unicode(r[0]['cn'][0]),
-            "mail": r[0]["mail"][0]
+            "mail": r[0]["mail"][0],
+            "groups": [item["cn"][0] for item in g]
         }
     except:
         return None
@@ -31,6 +33,7 @@ class User(UserMixin):
 
         if ldapres is not None:
             self.id = ldapres["uid"]
+            self.groups = ldapres["groups"]
             self.name = ldapres["name"]
             self.mail = ldapres["mail"]
             self.active = True
@@ -40,9 +43,16 @@ class User(UserMixin):
 
     def get_id(self):
         return unicode(self.id)
+    
+    def get_user(self):
+        return {"id": self.id,
+                "name": self.name,
+                "mail": self.mail,
+                "groups": self.groups,
+                "is_active": self.active}
 
     def __repr__(self):
-        return '<User %r>' % (self.id)
+        return '<User %r>' % (self.uid)
 
 # followers = db.Table(
 #     'followers',

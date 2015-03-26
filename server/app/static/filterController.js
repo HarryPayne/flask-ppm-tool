@@ -2,7 +2,11 @@
   
   "use strict";
   
-  var filtertCtl = angular.module("app.filter", []);
+  var filtertCtl = angular.module("app.filter", [
+    "ui.router",
+    "angular-storage",
+    "angular-jwt"
+  ]);
   
   filtertCtl.config(function($stateProvider) {
     $stateProvider
@@ -10,14 +14,20 @@
       name: 'filter',
       url: '/filter',
       controller: 'filterController',
-      templateUrl: '/filterView'
+      templateUrl: '/filterView',
+      data: {
+        requiresLogin: true
+      }
     });
   });
   
-  filtertCtl.controller('filterController', ['$scope', '$http', 'projectListService',
-    'selectStateService',
-    function($scope, $http, projectListService, selectStateService){
+  filtertCtl.controller('filterController', ['$scope', '$http', 
+    'store', 'jwtHelper', 'projectListService', 'selectStateService',
+    function($scope, $http, store, jwtHelper, projectListService, selectStateService){
       
+      $scope.jwt = store.get('jwt');
+      $scope.decodedJwt = $scope.jwt && jwtHelper.decodeToken($scope.jwt);
+
       $scope.projectList = projectListService.model;
       $scope.selectState = selectStateService;
             
@@ -26,5 +36,5 @@
       });
     }
   ]);
-    
+
 }());
