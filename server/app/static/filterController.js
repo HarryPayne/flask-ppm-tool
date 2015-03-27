@@ -21,13 +21,10 @@
     });
   });
   
-  filtertCtl.controller('filterController', ['$rootScope', '$scope', '$http', 
+  filtertCtl.controller('filterController', ['$scope', '$http', 
     'store', 'jwtHelper', 'projectListService', 'selectStateService',
-    function($rootScope, $scope, $http, store, jwtHelper, projectListService, selectStateService){
+    function($scope, $http, store, jwtHelper, projectListService, selectStateService){
       
-      $scope.jwt = store.get('jwt');
-      $scope.decodedJwt = $scope.jwt && jwtHelper.decodeToken($scope.jwt);
-
       $scope.projectList = projectListService.model;
       $scope.selectState = selectStateService;
             
