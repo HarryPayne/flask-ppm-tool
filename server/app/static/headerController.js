@@ -24,10 +24,10 @@
           return toState.name === name;
         }; 
         $scope.hasPrevious = function() {
-          return ($scope.isActive("project") || $scope.isActive("project.detail")) && $scope.projectList.previous > -1
+          return ($scope.isActive("project") || $scope.isActive("project.detail")) && $scope.projectList.previous > -1;
         };
         $scope.hasNext = function() {
-          return ($scope.isActive("project") || $scope.isActive("project.detail")) && $scope.projectList.next > -1
+          return ($scope.isActive("project") || $scope.isActive("project.detail")) && $scope.projectList.next > -1;
         };
       });
 

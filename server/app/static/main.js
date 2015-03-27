@@ -9,6 +9,7 @@
     'app.header', 
     'app.title', 
     'app.login', 
+    'app.loginModal',
     'ui.router',
     'angular-jwt',
     'angular-storage'
@@ -26,16 +27,23 @@
     }
   ]);
   
-  app.run(['$rootScope', '$state', 'store', 'jwtHelper', 
-    function ($rootScope, $state, store, jwtHelper) {
+  app.run(['$rootScope', '$state', 'store', 'jwtHelper',  'loginModal',
+    function ($rootScope, $state, store, jwtHelper, loginModal) {
       $state.transitionTo('select');
 
       $rootScope.$on('$stateChangeStart', function(e, to) {
-        if (to.data && to.data.requiresLogin) {
-          if (!store.get('jwt') || jwtHelper.isTokenExpired(store.get('jwt'))) {
-            e.preventDefault();
-            $state.go('login');
-          }
+        var requiresLogin = to.data && to.data.requiresLogin;
+        var noActiveToken = !store.get('jwt') || jwtHelper.isTokenExpired(store.get('jwt'));
+        if (requiresLogin && noActiveToken) {
+          e.preventDefault();
+          
+          loginModal()
+          .then(function () {
+            return $state.go(to.name);
+          })
+          .catch(function () {
+            return $state.go('select');
+          });
         }
       });
     }

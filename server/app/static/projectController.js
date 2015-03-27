@@ -2,8 +2,22 @@
   
   "use strict";
 
-  var projectCtl = angular.module("app.project", ["ui.router"]);
+  var projectCtl = angular.module("app.project", [
+    "ui.router"
+  ]);
   
+  projectCtl.controller('projectController', ['$scope', 'projectListService',
+    function($scope, projectListService){
+  
+      $scope.projectList = projectListService.model;
+      
+      $scope.$on("projectListBroadcast", function() {
+        $scope.projectList = projectListService.model;
+      });
+  
+    } 
+  ]);
+    
   projectCtl.config(function($stateProvider) {
     $stateProvider
       .state('project', {
@@ -28,18 +42,6 @@
       });
   });
   
-  projectCtl.controller('projectController', ['$scope', '$http', '$stateParams', 'projectListService',
-    function($scope, $http, $stateParams, projectListService){
-  
-      $scope.projectList = projectListService.model;
-      
-      $scope.$on("projectListBroadcast", function() {
-        $scope.projectList = projectListService.model;
-      });
-  
-    } 
-  ]);
-    
   projectCtl.factory('projectListService', ['$rootScope', '$http', '$state', '$stateParams', 
     function($rootScope, $http, $state, $stateParams) {
       var service = {};
