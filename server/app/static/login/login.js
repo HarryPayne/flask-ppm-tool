@@ -2,7 +2,9 @@
   
   var loginCtl = angular.module('app.login', [
     'ui.router',
-    'angular-storage'
+    'angular-storage',
+    'angular-jwt',
+    'ui.bootstrap'
   ]);
   
   loginCtl.config(function($stateProvider) {
@@ -13,43 +15,42 @@
     });
   });
   
-  loginCtl.controller( 'LoginCtrl', ['$scope', '$http', 'store', '$state', 'loginStateService',
-    function LoginController( $scope, $http, store, $state, loginStateService) {
+  loginCtl.controller( 'LoginCtrl', ['$scope', '$http', 'store', '$state', 
+    '$stateParams', 'loginStateService',
+    function LoginController($scope, $http, store, $state, $stateParams, loginStateService) {
   
-      loginStateService.model = $scope.user = {};
+      $scope.user = {};
     
       $scope.login = function() {
         $http({
-          url: 'http://127.0.0.1:5000/auth',
+          url: 'http://localhost:5000/auth',
           method: 'POST',
           data: $scope.user
         }).then(function(response) {
           store.set('jwt', response.data.token);
+          loginStateService.assignCurrentUser(store.get('jwt'));
           $state.go('select');
         }, function(error) {
           alert(error);
-        })
-        .then(function() {
-          if (store.get('jwt')) {
-            $http({
-              url: 'http://127.0.0.1:5000/getUser/' + $scope.user.username
-            }).success(function(response){
-              $scope.user = response;
-            });
-          }
         });
       };
+        
     }
   ]);
 
-  loginCtl.factory("loginStateService", ['$rootScope', 
-    function($rootScope) {
+  loginCtl.factory("loginStateService", ['$rootScope', '$http', 'store', 'jwtHelper',
+    function($rootScope, $http, store, jwtHelper) {
       
       var service = {
-        model: {
-          name: ""
+        assignCurrentUser: function(token) {
+          $rootScope.currentUser = jwtHelper.decodeToken(token);
+          return $rootScope.currentUser;
         },
         
+        logout: function() {
+          store.remove('jwt');
+        },
+
         SaveState: function () {
           sessionStorage.selectStateService = angular.toJson(service.model);
         },
@@ -69,5 +70,5 @@
       return service;    
     }
   ]);
-
+  
 }());

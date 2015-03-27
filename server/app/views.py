@@ -10,27 +10,30 @@ from wtforms import StringField, BooleanField, TextAreaField, SelectField
 from simplejson import dumps
 
 from app import app, db, lm, jwt #, cors 
-from .forms import Description, SelectForm, LoginForm  # ProjectViewForm, LoginForm, EditForm, PostForm
+from .forms import Description, SelectForm, LoginForm  # ProjectViewForm, EditForm, PostForm
 from .models import User
 from widgets import ChoicesSelect
 import alchemy_models as alch
 
 @jwt.authentication_handler
 def authenticate(username, password):
-    user = User(uid=username, passwd=password)
+    user = User(id=username, passwd=password)
     if user.active is not False:
         return user
 
 @jwt.user_handler
 def load_user(userid):
-    return User(uid=userid)
+    return User(id=userid)
 
-@app.route("/getUser/<id>")
-@cross_origin(headers=['Content-Type','Authorization'])
-@jwt_required()
-def getUser(id):
-    user = User(uid=id)
-    return dumps(user.get_user())
+@jwt.payload_handler
+def make_payload(user):
+    return {
+        'uid': user.id,
+        'name': user.name,
+        'mail': user.mail,
+        'roles': user.groups,
+        'active': user.active
+    }
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
