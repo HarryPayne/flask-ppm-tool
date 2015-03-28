@@ -45,8 +45,11 @@
     <script type="text/javascript" src="{{ url_for('static', filename='projectController.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='headerController.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='titleController.js') }}"></script>
-    <script type="text/javascript" src="static/login/login.js"></script>
     <script type="text/javascript" src="static/loginModal/loginModal.js"></script>
+    <script type="text/javascript" src="static/curate/curate.js"></script>
+    <script type="text/javascript" src="static/browse/browse.js"></script>
+    <script type="text/javascript" src="static/comment/comment.js"></script>
+    <script type="text/javascript" src="static/manage/manage.js"></script>
   </head>
   <body>
     <div id="page">
@@ -59,7 +62,7 @@
               <div id="top_menu" class="navbar-header navbar-right">
                 {% raw %}
                 <span ng-hide="currentUser"><a href="#" ng-click="login();">Login</a></span>
-                <span ng-show="currentUser">Logged in as {{ currentUser.name }}<a href="#" ng-click="logout();">Logout</a></span>
+                <span ng-show="currentUser">Logged in as {{ currentUser.name }} <a href="#" ng-click="logout();">Logout</a></span>
                 {% endraw %}
               </div>
             <div class="navbar-collapse collapse" style="clear: both;">

@@ -3,8 +3,7 @@
   var loginModalCtrl = angular.module('app.loginModal', [
     'ui.bootstrap',
     'angular-storage',
-    'angular-jwt',
-    'app.login'
+    'angular-jwt'
   ]);
   
   loginModalCtrl.controller('LoginModalCtrl', function($scope, UsersApi) {
@@ -136,6 +135,7 @@
         login: function() {
           loginModal();
         },
+        
         logout: function() {
           store.remove('jwt');
           delete $rootScope.currentUser;

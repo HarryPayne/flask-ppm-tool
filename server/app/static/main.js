@@ -3,12 +3,16 @@
   "use strict";
   
   var app = angular.module('PPTApp', [
-    'app.select', 
-    'app.project', 
+    'app.browse',
+    'app.comment',
+    'app.curate',
     'app.filter', 
     'app.header', 
-    'app.title', 
     'app.loginModal',
+    'app.manage',
+    'app.project', 
+    'app.select', 
+    'app.title', 
     'ui.router',
     'angular-jwt',
     'angular-storage'
