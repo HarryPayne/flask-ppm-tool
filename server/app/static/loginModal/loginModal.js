@@ -48,18 +48,20 @@
     function ($rootScope, $state, store, jwtHelper, loginModal) {
       $state.transitionTo('select');
 
-      $rootScope.$on('$stateChangeStart', function(e, to) {
-        var requiresLogin = to.data && to.data.requiresLogin;
+      $rootScope.$on('$stateChangeStart', function(e, toState, toParams, fromState, fromParams) {
+        var requiresLogin = toState.data && toState.data.requiresLogin;
         var noActiveToken = !store.get('jwt') || jwtHelper.isTokenExpired(store.get('jwt'));
         if (requiresLogin && noActiveToken) {
           e.preventDefault();
           
           loginModal()
           .then(function () {
-            return $state.go(to.name);
+            return $state.go(toState.name);
           })
           .catch(function () {
-            return $state.go('select');
+            if (fromState.name == "") {
+              return $state.go('select');
+            }
           });
         }
       });

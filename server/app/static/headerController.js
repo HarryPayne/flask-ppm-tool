@@ -19,7 +19,7 @@
         }
       };
       
-      $rootScope.$on("$stateChangeStart", function(e, toState){
+      $rootScope.$on("$stateChangeSuccess", function(e, toState){
         $scope.isActive = function(name) {
           return toState.name === name;
         }; 
