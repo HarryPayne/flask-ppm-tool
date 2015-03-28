@@ -7,6 +7,18 @@
     'app.login'
   ]);
   
+  loginModalCtrl.controller('LoginModalCtrl', function($scope, UsersApi) {
+
+    this.cancel = $scope.$dismiss;
+    
+    this.submit = function (email, password) {
+      UsersApi.login(email, password).then(function (user) {
+        $scope.$close(user);
+      });
+    };
+    
+  });
+
   loginModalCtrl.service('loginModal', ['$modal', '$rootScope', 'store', 'jwtHelper',
     function($modal, $rootScope, store, jwtHelper) {
 
@@ -32,18 +44,6 @@
     }
   ]);
   
-  loginModalCtrl.controller('LoginModalCtrl', function($scope, UsersApi) {
-
-    this.cancel = $scope.$dismiss;
-    
-    this.submit = function (email, password) {
-      UsersApi.login(email, password).then(function (user) {
-        $scope.$close(user);
-      });
-    };
-    
-  });
-
   loginModalCtrl.run(['$rootScope', '$state', 'store', 'jwtHelper',  'loginModal',
     function ($rootScope, $state, store, jwtHelper, loginModal) {
       $state.transitionTo('select');
@@ -119,4 +119,8 @@
     }
   ]);
   
+  window.onbeforeunload = function (event) {
+    store.remove("jwt");
+  };
+    
 }());

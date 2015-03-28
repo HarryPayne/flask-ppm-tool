@@ -8,7 +8,6 @@
     'app.filter', 
     'app.header', 
     'app.title', 
-    'app.login', 
     'app.loginModal',
     'ui.router',
     'angular-jwt',
