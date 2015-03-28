@@ -5,9 +5,14 @@
   var headerCtl = angular.module("app.header", ['ui.router']);
   
   headerCtl.controller('headerController', ['$scope', '$rootScope', '$state', 'projectListService',
-    function($scope, $rootScope, $state, projectListService) {
+   'loginStateService',
+    function($scope, $rootScope, $state, projectListService, loginStateService) {
       
       $scope.projectList = projectListService.model;
+      $scope.login = loginStateService.login;
+      $scope.logout = loginStateService.logout;
+      $scope.loggedIn = loginStateService.loggedIn;
+      
       $scope.jumpToPreviousProject = function() {
         if ($scope.projectList.previous > -1) {
            projectListService.jumpToProject($scope.projectList.previous);

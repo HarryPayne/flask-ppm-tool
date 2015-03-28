@@ -125,4 +125,40 @@
     store.remove("jwt");
   };
     
+  loginModalCtrl.factory("loginStateService", ['$rootScope', '$http', 'store', 'jwtHelper', 'loginModal',
+    function($rootScope, $http, store, jwtHelper, loginModal) {
+      
+      var service = {
+        loggedIn: function() {
+          return Boolean(store.get('jwt'));
+        },
+        
+        login: function() {
+          loginModal();
+        },
+        logout: function() {
+          store.remove('jwt');
+          delete $rootScope.currentUser;
+        },
+
+        SaveState: function () {
+          sessionStorage.loginStateService = angular.toJson(service.model);
+        },
+        
+        RestoreState: function () {
+          service.model = angular.fromJson(sessionStorage.loginStateService);
+        }
+      };
+      
+      $rootScope.$on("savestate, service.SaveState");
+      $rootScope.$on("restorestate, service.RestoreState");
+      
+      window.onbeforeunload = function (event) {
+        store.remove("jwt");
+      };
+    
+      return service;    
+    }
+  ]);
+
 }());
