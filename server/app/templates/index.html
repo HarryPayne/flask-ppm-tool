@@ -57,18 +57,21 @@
         <div class="navbar navbar-default" id="menu">
             <div class="navbar-header">
               <button class="btn btn-success navbar-toggle"></button>
-              <div id="logo"><h2>Project Portfolio Tool</h2></div>
+              <div id="logo" style="float:left;"><h2>Project Portfolio Tool</h2></div>
             </div>
-              <div id="top_menu" class="navbar-header navbar-right">
-                {% raw %}
+            <div class="navbar-collapse collapse">
+              {% raw %}
+              <span style="float:right;margin-top: 40px;">
                 <span ng-hide="currentUser"><a href="#" ng-click="login();">Login</a></span>
-                <span ng-show="currentUser">Logged in as {{ currentUser.name }} <a href="#" ng-click="logout();">Logout</a></span>
-                {% endraw %}
-              </div>
-            <div class="navbar-collapse collapse" style="clear: both;">
-              {% raw %} 
+                <span ng-show="currentUser">Logged in as {{ currentUser.name }}&nbsp;&nbsp;&nbsp;&nbsp;<a href="#" ng-click="logout();">Logout</a></span>
+              </span>
+              <br/>
+              {% endraw %}
+            </div>
+            <div class="navbar-collapse collapse">
+              {% raw %}
                 <ul class="nav navbar-nav navbar-right">
-                  <li role="presentation" ng-class="{active:isActive('comment')}" ng-show="currentUser.roles.indexOf('ContentProvider') > -1"><a ui-sref="comment">Comments</a></li>
+                  <li style="clear;both;" role="presentation" ng-class="{active:isActive('comment')}" ng-show="currentUser.roles.indexOf('ContentProvider') > -1"><a ui-sref="comment">Comments</a></li>
                   <li role="presentation" ng-class="{active:isActive('curate')}" ng-show="currentUser.roles.indexOf('Curator') > -1"><a ui-sref="curate">Curate</a></li>
                   <li role="presentation" ng-class="{active:isActive('manage')}" ng-show="currentUser.roles.indexOf('Manager') > -1"><a ui-sref="manage">Manage</a></li>
                   <li role="presentation" ng-class="{active:isActive('select')}"><a ui-sref="select">Select</a></li>

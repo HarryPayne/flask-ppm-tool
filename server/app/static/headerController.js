@@ -2,7 +2,9 @@
   
   "use strict";
   
-  var headerCtl = angular.module("app.header", ['ui.router']);
+  var headerCtl = angular.module("app.header", [
+    'ui.router'
+  ]);
   
   headerCtl.controller('headerController', ['$scope', '$rootScope', '$state', 'projectListService',
    'loginStateService',

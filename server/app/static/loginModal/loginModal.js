@@ -6,17 +6,18 @@
     'angular-jwt'
   ]);
   
-  loginModalCtrl.controller('LoginModalCtrl', function($scope, UsersApi) {
+  loginModalCtrl.controller('LoginModalCtrl', ['$scope', 'UsersApi', 'focus',
+    function($scope, UsersApi, focus) {
 
-    this.cancel = $scope.$dismiss;
-    
-    this.submit = function (email, password) {
-      UsersApi.login(email, password).then(function (user) {
-        $scope.$close(user);
-      });
-    };
-    
-  });
+      this.cancel = $scope.$dismiss;
+      
+      this.submit = function (email, password) {
+        UsersApi.login(email, password).then(function (user) {
+          $scope.$close(user);
+        });
+      };
+    }
+  ]);
 
   loginModalCtrl.service('loginModal', ['$modal', '$rootScope', 'store', 'jwtHelper',
     function($modal, $rootScope, store, jwtHelper) {
@@ -46,6 +47,10 @@
   loginModalCtrl.run(['$rootScope', '$state', 'store', 'jwtHelper',  'loginModal',
     function ($rootScope, $state, store, jwtHelper, loginModal) {
       $state.transitionTo('select');
+      
+      if (store.get('jwt') && !jwtHelper.isTokenExpired(store.get('jwt'))) {
+        $rootScope.currentUser = jwtHelper.decodeToken(store.get('jwt'));
+      }
 
       $rootScope.$on('$stateChangeStart', function(e, toState, toParams, fromState, fromParams) {
         var requiresLogin = toState.data && toState.data.requiresLogin;
