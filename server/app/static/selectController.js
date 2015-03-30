@@ -2,13 +2,32 @@
   
   "use strict";
   
-  app.controller('selectController', ['$scope', '$http', '$state', 'focus', 'projectListService',
-    'selectStateService',
-    function($scope, $http, $state, focus, projectListService, selectStateService){
+  var select = angular.module("app.select", [
+    "ui.router", 
+    'focusOn', 
+    'readMore'
+  ]);
+  
+  select.config(['$stateProvider', function($stateProvider) {
+    $stateProvider
+      .state('select', {
+        name: 'select',
+        url: '/',
+        controller: 'selectController',
+        templateUrl: '/selectView',
+        data: {
+          requiresLogin: false
+        }
+      });
+    }
+  ]);
+  
+  select.controller('selectController', ['$scope', 'focus', 
+    'projectListService', 'selectStateService',
+    function($scope, focus, projectListService, selectStateService){
       
       focus('focusMe');
       
-      projectListService.updateAllProjects();
       $scope.projectList = projectListService.model;  
       $scope.jumpToProject = projectListService.jumpToProject;
 
@@ -19,8 +38,18 @@
       });
     }
   ]);
+
+  select.run(['$rootScope', 'projectListService',
+    function($rootScope, projectListService){
+      $rootScope.$on('$stateChangeSuccess', function(e, toState, toParams, fromState, fromParams) {
+        if (toState.name == "select") {
+          projectListService.updateAllProjects();
+        }
+      });
+    }
+  ]);
   
-  app.filter("nameSearch", function() {
+  select.filter("nameSearch", function() {
     return function(projects, searchText, nameLogic, finalID) {
       /* return everything if no search string */
       if (!searchText) return projects;
@@ -31,41 +60,74 @@
       var wordslen = words.length;
       var bailout, j;
       
-      var out = [];
-      
-      for (var i = 0; i < projects.length; i++ ) {
-        if (nameLogic == "phrase") {
-          /* stop if no match */
-          if (!(projects[i].name+" "+projects[i].description).toLowerCase().match(st)) continue;
-        }
-        else if (nameLogic == "and") {
-          /* stop after the first non-match */
-          bailout = false;
-          for ( j = 0; j < wordslen; j++ ) {
-            if (!(projects[i].name+" "+projects[i].description).toLowerCase().match(words[j])) {
-              bailout = true;
-              break;
-            }
-          }
-          if (bailout) continue;
-        }
-        else if (nameLogic == "or") {
-          /* stop after the first match */
-          bailout = true;
-          for ( j = 0; j < wordslen; j++ ) {
-            if ((projects[i].name+" "+projects[i].description).toLowerCase().match(words[j])) {
-              bailout = false;
-              break;
-            }
-          }
-          if (bailout) continue;
-        }
-        if (finalID == "0" && projects[i].finalID != 0) continue;
-        out.push(projects[i]);
+      var out = projects;
+
+      if (finalID == "0") {
+        out = _.filter(out, function(project) {
+          return project.finalID == "0";
+        });
       }
       
+      if (nameLogic == "phrase") {
+        out = _.filter(out, function(project) {
+          return (project.name + " " + project.description).toLowerCase().match(st);
+        });
+      }
+      else if (nameLogic == "and") {
+        _.map(words, function(word) {
+          out = _.filter(out, function(project) {
+            return project.name.toLowerCase().match(this);
+          }, word);
+        });
+      }
+      else if (nameLogic == "or") {
+        var matches = [], partial;
+        _.map( words, function(word) {
+          partial = _.filter(out, function(project) {
+            return project.name.toLowerCase().match(this);
+          }, word);
+          matches = _.union(partial, matches);
+        });
+        out = _.intersection(out, matches);
+      }
+
       return out;
     };
   });
   
+  /**
+   *  Create a service for passing/saving/restoring select tab state
+   *  Following http://stackoverflow.com/questions/12940974/maintain-model-of
+   *       -scope-when-changing-between-views-in-angularjs/16559855#16559855
+   */
+  select.factory("selectStateService", ['$rootScope', 
+    function($rootScope) {
+      
+      var service = {
+        model: {
+          searchText: "",
+          nameLogic: "or",
+          finalID: "0"
+        },
+        
+        SaveState: function () {
+          sessionStorage.selectStateService = angular.toJson(service.model);
+        },
+        
+        RestoreState: function () {
+          service.model = angular.fromJson(sessionStorage.selectStateService);
+        }
+      };
+      
+      $rootScope.$on("savestate, service.SaveState");
+      $rootScope.$on("restorestate, service.RestoreState");
+      
+      window.onbeforeunload = function (event) {
+        $rootScope.$broadcast('savestate');
+      };
+    
+      return service;    
+    }
+  ]);
+
 }());

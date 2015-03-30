@@ -1,4 +1,4 @@
-<html ng-app="PPTApp" ng-cloak>
+<html ng-app="PPTApp" ng-controller="AppCtrl">
   <head ng-controller="TitleController">
     {% raw %}
     <title>{{ pageTitle }}</title>
@@ -13,6 +13,7 @@
 
     <link href="{{ url_for('static', filename='bootstrap.min.css') }}" rel="stylesheet" media="screen">
     <link href="{{ url_for('static', filename='angular-readmore-style.css') }}" rel="stylesheet" media="screen">
+    <link href="static/loginModal/loginModal.css" rel="stylesheet" media="screen">
     <style>     
       button.link {
         display:inline-block;
@@ -35,12 +36,21 @@
     <script type="text/javascript" src="{{ url_for('static', filename='angular-ui-router.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='readmore.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='ng-focus-on.min.js') }}"></script>
-    <script type="text/javascript" src="{{ url_for('static', filename='main.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='angular-storage.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='angular-jwt.min.js') }}"></script>
+    <script type="text/javascript" src="static/js/underscore-min.js"></script>
+
+    <script type="text/javascript" src="static/main.js"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='selectController.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='filterController.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='projectController.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='headerController.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='titleController.js') }}"></script>
+    <script type="text/javascript" src="static/loginModal/loginModal.js"></script>
+    <script type="text/javascript" src="static/curate/curate.js"></script>
+    <script type="text/javascript" src="static/browse/browse.js"></script>
+    <script type="text/javascript" src="static/comment/comment.js"></script>
+    <script type="text/javascript" src="static/manage/manage.js"></script>
   </head>
   <body>
     <div id="page">
@@ -48,19 +58,23 @@
         <div class="navbar navbar-default" id="menu">
             <div class="navbar-header">
               <button class="btn btn-success navbar-toggle"></button>
-              <div id="logo"><h2>Project Portfolio Tool</h2></div>
+              <div id="logo" style="float:left;"><h2>Project Portfolio Tool</h2></div>
             </div>
-              <div id="top_menu" class="navbar-right">
-                {% if current_user.is_anonymous() %}
-                    <a href="{{ url_for('login') }}">Login</a>
-                {% else %}
-                    Logged in as {{ current_user.name }}
-                    <a href="{{ url_for('logout')}}">Logout</a>
-                {% endif %}
-              </div>
-            <div class="navbar-collapse collapse" style="clear: both;">
-              {% raw %} 
+            <div class="navbar-collapse collapse">
+              {% raw %}
+              <span style="float:right;margin-top: 40px;">
+                <span ng-hide="currentUser"><a href="#" ng-click="login();">Login</a></span>
+                <span ng-show="currentUser">Logged in as {{ currentUser.name }}&nbsp;&nbsp;&nbsp;&nbsp;<a href="#" ng-click="logout();">Logout</a></span>
+              </span>
+              <br/>
+              {% endraw %}
+            </div>
+            <div class="navbar-collapse collapse">
+              {% raw %}
                 <ul class="nav navbar-nav navbar-right">
+                  <li style="clear;both;" role="presentation" ng-class="{active:isActive('comment')}" ng-show="currentUser.roles.indexOf('ContentProvider') > -1"><a ui-sref="comment">Comments</a></li>
+                  <li role="presentation" ng-class="{active:isActive('curate')}" ng-show="currentUser.roles.indexOf('Curator') > -1"><a ui-sref="curate">Curate</a></li>
+                  <li role="presentation" ng-class="{active:isActive('manage')}" ng-show="currentUser.roles.indexOf('Manager') > -1"><a ui-sref="manage">Manage</a></li>
                   <li role="presentation" ng-class="{active:isActive('select')}"><a ui-sref="select">Select</a></li>
                   <li role="presentation" ng-class="{active:isActive('filter')}"><a ui-sref="filter">Filter Builder</a></li>
                   <li role="presentation" ng-class="{active:isActive('browse')}"><a ui-sref="browse">Browse</a></li>

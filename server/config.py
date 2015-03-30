@@ -24,6 +24,10 @@ MAIL_PASSWORD = None
 # LDAP authentication
 LDAP_HOST = "localhost"
 LDAP_SEARCH_BASE = "ou=people,o=test"
+LDAP_GROUP_SEARCH_BASE = "ou=ZopeRoles,ou=groups,o=test"
+LDAP_OBJECTS_DN = "uid"
+LDAP_GROUP_OBJECT_FILTER = "objectclass=groupOfUniqueNames"
+LDAP_GROUP_MEMBERS_FIELD = "uniquemember"
 
 # administrator list
 ADMINS = ['you@example.com']

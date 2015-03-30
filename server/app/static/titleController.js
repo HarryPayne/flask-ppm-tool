@@ -2,13 +2,15 @@
   
   "use strict";
   
-  app.controller('TitleController', ['$scope', '$rootScope', '$state', 'projectListService',
+  var titleCtl = angular.module("app.title", ['ui.router']);
+  
+  titleCtl.controller('TitleController', ['$scope', '$rootScope', '$state', 'projectListService',
     function($scope, $rootScope, $state, projectListService){
 
       $scope.projectList = projectListService.model;
       $scope.pageTitle = "PPT: Select";
       
-      $rootScope.$on("$stateChangeStart", function(e, toState){
+      $rootScope.$on("$stateChangeSuccess", function(e, toState){
         if (toState.name == "select") {
           $scope.pageTitle = "PPT: Select";
         }
