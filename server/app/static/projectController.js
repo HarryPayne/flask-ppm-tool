@@ -73,12 +73,8 @@
       };
   
       service.getIDListFromAllProjects = function() {
-        var all = service.model.allProjects;
-        var projectIDList = [];
-        for ( var i = 0; i < all.length; i++ ) {
-          projectIDList.push(all[i].projectID);
-        }
-        return projectIDList;
+        return _.map(service.model.allProjects, function(item) {
+          return item.projectID;});
       };
   
       service.getAllProjectResults = function(results) {
@@ -110,7 +106,7 @@
             else {
               service.model.previous = -1;
             }
-            if (index < results.length) {
+            if (index < projectIDList.length) {
               service.model.next = projectIDList[index+1];
             }
             else {

@@ -28,7 +28,6 @@
       
       focus('focusMe');
       
-      //projectListService.updateAllProjects();
       $scope.projectList = projectListService.model;  
       $scope.jumpToProject = projectListService.jumpToProject;
 
@@ -40,13 +39,15 @@
     }
   ]);
 
-  select.run(function($rootScope, projectListService){
-    $rootScope.$on('$stateChangeSuccess', function(e, toState, toParams, fromState, fromParams) {
-      if (toState.name == "select") {
-        projectListService.updateAllProjects();
-      }
-    });
-  });
+  select.run(['$rootScope', 'projectListService',
+    function($rootScope, projectListService){
+      $rootScope.$on('$stateChangeSuccess', function(e, toState, toParams, fromState, fromParams) {
+        if (toState.name == "select") {
+          projectListService.updateAllProjects();
+        }
+      });
+    }
+  ]);
   
   select.filter("nameSearch", function() {
     return function(projects, searchText, nameLogic, finalID) {
@@ -59,39 +60,37 @@
       var wordslen = words.length;
       var bailout, j;
       
-      var out = [];
-      
-      for (var i = 0; i < projects.length; i++ ) {
-        if (nameLogic == "phrase") {
-          /* stop if no match */
-          if (!(projects[i].name+" "+projects[i].description).toLowerCase().match(st)) continue;
-        }
-        else if (nameLogic == "and") {
-          /* stop after the first non-match */
-          bailout = false;
-          for ( j = 0; j < wordslen; j++ ) {
-            if (!(projects[i].name+" "+projects[i].description).toLowerCase().match(words[j])) {
-              bailout = true;
-              break;
-            }
-          }
-          if (bailout) continue;
-        }
-        else if (nameLogic == "or") {
-          /* stop after the first match */
-          bailout = true;
-          for ( j = 0; j < wordslen; j++ ) {
-            if ((projects[i].name+" "+projects[i].description).toLowerCase().match(words[j])) {
-              bailout = false;
-              break;
-            }
-          }
-          if (bailout) continue;
-        }
-        if (finalID == "0" && projects[i].finalID != 0) continue;
-        out.push(projects[i]);
+      var out = projects;
+
+      if (finalID == "0") {
+        out = _.filter(out, function(project) {
+          return project.finalID == "0";
+        });
       }
       
+      if (nameLogic == "phrase") {
+        out = _.filter(out, function(project) {
+          return (project.name + " " + project.description).toLowerCase().match(st);
+        });
+      }
+      else if (nameLogic == "and") {
+        _.map(words, function(word) {
+          out = _.filter(out, function(project) {
+            return project.name.toLowerCase().match(this);
+          }, word);
+        });
+      }
+      else if (nameLogic == "or") {
+        var matches = [], partial;
+        _.map( words, function(word) {
+          partial = _.filter(out, function(project) {
+            return project.name.toLowerCase().match(this);
+          }, word);
+          matches = _.union(partial, matches);
+        });
+        out = _.intersection(out, matches);
+      }
+
       return out;
     };
   });
