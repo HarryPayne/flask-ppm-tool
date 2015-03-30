@@ -16,7 +16,7 @@
       controller: 'filterController',
       templateUrl: '/filterView',
       data: {
-        requiresLogin: true
+        requiresLogin: false
       }
     });
   });
