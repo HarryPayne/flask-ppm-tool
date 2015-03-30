@@ -125,10 +125,6 @@
     }
   ]);
   
-  window.onbeforeunload = function (event) {
-    store.remove("jwt");
-  };
-    
   loginModalCtrl.factory("loginStateService", ['$rootScope', '$http', 'store', 'jwtHelper', 'loginModal',
     function($rootScope, $http, store, jwtHelper, loginModal) {
       
@@ -158,10 +154,6 @@
       $rootScope.$on("savestate, service.SaveState");
       $rootScope.$on("restorestate, service.RestoreState");
       
-      window.onbeforeunload = function (event) {
-        store.remove("jwt");
-      };
-    
       return service;    
     }
   ]);

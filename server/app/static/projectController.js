@@ -82,13 +82,16 @@
       };
   
       service.getAllProjectResults = function(results) {
-        service.model.allProjects = results;
+        service.model.allProjects = results.data;
         var projectID;
         if ($stateParams.projectID) {
           projectID = $stateParams.projectID;
         }
         else if (service.model.allProjects.length) {
           projectID = service.model.allProjects[0].projectID;
+        }
+        else if (results.data.length) {
+          projectID = results.data[0].projectID;
         }
         else {
           alert("Can't find a project to display.");
@@ -98,9 +101,8 @@
           var projectIDList = service.getIDListFromAllProjects();
           var index = projectIDList.indexOf(projectID);
           if (index > -1) {
-            //service.model.list = all;
             service.model.index = index;
-            service.model.projectName = results[index].name;
+            service.model.projectName = results.data[index].name;
             service.model.description = "from url";
             if (index > 0) {
               service.model.previous = projectIDList[index-1];
@@ -119,7 +121,6 @@
             }
           }
         }
-        service.broadcast();
       };
       
       service.jumpToProjectInList = function(projectID, list) {
@@ -158,7 +159,7 @@
           $state.go('project.detail', {projectID: projectID});
           return;
         }
-        alert("Can't find a project to display.");
+        alert("Can't find a project to display.2");
       };
       
       service.init = function(projectID, description, projectName){
@@ -181,16 +182,13 @@
       service.updateAllProjects = function() {
         /* get fresh project list */
         $http.get('/getBriefDescriptions')
-          .success(function(results){
-            service.getAllProjectResults(results);
-          });
+          .then(service.getAllProjectResults);
       };
       
       service.RestoreState();
       if (typeof(service.model) == "undefined") {
         service.initModel();
-      };
-      service.updateAllProjects();
+      } 
   
       $rootScope.$on("savestate", service.SaveState);
       $rootScope.$on("restorestate", service.RestoreState);

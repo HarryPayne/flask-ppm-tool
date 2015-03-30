@@ -2,13 +2,13 @@
   
   "use strict";
   
-  var selectCtl = angular.module("app.select", [
+  var select = angular.module("app.select", [
     "ui.router", 
     'focusOn', 
     'readMore'
   ]);
   
-  selectCtl.config(['$stateProvider', function($stateProvider) {
+  select.config(['$stateProvider', function($stateProvider) {
     $stateProvider
       .state('select', {
         name: 'select',
@@ -22,13 +22,13 @@
     }
   ]);
   
-  selectCtl.controller('selectController', ['$scope', '$http', '$state', 'focus', 
+  select.controller('selectController', ['$scope', 'focus', 
     'projectListService', 'selectStateService',
-    function($scope, $http, $state, focus, projectListService, selectStateService){
+    function($scope, focus, projectListService, selectStateService){
       
       focus('focusMe');
       
-      projectListService.updateAllProjects();
+      //projectListService.updateAllProjects();
       $scope.projectList = projectListService.model;  
       $scope.jumpToProject = projectListService.jumpToProject;
 
@@ -39,8 +39,16 @@
       });
     }
   ]);
+
+  select.run(function($rootScope, projectListService){
+    $rootScope.$on('$stateChangeSuccess', function(e, toState, toParams, fromState, fromParams) {
+      if (toState.name == "select") {
+        projectListService.updateAllProjects();
+      }
+    });
+  });
   
-  selectCtl.filter("nameSearch", function() {
+  select.filter("nameSearch", function() {
     return function(projects, searchText, nameLogic, finalID) {
       /* return everything if no search string */
       if (!searchText) return projects;
@@ -93,7 +101,7 @@
    *  Following http://stackoverflow.com/questions/12940974/maintain-model-of
    *       -scope-when-changing-between-views-in-angularjs/16559855#16559855
    */
-  selectCtl.factory("selectStateService", ['$rootScope', 
+  select.factory("selectStateService", ['$rootScope', 
     function($rootScope) {
       
       var service = {
