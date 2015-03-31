@@ -9,7 +9,8 @@
         <li>
           <form name="myform" novalidate ng-submit="jumpToProject(projectID)">
             <label for="projectID"> Jump directly to project ID </label>
-            <input type="text" name="projectID" id="projectID" ng-model="projectID" focus-on="focusMe">
+            <input type="text" name="projectID" id="projectID" ng-model="projectID" 
+              placeholder="project ID" autofocus>
             &nbsp;
             <button type="submit"> Go </button>
           </form>
@@ -30,7 +31,8 @@
         <li>
           <form action="/projectView" method="post" novalidate>
             <label for="searchText"> Search in project names and descriptions </label>
-            <input type="text" name="searchText" id="searchText" ng-model="selectState.searchText"><br/>
+            <input type="text" name="searchText" id="searchText" ng-model="selectState.searchText"
+              placeholder="keywords or phrase"><br/>
     
             Join words: &nbsp;&nbsp;
             <input type="radio" name="nameLogic" id="nameLogic_or" value="or" ng-model="selectState.nameLogic">

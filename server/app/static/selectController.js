@@ -4,7 +4,6 @@
   
   var select = angular.module("app.select", [
     "ui.router", 
-    'focusOn', 
     'readMore'
   ]);
   
@@ -22,11 +21,9 @@
     }
   ]);
   
-  select.controller('selectController', ['$scope', 'focus', 
+  select.controller('selectController', ['$scope', 
     'projectListService', 'selectStateService',
-    function($scope, focus, projectListService, selectStateService){
-      
-      focus('focusMe');
+    function($scope, projectListService, selectStateService){
       
       $scope.projectList = projectListService.model;  
       $scope.jumpToProject = projectListService.jumpToProject;

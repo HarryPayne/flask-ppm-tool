@@ -1,7 +1,7 @@
 <html ng-app="PPTApp" ng-controller="AppCtrl">
   <head ng-controller="TitleController">
     {% raw %}
-    <title>{{ pageTitle }}</title>
+    <title ng-bind="pageTitle"> PPT </title>
     {% endraw %}
     <meta name="viewport" content="initial-scale=1.0">
     <style>
@@ -79,8 +79,8 @@
                   <li role="presentation" ng-class="{active:isActive('filter')}"><a ui-sref="filter">Filter Builder</a></li>
                   <li role="presentation" ng-class="{active:isActive('browse')}"><a ui-sref="browse">Browse</a></li>
                   <li role="presentation" ng-class="{active:isActive('project') || isActive('project.detail')}"><a ui-sref="project">Project</a></li>
-                  <li role="presentation" ng-class="{active:hasPrevious()}"><a href="#" onclick="return false;" ng-click="jumpToPreviousProject()">Previous</a></li>
-                  <li role="presentation" ng-class="{active:hasNext()}"><a href="#" onclick="return false;" ng-click="jumpToNextProject()">Next</a></li>
+                  <li role="presentation" ng-class="{active:hasPrevious()}"><a href="javascript:void(0);" ng-click="jumpToPreviousProject()">Previous</a></li>
+                  <li role="presentation" ng-class="{active:hasNext()}"><a href="javascript:void(0);" ng-click="jumpToNextProject()">Next</a></li>
                 </ul>
               {% endraw %}
             </div>
