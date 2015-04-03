@@ -6,8 +6,8 @@
     'angular-jwt'
   ]);
   
-  loginModalCtrl.controller('LoginModalCtrl', ['$scope', 'UsersApi', 'focus',
-    function($scope, UsersApi, focus) {
+  loginModalCtrl.controller('LoginModalCtrl', ['$scope', 'UsersApi', 
+    function($scope, UsersApi) {
 
       this.cancel = $scope.$dismiss;
       
