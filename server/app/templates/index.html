@@ -41,9 +41,13 @@
     <script type="text/javascript" src="static/js/underscore-min.js"></script>
 
     <script type="text/javascript" src="static/main.js"></script>
+    <script type="text/javascript" src="static/project/app.project.js"></script>
+    <script type="text/javascript" src="static/project/projectConfig.js"></script>
+    <script type="text/javascript" src="static/project/projectController.js"></script>
+    <script type="text/javascript" src="static/project/projectListService.js"></script>
+    <script type="text/javascript" src="static/project/projectModeService.js"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='selectController.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='filterController.js') }}"></script>
-    <script type="text/javascript" src="{{ url_for('static', filename='projectController.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='headerController.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='titleController.js') }}"></script>
     <script type="text/javascript" src="static/loginModal/loginModal.js"></script>
@@ -78,7 +82,7 @@
                   <li role="presentation" ng-class="{active:isActive('select')}"><a ui-sref="select">Select</a></li>
                   <li role="presentation" ng-class="{active:isActive('filter')}"><a ui-sref="filter">Filter Builder</a></li>
                   <li role="presentation" ng-class="{active:isActive('browse')}"><a ui-sref="browse">Browse</a></li>
-                  <li role="presentation" ng-class="{active:isActive('project') || isActive('project.detail')}"><a ui-sref="project">Project</a></li>
+                  <li role="presentation" ng-class="{active:isActive('project') || isActive('project.detail') || isActive('project.edit')}"><a ui-sref="project">Project</a></li>
                   <li role="presentation" ng-class="{active:hasPrevious()}"><a href="#" onclick="return false;" ng-click="jumpToPreviousProject()">Previous</a></li>
                   <li role="presentation" ng-class="{active:hasNext()}"><a href="#" onclick="return false;" ng-click="jumpToNextProject()">Next</a></li>
                 </ul>

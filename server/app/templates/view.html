@@ -1,42 +1,23 @@
 <html>
   <head></head>
   <body >
-    {% if not current_user.is_anonymous() %}
-        <a href="{{ url_for('projectEdit') }}">Edit</a>
-    {% endif %}
-
-    {% raw %}
-    <div ng-controller="projectController as proj">
+    <div ng-controller="Project as project">
+    {% raw %}  
+    <span style="float:right;margin-top: -26px;">
+      <span ng-show="project.currentMode() == 'view' && (project.currentUser.roles.indexOf('Curator') > -1 || project.currentUser.roles.indexOf('Manager') > -1)"><a ui-sref="project.edit">Edit this project</a></span>
+      <span ng-show="project.currentMode() == 'edit' && (project.currentUser.roles.indexOf('Curator') > -1 || project.currentUser.roles.indexOf('Manager') > -1)"><a ui-sref="project.detail">View this project</a></span>
+      &nbsp;&nbsp;&nbsp;&nbsp;
+      <span>Add a Comment</span>
+      &nbsp;&nbsp;&nbsp;&nbsp;
+      <span>Attach a File</span>
+    </span>
+      <h1>{{ project.projectList.projectID}}: {{project.projectList.projectName}}</h1>
       
-      <h1>{{ projectList.projectID}}: {{projectList.projectName}}</h1>
       <span>
-        <div name="descriptionHeaderItem" id="descriptionHeaderItem">
-          <h3>Description Attributes</h3>
-        </div>
+        <ng-include
+          src="project.viewUrl + project.projectList.projectID"></ng-include>
       </span>
     </div>
     {% endraw %}
-      <!--form>
-        <table>
-          {% for attr in attributes %}
-            {% if form[attr.name].data not in [0, None] %}
-            <tr>
-              <td style="text-align: right;vertical-align: top;">
-                {{ attr.label.capitalize() }}&nbsp;:&nbsp;
-              </td>
-              {% if attr.format == "multipleSelect" %}
-                {% for item in form[attr.name].choices %}
-                  {% if item[0] == form[attr.name].data %}
-                    <td>{{ item[1] }}</td>
-                  {% endif %}
-                {% endfor %}
-              {% else %}
-                <td>{{ form[attr.name].data }}</td>
-              {% endif %}
-            </tr>
-            {% endif %}
-          {% endfor %}
-        </table>
-      </form -->
   </body>
 </html>
