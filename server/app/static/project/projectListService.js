@@ -9,14 +9,15 @@
   function projectListService($rootScope, $http, $state, $stateParams) {
     var service = {
       "broadcast": broadcast,
-      "SaveState": SaveState,
-      "RestoreState": RestoreState,
       "initModel": initModel,
-      "getIDListFromAllProjects": getIDListFromAllProjects,
       "getAllProjectResults": getAllProjectResults,
-      "jumpToProjectInList": jumpToProjectInList,
-      "jumpToProject": jumpToProject,
+      "getIDListFromAllProjects": getIDListFromAllProjects,
       "init": init,
+      "initModel": initModel,
+      "jumpToProject": jumpToProject,
+      "jumpToProjectInList": jumpToProjectInList,
+      "RestoreState": RestoreState,
+      "SaveState": SaveState,
       "updateAllProjects": updateAllProjects
     };
   
@@ -34,33 +35,6 @@
         $rootScope.$broadcast("projectListBroadcast");
     };
   
-    function SaveState() {
-        sessionStorage.projectListService = angular.toJson(service.model);
-    };
-      
-    function RestoreState() {
-        service.model = angular.fromJson(sessionStorage.projectListService);
-        service.broadcast();
-    };
-
-    function initModel( ){
-      service.model = {
-        projectID: -1,
-        projectName: "",
-        list: [],
-        index: -1,
-        previous: -1,
-        next: -1,
-        description: "",
-        allProjects: []
-      };
-    };
-
-    function getIDListFromAllProjects() {
-      return _.map(service.model.allProjects, function(item) {
-        return item.projectID;});
-    };
-
     function getAllProjectResults(results) {
       service.model.allProjects = results.data;
       var projectID;
@@ -103,6 +77,41 @@
       }
     };
     
+    function getIDListFromAllProjects() {
+      return _.map(service.model.allProjects, function(item) {
+        return item.projectID;});
+    };
+
+    function init(projectID, description, projectName){
+      var allProjects = [];
+  
+      if (typeof(projectName) == "undefined") projectName = "";
+      if (typeof(description) == "undefined") description = "";
+      service.model = {
+        projectID: -1,
+        projectName: "",
+        list: [],
+        index: -1,
+        previous: -1,
+        next: -1,
+        description: description,
+        allProjects: allProjects
+      };
+    };
+    
+    function initModel( ){
+      service.model = {
+        projectID: -1,
+        projectName: "",
+        list: [],
+        index: -1,
+        previous: -1,
+        next: -1,
+        description: "",
+        allProjects: []
+      };
+    };
+
     function jumpToProjectInList(projectID, list) {
       var index = list.indexOf(projectID);
       service.model.index = index;
@@ -142,23 +151,15 @@
       alert("Can't find a project to display.2");
     };
     
-    function init(projectID, description, projectName){
-      var allProjects = [];
-  
-      if (typeof(projectName) == "undefined") projectName = "";
-      if (typeof(description) == "undefined") description = "";
-      service.model = {
-        projectID: -1,
-        projectName: "",
-        list: [],
-        index: -1,
-        previous: -1,
-        next: -1,
-        description: description,
-        allProjects: allProjects
-      };
+    function SaveState() {
+        sessionStorage.projectListService = angular.toJson(service.model);
     };
-    
+      
+    function RestoreState() {
+        service.model = angular.fromJson(sessionStorage.projectListService);
+        service.broadcast();
+    };
+
     function updateAllProjects() {
       /* get fresh project list */
       $http.get('/getBriefDescriptions')
