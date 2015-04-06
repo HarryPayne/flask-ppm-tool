@@ -1,7 +1,7 @@
 # coding: utf-8
 import sqlalchemy as sa
 from sqlalchemy import (Column, Date, DateTime, Enum, Float, Integer, SmallInteger, String, Table, Text, text,
-                        ForeignKey)
+                        ForeignKey, orm)
 from sqlalchemy_utils import ChoiceType
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.dialects.mysql.base import MEDIUMBLOB
@@ -85,21 +85,6 @@ t_distributionlist = Table(
 )
 
 
-t_driver = Table(
-    'driver', metadata,
-    Column('projectID', Integer, nullable=False, index=True, server_default=text("'0'")),
-    Column('driverID', Integer, nullable=False, index=True, server_default=text("'0'"))
-)
-
-
-class Driverlist(Base):
-    __tablename__ = 'driverlist'
-
-    driverID = Column(Integer, primary_key=True, server_default=text("'0'"))
-    driverDesc = Column(String(100), nullable=False, server_default=text("''"))
-    driverText = Column(Text, nullable=False)
-
-
 t_edit_log = Table(
     'edit_log', metadata,
     Column('user', String(100), nullable=False, index=True, server_default=text("''")),
@@ -164,6 +149,7 @@ class Maturitylist(Base):
                         primary_key=True, server_default=text("'0'"))
     maturityDesc = Column(String(100), nullable=False, server_default=text("''"))
     maturityText = Column(Text, nullable=False)
+    
 
 
 class Progresslist(Base):
@@ -212,14 +198,6 @@ class Sponsorlist(Base):
                        primary_key=True, server_default=text("'0'"))
     sponsorDesc = Column(String(100), nullable=False, server_default=text("''"))
     sponsorText = Column(Text, nullable=False)
-
-
-class Stakeholderlist(Base):
-    __tablename__ = 'stakeholderlist'
-
-    stakeholderID = Column(Integer, primary_key=True, server_default=text("'0'"))
-    stakeholderDesc = Column(String(100), nullable=False, server_default=text("''"))
-    stakeholderText = Column(Text, nullable=False)
 
 
 class Statuslist(Base):
@@ -296,13 +274,6 @@ class Visibilitylist(Base):
     visibilityText = Column(Text, nullable=False)
 
 
-t_child = Table(
-    'child', metadata,
-    Column('projectID', Integer, nullable=False, index=True, server_default=text("'0'")),
-    Column('childID', Integer, nullable=False, server_default=text("'0'"))
-)
-
-
 class Comment(Base):
     __tablename__ = 'comment'
 
@@ -343,6 +314,11 @@ for row in Finallist.query.all():
 INITIATIVE_CHOICES = []
 for row in Initiativelist.query.all():
     INITIATIVE_CHOICES.append((row.initiativeID, row.initiativeDesc))
+# t_stakeholder = Table(
+#     'stakeholder', metadata,
+#     Column('projectID', SmallInteger, nullable=False, index=True, server_default=text("'0'")),
+#     Column('stakeholderID', Integer, nullable=False, index=True, server_default=text("'0'"))
+# )
 
 class Description(Base):
     __tablename__ = 'description'
@@ -385,18 +361,64 @@ class Description(Base):
     lastModified = Column(DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"))
     lastModifiedBy = Column(String(100), nullable=False, server_default=text("''"))
     
-    # manually added relationships
-#     maturity = db.relationship(Maturitylist)
-#     maturity.info = {"choices": MATURITY_CHOICES}
-#     sponsor = db.relationship(Sponsorlist)
-#     sponsor.info = {"choices": SPONSOR_CHOICES}
-#     host = db.relationship(Hostlist)
-#     host.info = {"choices": HOST_CHOICES}
-#     technology = db.relationship(Technologylist)
-#     initiative = db.relationship(Initiativelist)
-#     type = db.relationship(Typelist)
-#     fundingsource = db.relationship(Fundingsourcelist)
-#     final = db.relationship(Finallist)
+    child = db.relationship('Child', backref='description')
+    driver = db.relationship('Driver', backref='description')
+    stakeholder = db.relationship('Stakeholder', backref='description')
+    
+#     stakeholder = orm.relationship('Stakeholder', backref='project')
+    
+# t_child = Table(
+#     'child', metadata,
+#     Column('projectID', Integer, nullable=False, index=True, server_default=text("'0'")),
+#     Column('childID', Integer, nullable=False, server_default=text("'0'"))
+# )
+
+# t_driver = Table(
+#     'driver', metadata,
+#     Column('projectID', Integer, nullable=False, index=True, server_default=text("'0'")),
+#     Column('driverID', Integer, nullable=False, index=True, server_default=text("'0'"))
+# )
+
+class Child(Base):
+    __tablename__ = 'child'
+    
+    projectID = Column(Integer, ForeignKey(Description.projectID), primary_key=True)
+    childID = Column(Integer)
+
+class Stakeholderlist(Base):
+    __tablename__ = 'stakeholderlist'
+
+    stakeholderID = Column(Integer, primary_key=True, server_default=text("'0'"))
+    stakeholderDesc = Column(String(100), nullable=False, server_default=text("''"))
+    stakeholderText = Column(Text, nullable=False)
+
+class Stakeholder(Base):
+    __tablename__ = 'stakeholder'
+    projectID = Column(Integer, ForeignKey(Description.projectID))
+    stakeholderID = Column(Integer, ForeignKey(Stakeholderlist.stakeholderID), primary_key=True)
+#    stakeholderlist = db.relationship(Stakeholderlist, uselist=False)
+
+class Driverlist(Base):
+    __tablename__ = 'driverlist'
+
+    driverID = Column(Integer, primary_key=True, server_default=text("'0'"))
+    driverDesc = Column(String(100), nullable=False, server_default=text("''"))
+    driverText = Column(Text, nullable=False)
+
+class Driver(Base):
+    __tablename__ = 'driver'
+    projectID = Column(Integer, ForeignKey(Description.projectID))
+    driverID = Column(Integer, ForeignKey(Driverlist.driverID), primary_key=True)
+#    driverlist = db.relationship(Driverlist, uselist=False, backref="driver")
+
+DRIVER_CHOICES = []
+for row in Driverlist.query.all():
+    DRIVER_CHOICES.append((row.driverID, row.driverDesc))
+
+STAKEHOLDER_CHOICES = []
+for row in Stakeholderlist.query.all():
+    STAKEHOLDER_CHOICES.append((row.stakeholderID, row.stakeholderDesc))
+
 
 class Disposition(Base):
     __tablename__ = 'disposition'
@@ -480,12 +502,6 @@ class Quarter(Base):
     quarterID = Column(Integer, primary_key=True, server_default=text("'0'"))
     quarterDesc = Column(String(12), nullable=False, server_default=text("''"))
 
-
-t_stakeholder = Table(
-    'stakeholder', metadata,
-    Column('projectID', SmallInteger, nullable=False, index=True, server_default=text("'0'")),
-    Column('stakeholderID', Integer, nullable=False, index=True, server_default=text("'0'"))
-)
 
 
 t_years = Table(

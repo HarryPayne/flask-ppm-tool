@@ -1,22 +1,29 @@
 <html>
   <head></head>
   <body >
-    <div ng-controller="Project as project">
     {% raw %}  
-    <span style="float:right;margin-top: -26px;">
-      <span ng-show="project.currentMode() == 'view' && (project.currentUser.roles.indexOf('Curator') > -1 || project.currentUser.roles.indexOf('Manager') > -1)"><a ui-sref="project.edit">Edit this project</a></span>
-      <span ng-show="project.currentMode() == 'edit' && (project.currentUser.roles.indexOf('Curator') > -1 || project.currentUser.roles.indexOf('Manager') > -1)"><a ui-sref="project.detail">View this project</a></span>
-      &nbsp;&nbsp;&nbsp;&nbsp;
-      <span>Add a Comment</span>
-      &nbsp;&nbsp;&nbsp;&nbsp;
-      <span>Attach a File</span>
-    </span>
-      <h1>{{ project.projectList.projectID}}: {{project.projectList.projectName}}</h1>
-      
-      <span>
-        <ng-include
-          src="project.viewUrl + project.projectList.projectID"></ng-include>
+    <div ng-controller="Project as project">
+      <span style="float:right;margin-top: -26px;">
+        <span ng-show="project.currentMode() == 'view' && (project.currentUser.roles.indexOf('Curator') > -1 || project.currentUser.roles.indexOf('Manager') > -1)"><a ui-sref="project.edit" ng-click="project.changeMode();">Edit this project</a></span>
+        <span ng-show="project.currentMode() == 'edit' && (project.currentUser.roles.indexOf('Curator') > -1 || project.currentUser.roles.indexOf('Manager') > -1)"><a ui-sref="project.detail" ng-click="project.changeMode();">View this project</a></span>
+        &nbsp;&nbsp;&nbsp;&nbsp;
+        <span>Add a Comment</span>
+        &nbsp;&nbsp;&nbsp;&nbsp;
+        <span>Attach a File</span>
       </span>
+      <h1>{{ project.projectList.projectID}}: {{project.projectList.projectName}}</h1>
+      <table ng-show="project.currentMode() == 'view'" class="table">
+        <tr 
+          ng-repeat="attr in project.attributes track by $index" 
+          ng-include src="'static/project/view-field.html'">
+        </tr>
+      </table>
+      <table ng-show="project.currentMode() == 'edit'" class="table">
+        <tr 
+          ng-repeat="attr in project.attributes track by $index" 
+          ng-include src="'static/project/edit-field.html'">
+        </tr>
+      </table>
     </div>
     {% endraw %}
   </body>

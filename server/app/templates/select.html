@@ -20,7 +20,7 @@
           <form name="myform2" novalidate ng-submit="jumpToProject(option.projectID)">
             <label> Jump directly to project </label> 
             <select name="projectID" ng-model="option"
-              ng-options="item.name for item in projectList.allProjects track by item.projectID"
+              ng-options="item.projectID+'. '+item.name for item in projectList.allProjects track by item.projectID"
               ng-change="jumpToProject(option.projectID)">
             </select>
             &nbsp;

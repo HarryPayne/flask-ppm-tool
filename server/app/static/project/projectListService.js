@@ -6,10 +6,9 @@
     .module("app.project")
     .factory("projectListService", projectListService);
   
-  function projectListService($rootScope, $http, $state, $stateParams) {
+  function projectListService($rootScope, $http, $state, $stateParams, $location) {
     var service = {
       "broadcast": broadcast,
-      "initModel": initModel,
       "getAllProjectResults": getAllProjectResults,
       "getIDListFromAllProjects": getIDListFromAllProjects,
       "init": init,
@@ -40,6 +39,9 @@
       var projectID;
       if ($stateParams.projectID) {
         projectID = $stateParams.projectID;
+      }
+      else if (Boolean(parseInt((_.last($location.path().split("/")))))) {
+        projectID = parseInt((_.last($location.path().split("/"))));
       }
       else if (service.model.allProjects.length) {
         projectID = service.model.allProjects[0].projectID;
@@ -151,15 +153,15 @@
       alert("Can't find a project to display.2");
     };
     
-    function SaveState() {
-        sessionStorage.projectListService = angular.toJson(service.model);
-    };
-      
     function RestoreState() {
         service.model = angular.fromJson(sessionStorage.projectListService);
         service.broadcast();
     };
 
+    function SaveState() {
+        sessionStorage.projectListService = angular.toJson(service.model);
+    };
+      
     function updateAllProjects() {
       /* get fresh project list */
       $http.get('/getBriefDescriptions')

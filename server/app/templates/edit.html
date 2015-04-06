@@ -4,7 +4,9 @@
     <div ng-controller="Project as project">
       <h3>Description Attributes</h3>
       <form method="POST" id="edit_form">
+        {% raw %}
         {{ form.hidden_tag() }}
+        {% endraw %}
         <table>
           {% for attr in attributes %}
             <tr>

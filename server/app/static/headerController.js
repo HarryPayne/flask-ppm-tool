@@ -18,11 +18,13 @@
       $scope.jumpToPreviousProject = function() {
         if ($scope.projectList.previous > -1) {
            projectListService.jumpToProject($scope.projectList.previous);
+           projectListService.broadcast();
         }
       };
       $scope.jumpToNextProject = function() {
         if ($scope.projectList.next > -1) {
            projectListService.jumpToProject($scope.projectList.next);
+           projectListService.broadcast();
         }
       };
       
@@ -31,10 +33,10 @@
           return toState.name === name;
         }; 
         $scope.hasPrevious = function() {
-          return ($scope.isActive("project") || $scope.isActive("project.detail")) && $scope.projectList.previous > -1;
+          return ($scope.isActive("project.edit") || $scope.isActive("project.detail")) && $scope.projectList.previous > -1;
         };
         $scope.hasNext = function() {
-          return ($scope.isActive("project") || $scope.isActive("project.detail")) && $scope.projectList.next > -1;
+          return ($scope.isActive("project.edit") || $scope.isActive("project.detail")) && $scope.projectList.next > -1;
         };
       });
 

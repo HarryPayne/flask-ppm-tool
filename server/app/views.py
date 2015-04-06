@@ -1,3 +1,4 @@
+from datetime import datetime
 from flask import (render_template, flash, redirect, session, url_for, request, 
                    g, jsonify, abort)
 from flask_jwt import jwt_required
@@ -8,7 +9,7 @@ from datetime import datetime
 from flask.ext.wtf import Form
 from wtforms.ext.sqlalchemy.orm import model_form
 from wtforms import StringField, BooleanField, TextAreaField, SelectField
-from simplejson import dumps
+from json import dumps
 
 from app import app, db, lm, jwt #, cors 
 from .forms import Description, SelectForm, LoginForm  # ProjectViewForm, EditForm, PostForm
@@ -126,23 +127,69 @@ def getProjectAttributesJSON(projectID):
 def getProjectAttributes(projectID):
     p = alch.Description.query.filter_by(projectID=projectID).first_or_404()
     form = Description(request.form, p)
-    #form.maturity.widget = ChoicesSelect(choices=alch.MATURITY_CHOICES)
-    #form.maturity.default = p.maturityID
-    #form.host.default = p.hostID
-    title = "PPT {id}: {name}".format(
-        id = p.projectID,
-        name = p.name
-        )
     attributes = []
+    index = 0
     for row in alch.Attributelist.query.filter_by(table="description").all():
+        if row.attributeName == "driver":
+            attr = form[row.attributeName]
+            values = [item.driverID for item in attr.data] 
+            attributes.append({"name": row.attributeName,
+                               "label": row.label,
+                               "format": row.format,
+                               "help": row.help,
+                               "multi": row.multipleValued,
+                               "value": values if attr.widget.multiple else values[0],
+                               "choices": attr.query_factory,
+                               "multiple": attr.widget.multiple,
+                               "index": index,
+                               "computed": row.computed})
+            index += 1
+            continue
+        elif row.attributeName == "child":
+            continue
+            attr = form[row.attributeName]
+            value = [{"driverID": item.driverlist.driverID, "driverDesc": item.driverlist.driverDesc} for item in attr.data]
+            attributes.append({"name": row.attributeName,
+                               "label": row.label,
+                               "format": row.format,
+                               "help": row.help,
+                               "multi": row.multipleValued,
+                               "value": value,
+                               "choices": attr.query_factory,
+                               "multiple": attr.widget.multiple,
+                               "index": index,
+                               "computed": row.computed})
+            index += 1
+            continue
+        elif row.attributeName == "stakeholder":
+            attr = form[row.attributeName]
+            values = [item.stakeholderID for item in attr.data]
+            attributes.append({"name": row.attributeName,
+                               "label": row.label,
+                               "format": row.format,
+                               "help": row.help,
+                               "multi": row.multipleValued,
+                               "value": values if attr.widget.multiple else values[0],
+                               "choices": attr.query_factory,
+                               "multiple": attr.widget.multiple,
+                               "index": index,
+                               "computed": row.computed})
+            index += 1
+            continue
+        if row.format == "dateRangeSelect" and form[row.attributeName].data:
+            value = form[row.attributeName].data.isoformat()
         attributes.append({"name": row.attributeName,
                            "label": row.label,
-                           "format": row.format})
-    return {"title": title,
-            "projectID": projectID,
-            "projectName": p.name,
-            #"form": form,
-            "attributes": attributes}
+                           "format": row.format,
+                           "help": row.help,
+                           "multi": row.multipleValued,
+                           "value": value if (row.format == "dateRangeSelect" and form[row.attributeName].data) else form[row.attributeName].data,
+                           "choices": form[row.attributeName].choices if row.format == "multipleSelect" and not form[row.attributeName].type == "ModelFieldList" else None,
+                           "multiple": form[row.attributeName].widget.multiple if row.format == "multipleSelect" and not form[row.attributeName].type == "ModelFieldList" else None,
+                           "index": index,
+                           "computed": row.computed})
+        index += 1
+    return attributes
 
 @app.route("/projectTemplate")
 def projectTemplate():
@@ -154,12 +201,7 @@ def projectView(projectID):
         p = alch.Description.query.filter_by(projectID=projectID).first_or_404()
         form = Description(request.form, p)
         form.projectID.raw_data = [form.projectID.data]
-        attributes = []
-        for row in alch.Attributelist.query.filter_by(table="description").all():
-            attributes.append({"name": row.attributeName,
-                               "label": row.label,
-                               "format": row.format,
-                               "help": row.help})
+        attributes = getProjectAttributes(projectID)
         return render_template("detail.html",
                                #title=attrs["title"],
                                projectID=projectID,
@@ -191,18 +233,16 @@ def projectEdit(projectID):
             id = p.projectID,
             name = p.name
             )
-        attributes = []
-        import pydevd
-        pydevd.settrace()
-        for row in alch.Attributelist.query.filter_by(table="description").all():
-            attributes.append({"name": row.attributeName,
-                               "label": row.label,
-                               "format": row.format,
-                               "help": row.help,
-                               "multi": row.multipleValued,
-                               "value": form[row.attributeName].data,
-                               "choices": form[row.attributeName].choices if form[row.type] == "SelectField" else None,
-                               "mulitple": form[row.attributeName].widget.multiple if form[row.type] == "SelectField" else None})
+        attributes = getProjectAttributes(projectID)
+#         for row in alch.Attributelist.query.filter_by(table="description").all():
+#             attributes.append({"name": row.attributeName,
+#                                "label": row.label,
+#                                "format": row.format,
+#                                "help": row.help,
+#                                "multi": row.multipleValued,
+#                                "value": form[row.attributeName].data,
+#                                "choices": form[row.attributeName].choices if form[row.type] == "SelectField" else None,
+#                                "multiple": form[row.attributeName].widget.multiple if form[row.type] == "SelectField" else None})
         return render_template("edit.html",
                                title=title,
                                projectID=projectID,
