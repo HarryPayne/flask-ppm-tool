@@ -189,7 +189,18 @@ def getProjectAttributes(projectID):
                            "index": index,
                            "computed": row.computed})
         index += 1
-    return attributes
+    
+    attributes.append({"name": row.attributeName,
+                       "label": row.label,
+                       "format": row.format,
+                       "help": row.help,
+                       "multi": row.multipleValued,
+                       "value": value if (row.format == "dateRangeSelect" and form[row.attributeName].data) else form[row.attributeName].data,
+                       "choices": form[row.attributeName].choices if row.format == "multipleSelect" and not form[row.attributeName].type == "ModelFieldList" else None,
+                       "multiple": form[row.attributeName].widget.multiple if row.format == "multipleSelect" and not form[row.attributeName].type == "ModelFieldList" else None,
+                       "index": index,
+                       "computed": True})
+    return {"projectID": projectID, "attributes": attributes}
 
 @app.route("/projectTemplate")
 def projectTemplate():

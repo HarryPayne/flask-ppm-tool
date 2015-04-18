@@ -24,6 +24,7 @@
     
     $scope.$on("projectDataBroadcast", function() {
       vm.attributes = projectDataService.attributes;
+      projectListService.updateProjectListProjectID(projectDataService.projectID, vm.projectList.list);
     });
     $scope.$on("projectListBroadcast", function() {
       vm.projectList = projectListService.model;

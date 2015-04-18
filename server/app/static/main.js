@@ -12,6 +12,7 @@
     'app.manage',
     'app.project', 
     'app.select', 
+    'app.stateLocation',
     'app.title', 
     'ui.router',
     'angular-jwt',

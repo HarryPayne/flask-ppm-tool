@@ -4,9 +4,9 @@
   
   angular
     .module("app.project")
-    .factory("projectListService", projectListService);
+    .factory("projectListService", ProjectListService);
   
-  function projectListService($rootScope, $http, $state, $stateParams, $location) {
+  function ProjectListService($rootScope, $http, $state, $stateParams, $location) {
     var service = {
       "broadcast": broadcast,
       "getAllProjectResults": getAllProjectResults,
@@ -17,7 +17,8 @@
       "jumpToProjectInList": jumpToProjectInList,
       "RestoreState": RestoreState,
       "SaveState": SaveState,
-      "updateAllProjects": updateAllProjects
+      "updateAllProjects": updateAllProjects,
+      "updateProjectListProjectID": updateProjectListProjectID
     };
   
     service.RestoreState();
@@ -52,31 +53,8 @@
       else {
         alert("Can't find a project to display.");
       }
-      if (projectID) {
-        service.model.projectID = projectID;
-        var projectIDList = service.getIDListFromAllProjects();
-        var index = projectIDList.indexOf(projectID);
-        if (index > -1) {
-          service.model.index = index;
-          service.model.projectName = results.data[index].name;
-          service.model.description = "from url";
-          if (index > 0) {
-            service.model.previous = projectIDList[index-1];
-          } 
-          else {
-            service.model.previous = -1;
-          }
-          if (index < projectIDList.length) {
-            service.model.next = projectIDList[index+1];
-          }
-          else {
-            service.model.next = -1;
-          }
-          if (typeof(service.model.list[0]) == "undefined") { /* ?? */
-            service.model.list = projectIDList;
-          }
-        }
-      }
+      var projectIDList = service.getIDListFromAllProjects();
+      updateProjectListProjectID(projectID, projectIDList);
     };
     
     function getIDListFromAllProjects() {
@@ -168,6 +146,36 @@
         .then(service.getAllProjectResults);
     };
     
+    function updateProjectListProjectID(projectID, list) {
+      if (projectID) {
+        service.model.projectID = projectID;
+        var index = list.indexOf(projectID);
+        if (index > -1) {
+          service.model.index = index;
+          service.model.description = "from url";
+          if (index > 0) {
+            service.model.previous = list[index-1];
+          } 
+          else {
+            service.model.previous = -1;
+          }
+          if (index < list.length) {
+            service.model.next = list[index+1];
+          }
+          else {
+            service.model.next = -1;
+          }
+          if (typeof(service.model.list[0]) == "undefined") { /* ?? */
+            service.model.list = list;
+          }
+        }
+        _.each(service.model.allProjects, function(proj){
+          if (proj.projectID == projectID) {
+            service.model.projectName = proj.name;
+          }
+        });
+      }
+    };
   }
     
 }());

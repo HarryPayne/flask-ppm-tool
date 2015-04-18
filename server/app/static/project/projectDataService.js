@@ -6,24 +6,27 @@
     .module("app.project")
     .factory("projectDataService", projectDataService);
   
-  function projectDataService($rootScope, $http, $state, $stateParams) {
+  function projectDataService($rootScope, $http, $state, $stateParams, $location) {
     var service = {
       "attributes": [],
       "broadcast": broadcast,
       "currentMode": currentMode,
       "changeMode": changeMode,
       "getProjectData": getProjectData,
+      "getProjectDataFromLocation": getProjectDataFromLocation,
       "projectID": $stateParams.projectID,
       "RestoreState": RestoreState,
       "SaveState": SaveState,
       "setProjectData": setProjectData,
-      "viewUrl": $state.current.data.viewUrl
+      "viewUrl": $state.current.data.viewUrl,
+      "url": $location.url
     };
     
     service.getProjectData(service.projectID);
     
     $rootScope.$on("savestate", service.SaveState);
     $rootScope.$on("restorestate", service.RestoreState);
+    $rootScope.$on("$locationChangeSuccess", service.getProjectDataFromLocation);
     
     return service;
 
@@ -54,6 +57,18 @@
         .then(service.setProjectData);
     }
     
+    function getProjectDataFromLocation() {
+      var url = $location.url();
+      if (url.substring(0,8) == "/project") {
+        var projectID = url.substring(9);
+        projectID = projectID.substring(0, projectID.indexOf("#"));
+        if (projectID) {
+          projectID = parseInt(projectID);
+          service.getProjectData(projectID);
+        }
+      }
+    };
+    
     function RestoreState() {
         service.attributes = angular.fromJson(sessionStorage.projectDataServiceAttributes);
         service.broadcast();
@@ -64,7 +79,8 @@
     };
       
     function setProjectData(result) {
-      service.attributes = result.data;
+      service.attributes = result.data.attributes;
+      service.projectID = parseInt(result.data.projectID);
       angular.forEach(service.attributes, function(attr){
         if (attr.format == "multipleSelect") {
           if (attr.multiple) {
