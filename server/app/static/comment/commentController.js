@@ -4,11 +4,11 @@
   
   angular
     .module("app.comment")
-    .controller("CommentCtrl", CommentCtrl);
+    .controller("Comment", Comment);
   
-  CommentCtrl.$inject = ["$scope", "$rootScope"];
+  Comment.$inject = ["$scope", "$rootScope"];
   
-  function CommentCtrl($scope, $rootScope) {
+  function Comment($scope, $rootScope) {
     var vm = this;
     
     vm.currentUser = $rootScope.currentUser;
