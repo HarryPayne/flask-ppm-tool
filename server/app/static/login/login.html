@@ -1,6 +1,6 @@
-<div class="login jumbotron center-block" ng-controller="LoginModalCtrl as LoginModalCtrl">
+<div class="login jumbotron center-block" ng-controller="Login as login">
   <h1>Login</h1>
-  <form role="form" ng-submit="LoginModalCtrl.submit(_username, _password)">
+  <form role="form" ng-submit="login.submit(_username, _password)">
     <div class="form-group">
       <label for="username">Username</label>
       <input type="text" class="form-control" ng-model="_username" id="username" placeholder="Username">
@@ -9,7 +9,7 @@
       <label for="password">Password</label>
       <input type="password" class="form-control" id="password" ng-model="_password" placeholder="Password">
     </div>
-    <button type="submit" class="btn btn-default" ng-click="LoginModalCtrl.submit(_username, _password)">Submit</button>
+    <button type="submit" class="btn btn-default" ng-click="login.submit(_username, _password)">Submit</button>
   </form>
-  <button ng-click="LoginModalCtrl.cancel()">Cancel</button>
+  <button ng-click="login.cancel()">Cancel</button>
 </div>

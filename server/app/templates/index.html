@@ -13,7 +13,7 @@
 
     <link href="{{ url_for('static', filename='bootstrap.min.css') }}" rel="stylesheet" media="screen">
     <link href="{{ url_for('static', filename='angular-readmore-style.css') }}" rel="stylesheet" media="screen">
-    <link href="static/loginModal/loginModal.css" rel="stylesheet" media="screen">
+    <link href="static/login/login.css" rel="stylesheet" media="screen">
     <style>     
       button.link {
         display:inline-block;
@@ -103,6 +103,14 @@
     <script type="text/javascript" src="static/filter/filterConfig.js"></script>
     <script type="text/javascript" src="static/filter/filterController.js"></script>
 
+    <script type="text/javascript" src="static/login/app.login.js"></script>
+    <script type="text/javascript" src="static/login/loginApiService.js"></script>
+    <script type="text/javascript" src="static/login/loginConfig.js"></script>
+    <script type="text/javascript" src="static/login/loginController.js"></script>
+    <script type="text/javascript" src="static/login/loginModalService.js"></script>
+    <script type="text/javascript" src="static/login/loginRun.js"></script>
+    <script type="text/javascript" src="static/login/loginStateService.js"></script>
+
     <script type="text/javascript" src="static/manage/app.manage.js"></script>
     <script type="text/javascript" src="static/manage/manageConfig.js"></script>
     <script type="text/javascript" src="static/manage/manageController.js"></script>
@@ -127,6 +135,5 @@
 
     <script type="text/javascript" src="{{ url_for('static', filename='headerController.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='titleController.js') }}"></script>
-    <script type="text/javascript" src="static/loginModal/loginModal.js"></script>
   </body>
 </html>

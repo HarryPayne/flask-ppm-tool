@@ -8,7 +8,7 @@
     'app.curate',
     'app.filter', 
     'app.header', 
-    'app.loginModal',
+    'app.login',
     'app.manage',
     'app.project', 
     'app.select', 
