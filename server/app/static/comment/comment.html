@@ -1,1 +1,11 @@
-<h2>Manage Comments</h2>
+<html>
+  <head></head>
+  <body >
+    <div ng-controller="CommentCtrl as comment">
+      <h2>Manage Comments</h2>
+      
+      User: {{comment.currentUser.name}}<br/>
+      Roles: {{comment.currentUser.roles}}
+    </div>
+  </body>
+</html>
