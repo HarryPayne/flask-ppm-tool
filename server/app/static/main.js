@@ -14,9 +14,7 @@
     'app.select', 
     'app.stateLocation',
     'app.title', 
-    'ui.router',
-    'angular-jwt',
-    'angular-storage'
+    'ui.router'
   ]);
   
   app.config(['$urlRouterProvider', 'jwtInterceptorProvider', '$httpProvider',
