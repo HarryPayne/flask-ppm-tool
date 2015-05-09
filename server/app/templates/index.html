@@ -49,7 +49,7 @@
             <div class="navbar-collapse collapse">
               {% raw %}
                 <ul class="nav navbar-nav navbar-right">
-                  <li style="clear;both;" role="presentation" ng-class="{active:isActive('comment')}" ng-show="currentUser.roles.indexOf('ContentProvider') > -1"><a ui-sref="comment">Comments</a></li>
+                  <li style="clear;both;" role="presentation" ng-class="{active:isActive('comment')}" ng-show="currentUser.roles.indexOf('ContentProvider') > -1 || currentUser.roles.indexOf('Curator') > -1"><a ui-sref="comment">Comments</a></li>
                   <li role="presentation" ng-class="{active:isActive('curate')}" ng-show="currentUser.roles.indexOf('Curator') > -1"><a ui-sref="curate">Curate</a></li>
                   <li role="presentation" ng-class="{active:isActive('manage')}" ng-show="currentUser.roles.indexOf('Manager') > -1"><a ui-sref="manage">Manage</a></li>
                   <li role="presentation" ng-class="{active:isActive('select')}"><a ui-sref="select">Select</a></li>
@@ -99,6 +99,10 @@
     <script type="text/javascript" src="static/curate/curateConfig.js"></script>
     <script type="text/javascript" src="static/curate/curateController.js"></script>
 
+    <script type="text/javascript" src="static/filter/app.filter.js"></script>
+    <script type="text/javascript" src="static/filter/filterConfig.js"></script>
+    <script type="text/javascript" src="static/filter/filterController.js"></script>
+
     <script type="text/javascript" src="static/manage/app.manage.js"></script>
     <script type="text/javascript" src="static/manage/manageConfig.js"></script>
     <script type="text/javascript" src="static/manage/manageController.js"></script>
@@ -121,7 +125,6 @@
     <script type="text/javascript" src="static/stateLocation/stateHistoryFactory.js"></script>
     <script type="text/javascript" src="static/stateLocation/stateLocationService.js"></script>
 
-    <script type="text/javascript" src="{{ url_for('static', filename='filterController.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='headerController.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='titleController.js') }}"></script>
     <script type="text/javascript" src="static/loginModal/loginModal.js"></script>

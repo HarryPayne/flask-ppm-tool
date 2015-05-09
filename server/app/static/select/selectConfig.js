@@ -12,7 +12,7 @@
         name: "select",
         url: "/",
         controller: "Select",
-        templateUrl: "/selectView",
+        templateUrl: "/static/select/select.html",
         data: {
           requiresLogin: false
         }
