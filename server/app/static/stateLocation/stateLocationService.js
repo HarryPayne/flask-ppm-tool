@@ -28,7 +28,7 @@
         return;
       }
       service.preventCall.push("stateChange");
-      return $state.go(entry.name, entry.params, {location: false});
+      $state.go(entry.name, entry.params, {location: false});
     };
     
     function stateChange() {
@@ -45,7 +45,7 @@
       var url = "/" + prefix + projectID + "#" + (service.guid().substr(0, 8));
       stateHistoryService.set(url, entry);
       service.preventCall.push('locationChange');
-      return $location.url(url);
+      $location.url(url);
     }
     
     function guid() {

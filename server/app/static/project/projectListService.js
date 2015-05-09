@@ -26,11 +26,11 @@
       service.initModel();
     } 
 
+    return service;    
+
     $rootScope.$on("savestate", service.SaveState);
     $rootScope.$on("restorestate", service.RestoreState);
     
-    return service;    
-
     function broadcast() {
         $rootScope.$broadcast("projectListBroadcast");
     };
