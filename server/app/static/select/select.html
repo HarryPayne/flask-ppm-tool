@@ -51,7 +51,7 @@
             <dl ng-repeat="project in filtered = (select.projectList.allProjects | nameSearch:select.selectState.searchText:select.selectState.nameLogic:select.selectState.finalID)"> 
               <dt>{{project.projectID}}. <a href="#" onclick="return false;" ng-click="select.jumpToProject(project.projectID)">{{project.name}}</a>
               </dt>
-              <dd read-more ng-model="project.description" words="false" length="200" style="width: 800px;"></dd>
+              <dd read-more content="{{ project.description }}" limit="200" style="width: 800px;"></dd>
             </dl>
           </div>
         </li>
