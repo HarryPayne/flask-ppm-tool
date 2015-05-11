@@ -12,7 +12,7 @@
           name: 'project',
           url: '/project',
           conroller: 'projectController',
-          templateUrl:"/projectTemplate",
+          templateUrl:"static/project/view.html",
           data: {
             requiresLogin: false
           }
@@ -23,7 +23,7 @@
           controller: function ($stateParams) {
             console.log($stateParams);
           },
-          templateUrl: "/projectTemplate",
+          templateUrl: "static/project/view.html",
           data: {
             requiresLogin: false,
             viewUrl: "/projectView/"
@@ -35,9 +35,9 @@
           controller: function ($stateParams) {
             console.log($stateParams);
           },
-          templateUrl: "/projectTemplate",
+          templateUrl: "static/project/edit.html",
           data: {
-            requiresLogin: false,
+            requiresLogin: true,
             viewUrl: "/projectEdit/"
           }
       });
