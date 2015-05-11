@@ -6,6 +6,7 @@
     .module("app.project")
     .factory("projectDataService", projectDataService);
   
+  projectDataService.$inject = ["$rootScope", "$http", "$state", "$stateParams", "$location"]
   function projectDataService($rootScope, $http, $state, $stateParams, $location) {
     var service = {
       "attributes": [],
@@ -53,8 +54,10 @@
     }
     
     function getProjectData(projectID) {
-      $http.get("getProjectAttributes/" + projectID)
-        .then(service.setProjectData);
+      if (projectID) {
+        $http.get("getProjectAttributes/" + projectID)
+          .then(service.setProjectData);
+      }
     }
     
     function getProjectDataFromLocation() {

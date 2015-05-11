@@ -6,9 +6,9 @@
     .module("app.project")
     .controller("Project", Project);
   
-  Project.$inject = ["$scope", "$rootScope", "projectDataService", "projectListService"];
+  Project.$inject = ["$rootScope", "$stateParams", "projectDataService", "projectListService", "stateLocationService"];
   
-  function Project($scope, $rootScope, projectDataService, projectListService){
+  function Project($rootScope, $stateParams, projectDataService, projectListService, stateLocationService){
     var vm = this;
     
     vm.ls = projectListService;
@@ -16,17 +16,26 @@
     vm.currentUser = $rootScope.currentUser;
     
     vm.ds = projectDataService;
+    if (!$stateParams.projectID) {
+      var projectID = vm.projectList.list[0];
+      $stateParams.projectID = vm.ds.projectID = projectID;
+      stateLocationService.stateChange();
+    }
+    if (!vm.ds.projectID) {
+      vm.ds.projectID = $stateParams.projectID;
+      vm.ds.getProjectData(projectID);
+    }
 
     vm.attributes = projectDataService.attributes;
     vm.currentMode = projectDataService.currentMode;
     vm.viewUrl = projectDataService.viewUrl;
     vm.changeMode = projectDataService.changeMode;
     
-    $scope.$on("projectDataBroadcast", function() {
+    $rootScope.$on("projectDataBroadcast", function() {
       vm.attributes = projectDataService.attributes;
       projectListService.updateProjectListProjectID(projectDataService.projectID, vm.projectList.list);
     });
-    $scope.$on("projectListBroadcast", function() {
+    $rootScope.$on("projectListBroadcast", function() {
       vm.projectList = projectListService.model;
       vm.ds.getProjectData(vm.projectList.projectID);
     });
