@@ -6,15 +6,15 @@
     .module("app.title")
     .controller("Title", Title);
   
-  Title.$inject = ["$rootScope", "$state", "projectListService"];
+  Title.$inject = ["$scope", "$state", "projectListService"];
   
-  function Title($rootScope, $state, projectListService){
+  function Title($scope, $state, projectListService){
     var vm = this;
     
-    vm.projectList = projectListService.model;
+    vm.projectList = projectListService.getModel;
     vm.pageTitle = "PPT: Select";
     
-    $rootScope.$on("$stateChangeSuccess", function(e, toState){
+    $scope.$on("$stateChangeSuccess", function(e, toState){
       if (toState.name == "select") {
         vm.pageTitle = "PPT: Select";
       }
@@ -25,20 +25,16 @@
         vm.pageTitle = "PPT: Browse";
       }
       else if (toState.name == "project") {
-        vm.pageTitle = vm.projectList.projectID + ". " + vm.projectList.projectName;
+        vm.pageTitle = vm.projectList().projectID + ". " + vm.projectList().projectName;
       }  
       else if (toState.name == "project.detail") {
-        vm.pageTitle = vm.projectList.projectID + ". " + vm.projectList.projectName;
+        vm.pageTitle = vm.projectList().projectID + ". " + vm.projectList().projectName;
       }  
       else {
         vm.pageTitle = "PPT: Select";
       }      
     });
 
-    $rootScope.$on("projectListBroadcast", function() {
-      vm.projectList = projectListService.model;
-    });
-  
   }
 
 }());

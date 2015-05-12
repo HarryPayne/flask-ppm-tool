@@ -3,7 +3,7 @@
   <body>
     <h3>Select a Project</h3>
 
-    <div ng-controller="Select as select">
+    <div>
       <ul>
         <li>
           <form name="myform" novalidate ng-submit="select.jumpToProject(projectID)">
@@ -19,7 +19,7 @@
           <form name="myform2" novalidate ng-submit="select.jumpToProject(option.projectID)">
             <label> Jump directly to project </label> 
             <select name="projectID" ng-model="option"
-              ng-options="item.projectID+'. '+item.name for item in select.projectList.allProjects track by item.projectID"
+              ng-options="item.projectID+'. '+item.name for item in select.projectList().allProjects track by item.projectID"
               ng-change="select.jumpToProject(option.projectID)">
             </select>
             &nbsp;
@@ -48,7 +48,7 @@
 
           <div ng-show="select.selectState.searchText">
             <p>There are {{ filtered.length }} matches:</p>
-            <dl ng-repeat="project in filtered = (select.projectList.allProjects | nameSearch:select.selectState.searchText:select.selectState.nameLogic:select.selectState.finalID)"> 
+            <dl ng-repeat="project in filtered = (select.projectList().allProjects | nameSearch:select.selectState.searchText:select.selectState.nameLogic:select.selectState.finalID)"> 
               <dt>{{project.projectID}}. <a href="#" onclick="return false;" ng-click="select.jumpToProject(project.projectID)">{{project.name}}</a>
               </dt>
               <dd read-more content="{{ project.description }}" limit="200" style="width: 800px;"></dd>

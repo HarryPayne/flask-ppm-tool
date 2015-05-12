@@ -1,7 +1,6 @@
 <html>
   <head></head>
   <body>
-    <div ng-controller="Filter as filter">
       <h3>Build a Project Selection Filter</h3>
   
       <p>
@@ -14,9 +13,7 @@
       </p>
       
       <p>
-        {{filter.projectList.list.length}} projects selected
+        {{filter.projectList().list.length}} projects selected
       </p>
-    </div>
-
   </body>
 </html>

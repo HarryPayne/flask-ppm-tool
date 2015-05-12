@@ -13,6 +13,7 @@
         url: "/browse",
         templateUrl: "/static/browse/browse.html",
         controller: "Browse",
+        controllerAs: "browse",
         data: {
           requiresLogin: false
         }

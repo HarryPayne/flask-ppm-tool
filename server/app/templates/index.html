@@ -1,4 +1,4 @@
-<html ng-app="PPTApp" ng-controller="AppCtrl">
+<html ng-app="PPT" ng-controller="PPTCtrl as app">
   <head ng-controller="Title as title">
     {% raw %}
     <title ng-bind="title.pageTitle"> PPT </title>
@@ -40,8 +40,8 @@
             <div class="navbar-collapse collapse">
               {% raw %}
               <span style="float:right;margin-top: 40px;">
-                <span ng-hide="header.currentUser"><a href="#" ng-click="header.login();">Login</a></span>
-                <span ng-show="header.currentUser">Logged in as {{ header.currentUser.name }}&nbsp;&nbsp;&nbsp;&nbsp;<a href="#" ng-click="header.logout();">Logout</a></span>
+                <span ng-hide="currentUser"><a href="#" ng-click="header.login();">Login</a></span>
+                <span ng-show="currentUser">Logged in as {{ currentUser.name }}&nbsp;&nbsp;&nbsp;&nbsp;<a href="#" ng-click="header.logout();">Logout</a></span>
               </span>
               <br/>
               {% endraw %}
@@ -49,9 +49,9 @@
             <div class="navbar-collapse collapse">
               {% raw %}
                 <ul class="nav navbar-nav navbar-right">
-                  <li style="clear;both;" role="presentation" ng-class="{active:header.isActive('comment')}" ng-show="header.currentUser.roles.indexOf('ContentProvider') > -1 || header.currentUser.roles.indexOf('Curator') > -1"><a ui-sref="comment">Comments</a></li>
-                  <li role="presentation" ng-class="{active:header.isActive('curate')}" ng-show="header.currentUser.roles.indexOf('Curator') > -1"><a ui-sref="curate">Curate</a></li>
-                  <li role="presentation" ng-class="{active:header.isActive('manage')}" ng-show="header.currentUser.roles.indexOf('Manager') > -1"><a ui-sref="manage">Manage</a></li>
+                  <li style="clear;both;" role="presentation" ng-class="{active:header.isActive('comment')}" ng-show="currentUser.roles.indexOf('ContentProvider') > -1 || currentUser.roles.indexOf('Curator') > -1"><a ui-sref="comment">Comments</a></li>
+                  <li role="presentation" ng-class="{active:header.isActive('curate')}" ng-show="currentUser.roles.indexOf('Curator') > -1"><a ui-sref="curate">Curate</a></li>
+                  <li role="presentation" ng-class="{active:header.isActive('manage')}" ng-show="currentUser.roles.indexOf('Manager') > -1"><a ui-sref="manage">Manage</a></li>
                   <li role="presentation" ng-class="{active:header.isActive('select')}"><a ui-sref="select">Select</a></li>
                   <li role="presentation" ng-class="{active:header.isActive('filter')}"><a ui-sref="filter">Filter Builder</a></li>
                   <li role="presentation" ng-class="{active:header.isActive('browse')}"><a ui-sref="browse">Browse</a></li>
@@ -87,6 +87,9 @@
     <script type="text/javascript" src="static/vendor/underscore/underscore-min.js"></script>
 
     <script type="text/javascript" src="static/app.js"></script>
+    <script type="text/javascript" src="static/app.config.js"></script>
+    <script type="text/javascript" src="static/app.controller.js"></script>
+    <script type="text/javascript" src="static/app.run.js"></script>
 
     <script type="text/javascript" src="static/browse/app.browse.js"></script>
     <script type="text/javascript" src="static/browse/browseConfig.js"></script>
@@ -129,7 +132,7 @@
     <script type="text/javascript" src="static/select/selectConfig.js"></script>
     <script type="text/javascript" src="static/select/selectController.js"></script>
     <script type="text/javascript" src="static/select/selectNameSearchFilter.js"></script>
-    <script type="text/javascript" src="static/select/selectRun.js"></script>
+    <!--script type="text/javascript" src="static/select/selectRun.js"></script-->
     <script type="text/javascript" src="static/select/selectStateService.js"></script>
 
     <script type="text/javascript" src="static/stateLocation/app.stateLocation.js"></script>

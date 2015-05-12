@@ -6,7 +6,8 @@
     .module("app.project")
     .factory("projectDataService", projectDataService);
   
-  projectDataService.$inject = ["$rootScope", "$http", "$state", "$stateParams", "$location"]
+  projectDataService.$inject = ["$rootScope", "$http", "$state", "$stateParams", "$location"];
+  
   function projectDataService($rootScope, $http, $state, $stateParams, $location) {
     var service = {
       "attributes": [],
@@ -14,6 +15,7 @@
       "currentMode": currentMode,
       "changeMode": changeMode,
       "getProjectData": getProjectData,
+      "getAttributes": getAttributes,
       "getProjectDataFromLocation": getProjectDataFromLocation,
       "projectID": $stateParams.projectID,
       "RestoreState": RestoreState,
@@ -24,13 +26,12 @@
     };
     
     service.getProjectData(service.projectID);
+    return service;
     
     $rootScope.$on("savestate", service.SaveState);
     $rootScope.$on("restorestate", service.RestoreState);
     $rootScope.$on("$locationChangeSuccess", service.getProjectDataFromLocation);
     
-    return service;
-
     function broadcast() {
         $rootScope.$broadcast("projectDataBroadcast");
     };
@@ -45,12 +46,16 @@
     }
     
     function changeMode() {
-      if (this.currentMode == "view") {
+      if (this.currentMode() == "view") {
         $state.go("project.edit", {projectID: service.projectID});
       }
       else {
         $state.go("project.detail", {projectID: this.projectID});
       }
+    }
+    
+    function getAttributes() {
+      return service.attributes;
     }
     
     function getProjectData(projectID) {
@@ -67,7 +72,7 @@
         projectID = projectID.substring(0, projectID.indexOf("#"));
         if (projectID) {
           projectID = parseInt(projectID);
-          service.getProjectData(projectID);
+          //service.getProjectData(projectID);
         }
       }
     };
@@ -107,8 +112,9 @@
         }
       });
       service.SaveState();
-      service.broadcast();
+      //service.broadcast();
     }
+
   }
 
 }());

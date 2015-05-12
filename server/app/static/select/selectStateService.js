@@ -24,9 +24,11 @@
     $rootScope.$on("savestate, service.SaveState");
     $rootScope.$on("restorestate, service.RestoreState");
     
+    /*
     window.onbeforeunload = function (event) {
       $rootScope.$broadcast('savestate');
     };
+    */
   
     function SaveState() {
       sessionStorage.selectStateService = angular.toJson(service.model);

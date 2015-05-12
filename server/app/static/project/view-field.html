@@ -1,27 +1,27 @@
-  <td style="width: 12%; text-align: right;" ng-if="attr.value"><label ng-bind="project.attributes[attr.index].label"></label></td>
+  <td style="width: 12%; text-align: right;" ng-if="attr.value"><label ng-bind="project.attributes()[attr.index].label"></label></td>
   <td ng-if="attr.value">
     <span ng-switch on="attr.format">
       <span ng-switch-when="string">
-        <span ng-bind="project.attributes[attr.index].value"></span>
+        <span ng-bind="project.attributes()[attr.index].value"></span>
       </span>
       <span ng-switch-when="textArea">
         <span
-          ng-bind="project.attributes[attr.index].value"></span>
+          ng-bind="project.attributes()[attr.index].value"></span>
       </span>
       <span ng-switch-when="multipleSelect">
         <span ng-if="attr.multiple">
-          <span ng-repeat="item in project.attributes[attr.index].value track by $index">
+          <span ng-repeat="item in project.attributes()[attr.index].value track by $index">
             <span 
-              ng-bind="project.attributes[attr.index].value[$index][1]">
+              ng-bind="project.attributes()[attr.index].value[$index][1]">
               </span><span ng-if="!$last">, </span>
           </span>
         </span>
         <span ng-if="!attr.multiple">
-          <span ng-bind="project.attributes[attr.index].value[1]"></span>
+          <span ng-bind="project.attributes()[attr.index].value[1]"></span>
         </span>
       </span>
       <span ng-switch-when="dateRangeSelect">
-        <span ng-bind="project.attributes[attr.index].value"></span>
+        <span ng-bind="project.attributes()[attr.index].value"></span>
       </span>
     </span>
   </td>

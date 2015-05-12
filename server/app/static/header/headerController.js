@@ -12,7 +12,7 @@
     var vm = this;
     
     vm.currentUser = $rootScope.currentUser;
-    vm.projectList = projectListService.model;
+    vm.projectList = projectListService.getModel;
 
     vm.loggedIn = loginStateService.loggedIn;
     vm.login = loginStateService.login;
@@ -31,29 +31,25 @@
       }; 
   
       function hasNext() {
-        return (vm.isActive("project.edit") || vm.isActive("project.detail")) && vm.projectList.next > -1;
+        return (vm.isActive("project.edit") || vm.isActive("project.detail")) && vm.projectList().next > -1;
       };
   
       function hasPrevious() {
-        return (vm.isActive("project.edit") || vm.isActive("project.detail")) && vm.projectList.previous > -1;
+        return (vm.isActive("project.edit") || vm.isActive("project.detail")) && vm.projectList().previous > -1;
       };
     });
     
-    $rootScope.$on("projectListBroadcast", function() {
-      vm.projectList = projectListService.model;
-    });
-
     function jumpToNextProject() {
-      if (vm.projectList.next > -1) {
-         projectListService.jumpToProject(vm.projectList.next);
-         projectListService.broadcast();
+      if (vm.projectList().next > -1) {
+         projectListService.jumpToProject(vm.projectList().next);
+         //projectListService.broadcast();
       }
     };
 
     function jumpToPreviousProject () {
-      if (vm.projectList.previous > -1) {
-         projectListService.jumpToProject(vm.projectList.previous);
-         projectListService.broadcast();
+      if (vm.projectList().previous > -1) {
+         projectListService.jumpToProject(vm.projectList().previous);
+         //projectListService.broadcast();
       }
     };
   }

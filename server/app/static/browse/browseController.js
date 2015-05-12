@@ -12,11 +12,8 @@
     var vm = this;
     
     vm.ls = projectListService;
-    vm.projectList = vm.ls.model;
+    vm.projectList = vm.ls.getModel;
 
-    $scope.$on("projectListBroadcast", function() {
-      vm.projectList = projectListService.model;
-    });
   }
   
 }());

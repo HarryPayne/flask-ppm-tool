@@ -11,7 +11,8 @@
       .state('project', {
           name: 'project',
           url: '/project',
-          conroller: 'projectController',
+          controller: "Project",
+          controllerAs: "project",
           templateUrl:"static/project/view.html",
           data: {
             requiresLogin: false
@@ -23,6 +24,7 @@
           controller: function ($stateParams) {
             console.log($stateParams);
           },
+          controllerAs: "project",
           templateUrl: "static/project/view.html",
           data: {
             requiresLogin: false,
@@ -35,7 +37,8 @@
           controller: function ($stateParams) {
             console.log($stateParams);
           },
-          templateUrl: "static/project/edit.html",
+          controllerAs: "project",
+          templateUrl: "static/project/view.html",
           data: {
             requiresLogin: true,
             viewUrl: "/projectEdit/"

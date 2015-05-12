@@ -5,13 +5,15 @@
   angular
     .module("app.project")
     .factory("projectListService", ProjectListService);
+    
+  ProjectListService.$inject = ["$rootScope", "$http", "$state", "$stateParams", "$location"];
   
   function ProjectListService($rootScope, $http, $state, $stateParams, $location) {
     var service = {
       "broadcast": broadcast,
       "getAllProjectResults": getAllProjectResults,
       "getIDListFromAllProjects": getIDListFromAllProjects,
-      "init": init,
+      "getModel": getModel,
       "initModel": initModel,
       "jumpToProject": jumpToProject,
       "jumpToProjectInList": jumpToProjectInList,
@@ -26,13 +28,13 @@
       service.initModel();
     } 
 
-    return service;    
-
     $rootScope.$on("savestate", service.SaveState);
     $rootScope.$on("restorestate", service.RestoreState);
     
+    return service;    
+
     function broadcast() {
-        $rootScope.$broadcast("projectListBroadcast");
+        $rootScope.$broadcast("projectListUpdated");
     };
   
     function getAllProjectResults(results) {
@@ -55,6 +57,7 @@
       }
       var projectIDList = service.getIDListFromAllProjects();
       updateProjectListProjectID(projectID, projectIDList);
+      service.model.description = "none";
     };
     
     function getIDListFromAllProjects() {
@@ -62,21 +65,8 @@
         return item.projectID;});
     };
 
-    function init(projectID, description, projectName){
-      var allProjects = [];
-  
-      if (typeof(projectName) == "undefined") projectName = "";
-      if (typeof(description) == "undefined") description = "";
-      service.model = {
-        projectID: -1,
-        projectName: "",
-        list: [],
-        index: -1,
-        previous: -1,
-        next: -1,
-        description: description,
-        allProjects: allProjects
-      };
+    function getModel() {
+      return service.model;
     };
     
     function initModel( ){
@@ -92,6 +82,21 @@
       };
     };
 
+    function jumpToProject(projectID) {
+      projectID = parseInt(projectID);
+      var index = service.model.list.indexOf(projectID);
+      if (service.model.list.indexOf(projectID) > -1) {
+        service.jumpToProjectInList(projectID, service.model.list);
+        return;
+      }
+      var projectIDlist = service.getIDListFromAllProjects();
+      if (projectIDlist.indexOf(projectID) > -1) {
+        service.jumpToProjectInList(projectID, projectIDlist);
+        return;
+      }
+      alert("Can't find a project to display.");
+    };
+    
     function jumpToProjectInList(projectID, list) {
       var index = list.indexOf(projectID);
       service.model.index = index;
@@ -112,25 +117,9 @@
       index = projectIDList.indexOf(projectID);
       service.model.projectName = service.model.allProjects[index].name;
       $state.go('project.detail', {projectID: projectID});
+      service.broadcast();
     };
 
-    function jumpToProject(projectID) {
-      projectID = parseInt(projectID);
-      var index = service.model.list.indexOf(projectID);
-      if (service.model.list.indexOf(projectID) > -1) {
-        service.jumpToProjectInList(projectID, service.model.list);
-        $state.go('project.detail', {projectID: projectID});
-        return;
-      }
-      var projectIDlist = service.getIDListFromAllProjects();
-      if (projectIDlist.indexOf(projectID) > -1) {
-        service.jumpToProjectInList(projectID, projectIDlist);
-        $state.go('project.detail', {projectID: projectID});
-        return;
-      }
-      alert("Can't find a project to display.2");
-    };
-    
     function RestoreState() {
         service.model = angular.fromJson(sessionStorage.projectListService);
         service.broadcast();
@@ -141,7 +130,6 @@
     };
       
     function updateAllProjects() {
-      /* get fresh project list */
       $http.get('/getBriefDescriptions')
         .then(service.getAllProjectResults);
     };
@@ -152,7 +140,6 @@
         var index = list.indexOf(projectID);
         if (index > -1) {
           service.model.index = index;
-          service.model.description = "from url";
           if (index > 0) {
             service.model.previous = list[index-1];
           } 

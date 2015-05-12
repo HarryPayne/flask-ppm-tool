@@ -12,6 +12,7 @@
     var service = {
       "preventCall": [],
       "locationChange": locationChange,
+      "getProjectIDFromLocation": getProjectIDFromLocation,
       "stateChange": stateChange,
       "guid": guid,
       "s4": s4
@@ -24,27 +25,43 @@
         return;
       }
       var location = $location.url();
+      if (location.substring(0,9) == "/project/" && Boolean($stateParams.projectID) == false) {
+        var projectID = parseInt(_.first(_.last(location.split("/")).split("#")));
+        if (projectID) {
+          $stateParams.projectID = projectID;
+        }
+      }
       var entry = stateHistoryService.get(location);
-      if (entry == null && !(location == "/project/" && $stateParams.projectID == "")) {
+      if (entry == null) {
         return;
       }
       service.preventCall.push("stateChange");
+      service.preventCall.push("locationChange");
       $state.go(entry.name, entry.params, {location: false});
     };
     
-    function stateChange() {
+    function getProjectIDFromLocation() {
+      var location = $location.url();
+      if (location.substring(0,9) == "/project/") {
+        var projectID = parseInt(_.first(_.last(location.split("/")).split("#")));
+        if (projectID) {
+          $stateParams.projectID = projectID;
+          return projectID;
+        }
+      }
+      return null;
+    }
+    
+    function stateChange(projectID) {
       if (service.preventCall.pop("stateChange") != null){
         return;
       }
+      var params = $state.params.projectID == "" ? {projectID: projectID} : $state.params;
       var entry = {
         "name": $state.current.name,
-        "params": $state.params
+        "params": params
       };
       var prefix = $state.current.name == "select" ? "" : $state.current.name;
-      if (prefix.substring(0,8) == "project." && !$stateParams.projectID) {
-        //service.preventCall.push('locationChange');
-        return;
-      }
       prefix = prefix.substring(0,8) == "project." ? prefix.substring(0, prefix.indexOf(".")) : prefix;
       var projectID = prefix == "project" ? "/" + $stateParams.projectID : "";
       var url = "/" + prefix + projectID + "#" + (service.guid().substr(0, 8));

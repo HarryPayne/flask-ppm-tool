@@ -15,6 +15,7 @@
         url: "/curate",
         templateUrl: "/static/curate/curate.html",
         controller: "Curate",
+        controllerAs: "curate",
         data: {
           requiresLogin: true
         }

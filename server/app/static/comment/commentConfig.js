@@ -13,6 +13,7 @@
         url: "/comment",
         templateUrl: "/static/comment/comment.html",
         controller: "Comment",
+        controllerAs: "comment",
         data: {
           requiresLogin: true
         }
