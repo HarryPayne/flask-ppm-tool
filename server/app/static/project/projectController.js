@@ -19,25 +19,6 @@
 
     initialLoad();
 
-    /*
-    if (!$stateParams.projectID && vm.projectList().list.length) {
-      var list = vm.projectList().list;
-      var projectID = vm.projectList().index > -1 ? list[vm.projectList().index] : list[0];
-      projectListService.updateProjectListProjectID(projectID, list);
-      //$stateParams.projectID = vm.ds.projectID = projectID;
-      stateLocationService.stateChange(projectID);
-    }
-    else if (!$stateParams.projectID && vm.projectList().list.length == 0) {
-      var projectID = stateLocationService.getProjectIDFromLocation();
-      vm.projectList().list = [projectID];
-      vm.projectList().description = "projectID = " + projectID + ";";
-      $stateParams.projectID = projectID;
-      projectListService.updateProjectListProjectID(projectID, vm.projectList().list);
-      stateLocationService.stateChange();
-    }
-    */
-    
-    
     function initialLoad() {
       if (!$stateParams.projectID) {
         var projectID = stateLocationService.getProjectIDFromLocation();

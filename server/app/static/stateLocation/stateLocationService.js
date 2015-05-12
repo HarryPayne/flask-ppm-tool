@@ -6,18 +6,21 @@
     .module("app.stateLocation")
     .factory("stateLocationService", stateLocationService);
   
-  stateLocationService.$inject = ['$location', '$state', '$stateParams', 'stateHistoryService'];
-  
-  function stateLocationService($location, $state, $stateParams, stateHistoryService){
+  stateLocationService.$inject = ["$rootScope", "$location", "$state", "$stateParams", "stateHistoryService", "projectListService"];
+ 
+  function stateLocationService($rootScope, $location, $state, $stateParams, stateHistoryService, projectListService){
     var service = {
       "preventCall": [],
       "locationChange": locationChange,
       "getProjectIDFromLocation": getProjectIDFromLocation,
+      "saveState": saveState,
       "stateChange": stateChange,
       "guid": guid,
       "s4": s4
     };
     
+    //$rootScope.$on("$locationChangeSuccess", service.saveState);
+
     return service;
     
     function locationChange() {
@@ -25,10 +28,10 @@
         return;
       }
       var location = $location.url();
-      if (location.substring(0,9) == "/project/" && Boolean($stateParams.projectID) == false) {
+      if (location.substring(0,9) == "/project/") {
         var projectID = parseInt(_.first(_.last(location.split("/")).split("#")));
         if (projectID) {
-          $stateParams.projectID = projectID;
+          projectListService.updateProjectListProjectID(projectID);
         }
       }
       var entry = stateHistoryService.get(location);
@@ -36,7 +39,7 @@
         return;
       }
       service.preventCall.push("stateChange");
-      service.preventCall.push("locationChange");
+      //service.preventCall.push("locationChange");
       $state.go(entry.name, entry.params, {location: false});
     };
     
@@ -56,6 +59,10 @@
       if (service.preventCall.pop("stateChange") != null){
         return;
       }
+      if (!$state.current.name) {
+        return;
+      }
+      projectID = projectListService.getModel().projectID;
       var params = $state.params.projectID == "" ? {projectID: projectID} : $state.params;
       var entry = {
         "name": $state.current.name,
@@ -63,11 +70,23 @@
       };
       var prefix = $state.current.name == "select" ? "" : $state.current.name;
       prefix = prefix.substring(0,8) == "project." ? prefix.substring(0, prefix.indexOf(".")) : prefix;
-      var projectID = prefix == "project" ? "/" + $stateParams.projectID : "";
+      var projectID = prefix == "project" ? "/" + projectID : "";
       var url = "/" + prefix + projectID + "#" + (service.guid().substr(0, 8));
       stateHistoryService.set(url, entry);
       service.preventCall.push('locationChange');
       $location.url(url);
+    }
+    
+    function saveState() {
+      if ($state.current.name) {
+        var entry = {
+          "name": $state.current.name,
+          "params": $state.params
+        };
+        var url = $location.url();
+        stateHistoryService.set(url, entry);
+      }
+      
     }
     
     function guid() {

@@ -129,6 +129,9 @@
     
     function updateProjectListProjectID(projectID, list) {
       if (projectID) {
+        if (typeof list == "undefined") {
+          list = service.model.list;
+        }
         service.model.projectID = projectID;
         var index = list.indexOf(projectID);
         if (index > -1) {
