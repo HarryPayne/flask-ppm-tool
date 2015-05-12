@@ -10,7 +10,7 @@
   
   function updateProjectList($rootScope, projectListService) {
     $rootScope.$on("$stateChangeSuccess", function(e, toState, toParams, fromState, fromParams) {
-      if (toState.name == "select" || projectListService.model.allProjects.length == 0) {
+      if (toState.name == "select" ) {
         projectListService.updateAllProjects();
       }
     });

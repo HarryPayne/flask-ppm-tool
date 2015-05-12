@@ -42,14 +42,12 @@
     function jumpToNextProject() {
       if (vm.projectList().next > -1) {
          projectListService.jumpToProject(vm.projectList().next);
-         //projectListService.broadcast();
       }
     };
 
     function jumpToPreviousProject () {
       if (vm.projectList().previous > -1) {
          projectListService.jumpToProject(vm.projectList().previous);
-         //projectListService.broadcast();
       }
     };
   }

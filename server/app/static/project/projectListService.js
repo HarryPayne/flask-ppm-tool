@@ -10,7 +10,6 @@
   
   function ProjectListService($rootScope, $http, $state, $stateParams, $location) {
     var service = {
-      "broadcast": broadcast,
       "getAllProjectResults": getAllProjectResults,
       "getIDListFromAllProjects": getIDListFromAllProjects,
       "getModel": getModel,
@@ -33,10 +32,6 @@
     
     return service;    
 
-    function broadcast() {
-        $rootScope.$broadcast("projectListUpdated");
-    };
-  
     function getAllProjectResults(results) {
       service.model.allProjects = results.data;
       var projectID;
@@ -117,12 +112,10 @@
       index = projectIDList.indexOf(projectID);
       service.model.projectName = service.model.allProjects[index].name;
       $state.go('project.detail', {projectID: projectID});
-      service.broadcast();
     };
 
     function RestoreState() {
         service.model = angular.fromJson(sessionStorage.projectListService);
-        service.broadcast();
     };
 
     function SaveState() {

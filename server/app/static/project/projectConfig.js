@@ -28,7 +28,6 @@
           templateUrl: "static/project/view.html",
           data: {
             requiresLogin: false,
-            viewUrl: "/projectView/"
           }
       })
       .state('project.edit', {
@@ -41,7 +40,6 @@
           templateUrl: "static/project/view.html",
           data: {
             requiresLogin: true,
-            viewUrl: "/projectEdit/"
           }
       });
   };

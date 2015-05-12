@@ -11,7 +11,6 @@
   function projectDataService($rootScope, $http, $state, $stateParams, $location) {
     var service = {
       "attributes": [],
-      "broadcast": broadcast,
       "currentMode": currentMode,
       "changeMode": changeMode,
       "getProjectData": getProjectData,
@@ -26,16 +25,11 @@
     };
     
     service.getProjectData(service.projectID);
-    return service;
     
     $rootScope.$on("savestate", service.SaveState);
     $rootScope.$on("restorestate", service.RestoreState);
     $rootScope.$on("$locationChangeSuccess", service.getProjectDataFromLocation);
     
-    function broadcast() {
-        $rootScope.$broadcast("projectDataBroadcast");
-    };
-  
     function currentMode() {
       if ($state.current.name == "project.detail") {
         return "view";
@@ -72,14 +66,13 @@
         projectID = projectID.substring(0, projectID.indexOf("#"));
         if (projectID) {
           projectID = parseInt(projectID);
-          //service.getProjectData(projectID);
+          service.getProjectData(projectID);
         }
       }
     };
     
     function RestoreState() {
         service.attributes = angular.fromJson(sessionStorage.projectDataServiceAttributes);
-        service.broadcast();
     };
 
     function SaveState() {
@@ -112,9 +105,9 @@
         }
       });
       service.SaveState();
-      //service.broadcast();
     }
 
+    return service;
   }
 
 }());
