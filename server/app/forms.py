@@ -1,6 +1,7 @@
-from wtforms_alchemy import ModelForm, ModelFormField
+from wtforms_alchemy import ModelForm, ModelFormField, ModelFieldList
 from wtforms import (StringField, BooleanField, TextAreaField, SelectField, 
-                     TextField, PasswordField, validators)
+                     TextField, PasswordField, validators, FormField)
+from wtforms.ext.sqlalchemy.fields import QuerySelectField, QuerySelectMultipleField
 from wtforms.validators import DataRequired, Length
 import alchemy_models as alch
 
@@ -20,6 +21,20 @@ class ModelForm(BaseModelForm):
         return db.session
 
 # Forms for select field choices
+class ChildForm(ModelForm):
+    class Meta:
+        model = alch.Child
+ 
+class DriverlistForm(ModelForm): 
+    class Meta:
+        model= alch.Driverlist
+              
+class DriverForm(ModelForm):
+    class Meta:
+        model = alch.Driver
+    
+    driverlist = ModelFormField(DriverlistForm)
+        
 class FinallistForm(ModelForm):
     class Meta:
         model = alch.Finallist
@@ -47,6 +62,16 @@ class SponsorlistForm(ModelForm):
         model = alch.Sponsorlist
         only = ["sponsorID", "sponsorDesc"]
 
+class StakeholderlistForm(ModelForm):
+    class Meta:
+        model = alch.Stakeholderlist
+        
+class StakeholderForm(ModelForm):
+    class Meta:
+        model = alch.Stakeholder
+    
+    stakeholderlist = ModelFormField(StakeholderlistForm)
+        
 class TechnologylistForm(ModelForm):
     class Meta:
         model = alch.Technologylist
@@ -55,7 +80,10 @@ class TechnologylistForm(ModelForm):
 class TypelistForm(ModelForm): 
     class Meta:
         model = alch.Typelist
-                      
+
+def maturity_choices():
+    return alch.Maturitylist.query.all()
+
 # Primary table forms
 class Description(ModelForm):
     class Meta:
@@ -75,9 +103,13 @@ class Description(ModelForm):
 #     type = ModelFormField(TypelistForm)
 #     fundingsource = ModelFormField(FundingsourcelistForm)
 #     final = ModelFormField(FinallistForm)
-    stakeholder = StringField(u"Stakeholders")
-    driver = StringField(u"Driver")
-    child = StringField(u"Child")
+
+#    maturity = QuerySelectField(query_factory=maturity_choices, allow_blank=True)
+    stakeholder = QuerySelectMultipleField(query_factory=alch.STAKEHOLDER_CHOICES, allow_blank=False)
+    #stakeholder.info["choices"] = stakeholder_choices()
+    #driver = ModelFieldList(FormField(DriverForm))
+    driver = QuerySelectMultipleField(query_factory=alch.DRIVER_CHOICES)
+    child = ModelFieldList(FormField(ChildForm))
         
 class SelectForm(Form):
     projectID = SelectField(u"Jump directly to project ", coerce=int)

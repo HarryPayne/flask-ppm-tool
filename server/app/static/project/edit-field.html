@@ -1,0 +1,49 @@
+  <td style="width: 12%; text-align: right;"><label ng-bind="project.attributes[attr.index].label"></label></td>
+  <td>
+    <span ng-switch on="attr.format">
+      <span ng-switch-when="string">
+        <p ng-bind="project.attributes[attr.index].help"></p>
+        <input size="60"
+          ng-model="project.attributes[attr.index].value"
+          type="text"
+         />
+      </span>
+      <span ng-switch-when="textArea">
+        <p ng-bind="project.attributes[attr.index].help"></p>
+        <textarea rows="8" cols="80"
+          ng-model="project.attributes[attr.index].value"
+          ng-bind="project.attributes[attr.index].value"></textarea>
+      </span>
+      <span ng-switch-when="multipleSelect">
+        <table style="width: 100%">
+          <tr>
+            <td ng-if="attr.multiple" style="width: 25%; vertical-align: top;">
+              <select multiple size="8" style="float:left"
+                ng-model="project.attributes[attr.index].value"
+                ng-options="item[1] for item in project.attributes[attr.index].choices track by item[0]"></select>
+            </td>
+            <td ng-if="!attr.multiple" style="width: 25%; vertical-align: top;">
+              <select 
+                ng-model="project.attributes[attr.index].value"
+                ng-options="item[1] for item in project.attributes[attr.index].choices track by item[0]"></select>
+            </td>
+            <td style="width: 60%; vertical-align: top;">
+              <p ng-bind="project.attributes[attr.index].help"></p>        
+            </td>
+          </tr>
+        </table>
+      </span>
+      <span ng-switch-when="dateRangeSelect">
+        <p ng-bind="project.attributes[attr.index].help"></p>
+        <span ng-if="attr.computed == 1">
+          <span ng-bind="project.attributes[attr.index].value"></span>
+        </span>
+        <span ng-if="attr.computed == 0">
+          <input
+            ng-model="project.attributes[attr.index].value"
+            type="text"
+           />
+        </span>
+      </span>
+    </span>
+  </td>

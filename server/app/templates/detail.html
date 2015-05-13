@@ -1,0 +1,42 @@
+<html>
+  <head></head>
+  <body >
+    <div name="descriptionHeaderItem" id="descriptionHeaderItem">
+      <h3>Description Attributes</h3>
+    </div>
+    <form>
+      <table>
+        {% for attr in attributes %}
+          {% if attr.value not in [0, None] %}
+          <tr>
+            <td style="text-align: right;vertical-align: top;">
+              {{ attr.label.capitalize() }}&nbsp;:&nbsp;
+            </td>
+            {% if attr.format == "multipleSelect" %}
+              {% if attr.multiple %}
+                <td>
+                  {% for val in attr.value %}
+                    {% for item in attr.choices %}
+                      {% if item[0] == val %}
+                        {{ item[1] }}{% if not loop.last %},{% endif %}
+                      {% endif %}
+                    {% endfor %}
+                  {% endfor %}
+                </td>
+              {% else %}
+                {% for item in attr.choices %}
+                  {% if item[0] == attr.value %}
+                    <td>{{ item[1] }}</td>
+                  {% endif %}
+                {% endfor %}
+              {% endif %}
+            {% else %}
+              <td>{{ attr.value }}</td>
+            {% endif %}
+          </tr>
+          {% endif %}
+        {% endfor %}
+      </table>
+    </form>
+  </body>
+</html>

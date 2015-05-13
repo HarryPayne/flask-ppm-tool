@@ -31,3 +31,6 @@ LDAP_GROUP_MEMBERS_FIELD = "uniquemember"
 
 # administrator list
 ADMINS = ['you@example.com']
+
+# JWT options
+JWT_EXPIRATION_DELTA = 36000    # 10 hours, maybe get renewal working.
