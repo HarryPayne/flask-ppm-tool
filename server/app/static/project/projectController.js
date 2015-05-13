@@ -28,6 +28,11 @@
             projectID = vm.projectList().index > -1 ? list[vm.projectList().index] : list[0];
           }
         }
+        else {
+          projectListService.updateAllProjects();
+          vm.projectList.list = [projectID];
+          vm.projectList.description = "projectID = " + projectID + ";";
+        }
       }
       projectListService.updateProjectListProjectID(projectID, vm.projectList().list);
       stateLocationService.stateChange();
