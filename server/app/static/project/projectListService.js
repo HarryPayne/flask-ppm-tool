@@ -18,6 +18,8 @@
       "jumpToProjectInList": jumpToProjectInList,
       "RestoreState": RestoreState,
       "SaveState": SaveState,
+      "setDescription": setDescription,
+      "setList": setList,
       "updateAllProjects": updateAllProjects,
       "updateProjectListProjectID": updateProjectListProjectID
     };
@@ -109,6 +111,19 @@
     function SaveState() {
         sessionStorage.projectListService = angular.toJson(service.model);
     };
+    
+    function setDescription(description) {
+      service.model.description = description;
+    };
+    
+    function setList(list) {
+      service.model.list = list;
+      var index = list.indexOf(service.model.projectID);
+      if (index < 0) {
+        var projectID = list[0];
+        service.updateProjectListProjectID(projectID, list);
+      }
+    }
       
     function updateAllProjects() {
       $http.get('/getBriefDescriptions')

@@ -30,8 +30,8 @@
         }
         else {
           projectListService.updateAllProjects();
-          vm.projectList.list = [projectID];
-          vm.projectList.description = "projectID = " + projectID + ";";
+          projectListService.setList([projectID]);
+          projectListService.setDescription("projectID = " + projectID + ";");
         }
       }
       projectListService.updateProjectListProjectID(projectID, vm.projectList().list);
