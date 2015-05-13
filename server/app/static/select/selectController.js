@@ -15,7 +15,7 @@
     this.jumpToProject = this.ls.jumpToProject;
     
     this.ss = selectStateService;
-    this.selectState = this.ss.model;
+    this.selectState = this.ss.masterList;
     
   };
   

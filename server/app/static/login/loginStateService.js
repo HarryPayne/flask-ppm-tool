@@ -34,11 +34,11 @@
     }
 
     function SaveState() {
-      sessionStorage.loginStateService = angular.toJson(service.model);
+      sessionStorage.loginStateService = angular.toJson(service.masterList);
     }
     
     function RestoreState() {
-      service.model = angular.fromJson(sessionStorage.loginStateService);
+      service.masterList = angular.fromJson(sessionStorage.loginStateService);
     }
     
     $rootScope.$on("savestate, service.SaveState");

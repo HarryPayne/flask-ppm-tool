@@ -10,7 +10,7 @@
   
   function selectStateService($rootScope) {
     var service = {
-      model: {
+      masterList: {
         searchText: "",
         nameLogic: "or",
         finalID: "0",
@@ -27,11 +27,11 @@
     };
   
     function SaveState() {
-      sessionStorage.selectStateService = angular.toJson(service.model);
+      sessionStorage.selectStateService = angular.toJson(service.masterList);
     }
     
     function RestoreState() {
-      service.model = angular.fromJson(sessionStorage.selectStateService);
+      service.masterList = angular.fromJson(sessionStorage.selectStateService);
     }
 
     return service;    
