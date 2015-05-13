@@ -9,9 +9,9 @@
   Manage.$inject = ["$rootScope"];
   
   function Manage($rootScope) {
-    var vm = this;
     
-    vm.currentUser = $rootScope.currentUser;
+    this.currentUser = $rootScope.currentUser;
+    
   };
   
 }());

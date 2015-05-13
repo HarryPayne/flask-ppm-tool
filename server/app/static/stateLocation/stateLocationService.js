@@ -19,8 +19,6 @@
       "s4": s4
     };
     
-    //$rootScope.$on("$locationChangeSuccess", service.saveState);
-
     return service;
     
     function locationChange() {
@@ -39,7 +37,6 @@
         return;
       }
       service.preventCall.push("stateChange");
-      //service.preventCall.push("locationChange");
       $state.go(entry.name, entry.params, {location: false});
     };
     
@@ -86,8 +83,7 @@
         var url = $location.url();
         stateHistoryService.set(url, entry);
       }
-      
-    }
+     }
     
     function guid() {
       return "" + (service.s4()) + (service.s4()) + "-" + (service.s4()) + "-" + (service.s4()) + "-" + (service.s4()) + "-" + (service.s4()) + (service.s4()) + (service.s4());

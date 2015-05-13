@@ -11,11 +11,10 @@
   
   function Filter($scope, $http, store, jwtHelper, projectListService, 
                   selectStateService) {
-    var vm = this;
     
-    vm.ls = projectListService;
-    vm.projectList = projectListService.getModel;
-    vm.selectState = selectStateService;
+    this.ls = projectListService;
+    this.projectList = projectListService.getModel;
+    this.selectState = selectStateService;
 
   };
   

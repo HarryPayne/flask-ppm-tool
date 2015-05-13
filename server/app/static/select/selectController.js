@@ -9,14 +9,13 @@
   Select.$inject = ["$scope", "projectListService", "selectStateService"];
   
   function Select($scope, projectListService, selectStateService) {
-    var vm = this;
     
-    vm.ls = projectListService;
-    vm.projectList = vm.ls.getModel;
-    vm.jumpToProject = vm.ls.jumpToProject;
+    this.ls = projectListService;
+    this.projectList = this.ls.getModel;
+    this.jumpToProject = this.ls.jumpToProject;
     
-    vm.ss = selectStateService;
-    vm.selectState = vm.ss.model;
+    this.ss = selectStateService;
+    this.selectState = this.ss.model;
     
   };
   

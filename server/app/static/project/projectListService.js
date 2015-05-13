@@ -13,6 +13,7 @@
       "getAllProjectResults": getAllProjectResults,
       "getIDListFromAllProjects": getIDListFromAllProjects,
       "getModel": getModel,
+      "hasProjects": hasProjects,
       "initModel": initModel,
       "jumpToProject": jumpToProject,
       "jumpToProjectInList": jumpToProjectInList,
@@ -42,7 +43,6 @@
         projectID = projectIDList[0];
       }
       updateProjectListProjectID(projectID, projectIDList);
-      service.model.description = "none;";
     };
     
     function getIDListFromAllProjects() {
@@ -53,6 +53,10 @@
     function getModel() {
       return service.model;
     };
+    
+    function hasProjects() {
+      return Boolean(service.getModel().allProjects.length > 0);
+    }
     
     function initModel( ){
       service.model = {

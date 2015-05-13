@@ -7,9 +7,9 @@
     .factory("loginStateService", loginStateService);
   
   loginStateService.$inject = ["$rootScope", "$http", "store", "jwtHelper", 
-                               "loginModalService"];
+                               "loginService"];
   
-  function loginStateService($rootScope, $http, store, jwtHelper, loginModalService) {
+  function loginStateService($rootScope, $http, store, jwtHelper, loginService) {
     var service = {
       loggedIn: loggedIn,
       login: login,
@@ -25,7 +25,7 @@
     }
     
     function login() {
-      loginModalService();
+      loginService();
     }
 
     function logout() {

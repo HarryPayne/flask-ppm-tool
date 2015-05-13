@@ -6,46 +6,19 @@
     .module("app.project")
     .controller("Project", Project);
   
-  Project.$inject = ["$stateParams", "projectDataService", "projectListService", "stateLocationService"];
+  Project.$inject = ["projectDataService", "projectListService"];
   
-  function Project($stateParams, projectDataService, projectListService, stateLocationService){
-    var vm = this;
+  function Project(projectDataService, projectListService){
     
-    vm.ls = projectListService;
-    vm.projectList = vm.ls.getModel;
+    this.ls = projectListService;
+    this.projectList = this.ls.getModel;
     
-    vm.ds = projectDataService;
-    vm.attributes = vm.ds.getAttributes;
+    this.ds = projectDataService;
+    this.attributes = projectDataService.getAttributes;
+    this.currentMode = projectDataService.currentMode;
+    this.viewUrl = projectDataService.viewUrl;
+    this.changeMode = projectDataService.changeMode;
 
-    initialLoad();
-
-    function initialLoad() {
-      if (!$stateParams.projectID) {
-        var projectID = stateLocationService.getProjectIDFromLocation();
-        if (!projectID) {
-          if (vm.projectList().list.length) {
-            var list = vm.projectList().list;
-            projectID = vm.projectList().index > -1 ? list[vm.projectList().index] : list[0];
-          }
-        }
-        else {
-          projectListService.updateAllProjects();
-          projectListService.setList([projectID]);
-          projectListService.setDescription("projectID = " + projectID + ";");
-        }
-      }
-      projectListService.updateProjectListProjectID(projectID, vm.projectList().list);
-      stateLocationService.stateChange();
-
-      if (!vm.ds.projectID) {
-        vm.ds.projectID = $stateParams.projectID;
-        vm.ds.getProjectData(projectID);
-      }
-
-      vm.currentMode = projectDataService.currentMode;
-      vm.viewUrl = projectDataService.viewUrl;
-      vm.changeMode = projectDataService.changeMode;
-    }
   };
   
 }());

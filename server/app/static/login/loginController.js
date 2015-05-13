@@ -11,8 +11,8 @@
   function Login($scope, loginApiService) {
     var vm = this;
     
-    vm.cancel = $scope.$dismiss;
-    vm.submit = submitLogin;
+    this.cancel = $scope.$dismiss;
+    this.submit = submitLogin;
     
     function submitLogin(email, password) {
       loginApiService.login(email, password).then(function (user) {

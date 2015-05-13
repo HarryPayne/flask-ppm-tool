@@ -4,11 +4,11 @@
   
   angular
     .module("app.login")
-    .service("loginModalService", loginModalService);
+    .service("loginService", loginService);
   
-  loginModalService.$inject = ['$modal', '$rootScope', 'store', 'jwtHelper'];
+  loginService.$inject = ['$modal', '$rootScope', 'store', 'jwtHelper'];
   
-  function loginModalService($modal, $rootScope, store, jwtHelper) {
+  function loginService($modal, $rootScope, store, jwtHelper) {
 
     return getUserViaModal;
     

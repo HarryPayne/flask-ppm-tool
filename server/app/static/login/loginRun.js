@@ -6,9 +6,9 @@
     .module("app.login")
     .run(loginRun);
   
-  loginRun.$inject = ["$rootScope", "$state", "store", "jwtHelper",  "loginModalService"];
+  loginRun.$inject = ["$rootScope", "$state", "store", "jwtHelper",  "loginService"];
   
-  function loginRun($rootScope, $state, store, jwtHelper, loginModalService) {
+  function loginRun($rootScope, $state, store, jwtHelper, loginService) {
       $state.transitionTo("select");
       
       if (store.get("jwt") && !jwtHelper.isTokenExpired(store.get("jwt"))) {
@@ -23,7 +23,7 @@
         if (requiresLogin && noActiveToken) {
           e.preventDefault();
           
-          loginModalService()
+          loginService()
           .then(function () {
             return $state.go(toState.name);
           })

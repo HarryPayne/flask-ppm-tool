@@ -9,10 +9,9 @@
   Browse.$inject = ["$scope", "projectListService"];
   
   function Browse($scope, projectListService) {
-    var vm = this;
     
-    vm.ls = projectListService;
-    vm.projectList = vm.ls.getModel;
+    this.ls = projectListService;
+    this.projectList = this.ls.getModel;
 
   }
   

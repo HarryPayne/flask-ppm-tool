@@ -11,15 +11,15 @@
   function Header($rootScope, $state, projectListService, loginStateService) {
     var vm = this;
     
-    vm.currentUser = $rootScope.currentUser;
-    vm.projectList = projectListService.getModel;
+    this.currentUser = $rootScope.currentUser;
+    this.projectList = projectListService.getModel;
 
-    vm.loggedIn = loginStateService.loggedIn;
-    vm.login = loginStateService.login;
-    vm.logout = loginStateService.logout;
+    this.loggedIn = loginStateService.loggedIn;
+    this.login = loginStateService.login;
+    this.logout = loginStateService.logout;
 
-    vm.jumpToNextProject = jumpToNextProject;
-    vm.jumpToPreviousProject = jumpToPreviousProject;
+    this.jumpToNextProject = jumpToNextProject;
+    this.jumpToPreviousProject = jumpToPreviousProject;
     
     $rootScope.$on("$stateChangeSuccess", function(e, toState){
       vm.isActive = isActive;

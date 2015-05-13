@@ -11,11 +11,11 @@
   function loginConfig($httpProvider) {
   
     $httpProvider.interceptors.push(function ($timeout, $q, $injector) {
-      var loginModalService, $http, $state;
+      var loginService, $http, $state;
   
       /* Avoid `Uncaught Error: [$injector:cdep] Circular dependency found` */
       $timeout(function () {
-        loginModalService = $injector.get("loginModalService");
+        loginService = $injector.get("loginService");
         $http = $injector.get('$http');
         $state = $injector.get('$state');
       });
@@ -28,7 +28,7 @@
   
           var deferred = $q.defer();
   
-          loginModalService()
+          loginService()
             .then(function () {
               deferred.resolve( $http(rejection.config) );
             })

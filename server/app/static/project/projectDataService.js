@@ -20,7 +20,7 @@
       "RestoreState": RestoreState,
       "SaveState": SaveState,
       "setProjectData": setProjectData,
-      "viewUrl": $state.current.data.viewUrl,
+      "viewUrl": $state.current.data ? $state.current.data.viewUrl : "",
       "url": $location.url
     };
     
