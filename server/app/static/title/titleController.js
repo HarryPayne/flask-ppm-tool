@@ -11,7 +11,7 @@
   function Title($scope, $state, projectListService){
     var vm = this;
     
-    this.projectList = projectListService.getModel;
+    this.masterList = projectListService.getMasterList;
     this.pageTitle = "PPT: Select";
     
     $scope.$on("$stateChangeSuccess", function(e, toState){
@@ -25,10 +25,10 @@
         vm.pageTitle = "PPT: Browse";
       }
       else if (toState.name == "project") {
-        vm.pageTitle = vm.projectList().projectID + ". " + vm.projectList().projectName;
+        vm.pageTitle = vm.masterList().projectID + ". " + vm.masterList().projectName;
       }  
       else if (toState.name == "project.detail") {
-        vm.pageTitle = vm.projectList().projectID + ". " + vm.projectList().projectName;
+        vm.pageTitle = vm.masterList().projectID + ". " + vm.masterList().projectName;
       } 
       else if (toState.name == "comment") {
         vm.pageTitle = "PPT: Comments";

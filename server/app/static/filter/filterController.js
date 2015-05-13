@@ -13,7 +13,7 @@
                   selectStateService) {
     
     this.ls = projectListService;
-    this.projectList = projectListService.getModel;
+    this.masterList = projectListService.getMasterList;
     this.selectState = selectStateService;
 
   };

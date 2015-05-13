@@ -12,7 +12,7 @@
     var service = {
       "getAllProjectResults": getAllProjectResults,
       "getIDListFromAllProjects": getIDListFromAllProjects,
-      "getModel": getModel,
+      "getMasterList": getMasterList,
       "hasProjects": hasProjects,
       "initModel": initModel,
       "jumpToProject": jumpToProject,
@@ -50,32 +50,32 @@
         return item.projectID;});
     };
 
-    function getModel() {
+    function getMasterList() {
       return service.model;
     };
     
     function hasProjects() {
-      return Boolean(service.getModel().allProjects.length > 0);
+      return Boolean(service.getMasterList().allProjects.length > 0);
     }
     
     function initModel( ){
       service.model = {
+        allProjects: [],
+        description: "",
+        index: -1,
+        next: -1,
+        previous: -1,
         projectID: -1,
         projectName: "",
-        list: [],
-        index: -1,
-        previous: -1,
-        next: -1,
-        description: "",
-        allProjects: []
+        selectedIds: []
       };
     };
 
     function jumpToProject(projectID) {
       projectID = parseInt(projectID);
-      var index = service.model.list.indexOf(projectID);
-      if (service.model.list.indexOf(projectID) > -1) {
-        service.jumpToProjectInList(projectID, service.model.list);
+      var index = service.model.selectedIds.indexOf(projectID);
+      if (service.model.selectedIds.indexOf(projectID) > -1) {
+        service.jumpToProjectInList(projectID, service.model.selectedIds);
         return;
       }
       var projectIDlist = service.getIDListFromAllProjects();
@@ -86,18 +86,18 @@
       alert("Can't find a project to display.");
     };
     
-    function jumpToProjectInList(projectID, list) {
-      var index = list.indexOf(projectID);
+    function jumpToProjectInList(projectID, selectedIds) {
+      var index = selectedIds.indexOf(projectID);
       service.model.index = index;
       service.model.projectID = projectID;
       if (index > 0) {
-        service.model.previous = list[index-1];
+        service.model.previous = selectedIds[index-1];
       }
       else {
         service.model.previous = -1;
       }
-      if (index < list.length) {
-        service.model.next = list[index+1];
+      if (index < selectedIds.length) {
+        service.model.next = selectedIds[index+1];
       }
       else {
         service.model.next = -1;
@@ -120,12 +120,12 @@
       service.model.description = description;
     };
     
-    function setList(list) {
-      service.model.list = list;
-      var index = list.indexOf(service.model.projectID);
+    function setList(selectedIds) {
+      service.model.selectedIds = selectedIds;
+      var index = selectedIds.indexOf(service.model.projectID);
       if (index < 0) {
-        var projectID = list[0];
-        service.updateProjectListProjectID(projectID, list);
+        var projectID = selectedIds[0];
+        service.updateProjectListProjectID(projectID, selectedIds);
       }
     }
       
@@ -134,29 +134,29 @@
         .then(service.getAllProjectResults);
     };
     
-    function updateProjectListProjectID(projectID, list) {
+    function updateProjectListProjectID(projectID, selectedIds) {
       if (projectID) {
-        if (typeof list == "undefined") {
-          list = service.model.list;
+        if (typeof selectedIds == "undefined") {
+          selectedIds = service.model.selectedIds;
         }
         service.model.projectID = projectID;
-        var index = list.indexOf(projectID);
+        var index = selectedIds.indexOf(projectID);
         if (index > -1) {
           service.model.index = index;
           if (index > 0) {
-            service.model.previous = list[index-1];
+            service.model.previous = selectedIds[index-1];
           } 
           else {
             service.model.previous = -1;
           }
-          if (index < list.length) {
-            service.model.next = list[index+1];
+          if (index < selectedIds.length) {
+            service.model.next = selectedIds[index+1];
           }
           else {
             service.model.next = -1;
           }
-          if (typeof(service.model.list[0]) == "undefined") { /* ?? */
-            service.model.list = list;
+          if (typeof(service.model.selectedIds[0]) == "undefined") { /* ?? */
+            service.model.selectedIds = selectedIds;
           }
         }
         _.each(service.model.allProjects, function(proj){

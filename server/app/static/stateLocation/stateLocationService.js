@@ -59,7 +59,7 @@
       if (!$state.current.name) {
         return;
       }
-      projectID = projectListService.getModel().projectID;
+      projectID = projectListService.getMasterList().projectID;
       var params = $state.params.projectID == "" ? {projectID: projectID} : $state.params;
       var entry = {
         "name": $state.current.name,

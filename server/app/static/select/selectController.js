@@ -11,7 +11,7 @@
   function Select($scope, projectListService, selectStateService) {
     
     this.ls = projectListService;
-    this.projectList = this.ls.getModel;
+    this.masterList = this.ls.getMasterList;
     this.jumpToProject = this.ls.jumpToProject;
     
     this.ss = selectStateService;

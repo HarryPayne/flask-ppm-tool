@@ -12,7 +12,7 @@
     var vm = this;
     
     this.currentUser = $rootScope.currentUser;
-    this.projectList = projectListService.getModel;
+    this.masterList = projectListService.getMasterList;
 
     this.loggedIn = loginStateService.loggedIn;
     this.login = loginStateService.login;
@@ -31,23 +31,23 @@
       }; 
   
       function hasNext() {
-        return (vm.isActive("project.edit") || vm.isActive("project.detail")) && vm.projectList().next > -1;
+        return (vm.isActive("project.edit") || vm.isActive("project.detail")) && vm.masterList().next > -1;
       };
   
       function hasPrevious() {
-        return (vm.isActive("project.edit") || vm.isActive("project.detail")) && vm.projectList().previous > -1;
+        return (vm.isActive("project.edit") || vm.isActive("project.detail")) && vm.masterList().previous > -1;
       };
     });
     
     function jumpToNextProject() {
-      if (vm.projectList().next > -1) {
-         projectListService.jumpToProject(vm.projectList().next);
+      if (vm.masterList().next > -1) {
+         projectListService.jumpToProject(vm.masterList().next);
       }
     };
 
     function jumpToPreviousProject () {
-      if (vm.projectList().previous > -1) {
-         projectListService.jumpToProject(vm.projectList().previous);
+      if (vm.masterList().previous > -1) {
+         projectListService.jumpToProject(vm.masterList().previous);
       }
     };
   }

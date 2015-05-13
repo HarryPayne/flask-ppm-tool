@@ -11,7 +11,7 @@
   function Browse($scope, projectListService) {
     
     this.ls = projectListService;
-    this.projectList = this.ls.getModel;
+    this.masterList = this.ls.getMasterList;
 
   }
   

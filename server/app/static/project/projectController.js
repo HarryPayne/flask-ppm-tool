@@ -11,7 +11,7 @@
   function Project(projectDataService, projectListService){
     
     this.ls = projectListService;
-    this.projectList = this.ls.getModel;
+    this.masterList = this.ls.getMasterList;
     
     this.ds = projectDataService;
     this.attributes = projectDataService.getAttributes;

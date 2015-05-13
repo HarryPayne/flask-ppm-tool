@@ -22,26 +22,25 @@
         projectListService.updateAllProjects();
 
         var projectID;
-        var masterList = projectListService.getModel();
-        var list = masterList.list;
+        var masterList = projectListService.getMasterList();
+        var selectedIds = masterList.selectedIds;
         var oldProjectID = masterList.projectID;
 
         if (!toParams.projectID) {
           projectID = stateLocationService.getProjectIDFromLocation();
           if (!projectID) {
             if (projectListService.hasProjects()) {
-              projectID = masterList.index > -1 ? list[masterList.index] : list[0];
+              projectID = masterList.index > -1 ? selectedIds[masterList.index] : selectedIds[0];
             }
           }
         }
         else {
           projectID = parseInt(toParams.projectID);
-          list = [projectID];
-          projectListService.setList(list);
+          selectedIds = [projectID];
+          projectListService.setList(selectedIds);
           projectListService.setDescription("projectID = " + projectID + ";");
         }
-        projectListService.updateProjectListProjectID(projectID, list);
-        //stateLocationService.stateChange();
+        projectListService.updateProjectListProjectID(projectID, selectedIds);
 
         if (!projectDataService.projectID || projectDataService.projectID != projectID) {
           projectDataService.projectID = projectID;

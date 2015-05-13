@@ -37,7 +37,7 @@
             console.log($stateParams);
           },
           controllerAs: "project",
-          templateUrl: "static/project/view.html",
+          templateUrl: "static/project/edit.html",
           data: {
             requiresLogin: true,
           }
