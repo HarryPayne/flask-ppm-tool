@@ -33,26 +33,14 @@
     return service;    
 
     function getAllProjectResults(results) {
+      var projectID = service.model.projectID;
       service.model.allProjects = results.data;
-      var projectID;
-      if ($stateParams.projectID) {
-        projectID = $stateParams.projectID;
-      }
-      else if (Boolean(parseInt((_.last($location.path().split("/")))))) {
-        projectID = parseInt((_.last($location.path().split("/"))));
-      }
-      else if (service.model.allProjects.length) {
-        projectID = service.model.allProjects[0].projectID;
-      }
-      else if (results.data.length) {
-        projectID = results.data[0].projectID;
-      }
-      else {
-        alert("Can't find a project to display.");
-      }
       var projectIDList = service.getIDListFromAllProjects();
+      if (typeof projectID == "undefined" || projectID < 0) {
+        projectID = projectIDList[0];
+      }
       updateProjectListProjectID(projectID, projectIDList);
-      service.model.description = "none";
+      service.model.description = "none;";
     };
     
     function getIDListFromAllProjects() {
