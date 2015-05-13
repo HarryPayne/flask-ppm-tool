@@ -17,7 +17,7 @@
         controllerAs: "filter",
         templateUrl: "/static/filter/filter.html",
         data: {
-          requiresLogin: true
+          requiresLogin: false
         }
       });
   };
