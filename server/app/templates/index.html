@@ -49,7 +49,7 @@
                   <li role="presentation" ng-class="{active:header.isActive('select')}"><a ui-sref="select">Select</a></li>
                   <li role="presentation" ng-class="{active:header.isActive('filter')}"><a ui-sref="filter">Filter Builder</a></li>
                   <li role="presentation" ng-class="{active:header.isActive('browse')}"><a ui-sref="browse">Browse</a></li>
-                  <li role="presentation" ng-class="{active:header.isActive('project') || header.isActive('project.detail') || header.isActive('project.edit')}"><a ui-sref="project.detail">Project</a></li>
+                  <li role="presentation" ng-class="{active:header.isActive('project') || header.isActive('project') || header.isActive('project')}"><a ui-sref="project.detail">Project</a></li>
                   <li role="presentation" ng-class="{active:header.hasPrevious()}"><a href="#" onclick="return false;" ng-click="header.jumpToPreviousProject()">Previous</a></li>
                   <li role="presentation" ng-class="{active:header.hasNext()}"><a href="#" onclick="return false;" ng-click="header.jumpToNextProject()">Next</a></li>
                   <li role="presentation" ng-class="{active:header.isActive('comment')}" 

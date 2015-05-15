@@ -27,15 +27,15 @@
       vm.hasPrevious = hasPrevious;
 
       function isActive(name) {
-        return toState.name === name;
+        return toState.name.split(".")[0] === name;
       }; 
   
       function hasNext() {
-        return (vm.isActive("project.edit") || vm.isActive("project.detail")) && vm.masterList().next > -1;
+        return (vm.isActive("project") && vm.masterList().next > -1);
       };
   
       function hasPrevious() {
-        return (vm.isActive("project.edit") || vm.isActive("project.detail")) && vm.masterList().previous > -1;
+        return (vm.isActive("project") && vm.masterList().previous > -1);
       };
     });
     

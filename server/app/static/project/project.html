@@ -29,11 +29,13 @@
       ng-repeat="attr in project.attributes() track by $index" 
       ng-include src="'static/project/view-field.html'">
     </dl>
+
     <dl class="dl-horizontal"
       ng-show="project.currentMode() == 'edit'"
       ng-repeat="attr in project.attributes() track by $index" 
       ng-include src="'static/project/edit-field.html'">
     </dl>
+
     <div ng-show="project.currentMode() == 'comment'">
       Enter a comment
     </div>

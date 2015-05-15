@@ -15,7 +15,8 @@
           controllerAs: "project",
           templateUrl:"static/project/project.html",
           data: {
-            requiresLogin: false
+            requiresLogin: false,
+            viewUrl: "static/project/project.html"
           }
       })  
       .state('project.detail', {
@@ -26,8 +27,7 @@
           },
           controllerAs: "project",
           data: {
-            requiresLogin: false,
-            viewUrl: "static/project/project.html"
+            requiresLogin: false
           }
       })
       .state('project.edit', {
@@ -38,8 +38,7 @@
           },
           controllerAs: "project",
           data: {
-            requiresLogin: true,
-            viewUrl: "static/project/project.html"
+            requiresLogin: true
           }
       })
       .state('project.comment', {
@@ -50,8 +49,7 @@
           },
           controllerAs: "project",
           data: {
-            requiresLogin: true,
-            viewUrl: "static/project/project.html"
+            requiresLogin: true
           }
       })
       .state('project.attach', {
@@ -62,8 +60,7 @@
           },
           controllerAs: "project",
           data: {
-            requiresLogin: true,
-            viewUrl: "static/project/project.html"
+            requiresLogin: true
           }
       });
   };
