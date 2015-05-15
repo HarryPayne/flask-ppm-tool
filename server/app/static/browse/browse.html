@@ -1,7 +1,12 @@
 <html>
   <head></head>
   <body >
-    <h2>View Project List as Table</h2>
+    <ul class="list-inline text-right col-lg-8 clearfix">
+      <li>Download as spreadsheet</li>
+      <li>Select other columns</li>
+      <li>Change report title</li>
+    </ul>
+    <h3>View Project List as Table</h3>
     
     Filter: {{ browse.masterList().description }}<br/>
     {{browse.masterList().selectedIds.length}} projects selected

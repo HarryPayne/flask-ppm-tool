@@ -15,9 +15,11 @@
     
     this.ds = projectDataService;
     this.attributes = projectDataService.getAttributes;
-    this.currentMode = projectDataService.currentMode;
-    this.viewUrl = projectDataService.viewUrl;
     this.changeMode = projectDataService.changeMode;
+    this.currentMode = projectDataService.currentMode;
+    this.jumpToAtachFile = projectDataService.jumpToAtachFile;
+    this.jumpToCommentEntry = projectDataService.jumpToCommentEntry;
+    this.viewUrl = projectDataService.viewUrl;
 
   };
   

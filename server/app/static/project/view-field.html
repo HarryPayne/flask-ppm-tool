@@ -1,5 +1,5 @@
-  <td style="width: 12%; text-align: right;" ng-if="attr.value"><label ng-bind="project.attributes()[attr.index].label"></label></td>
-  <td ng-if="attr.value">
+  <dt ng-if="attr.value" ng-bind="project.attributes()[attr.index].label" class="text-capitalize"></dt>
+  <dd ng-if="attr.value">
     <span ng-switch on="attr.format">
       <span ng-switch-when="string">
         <span ng-bind="project.attributes()[attr.index].value"></span>
@@ -24,4 +24,4 @@
         <span ng-bind="project.attributes()[attr.index].value"></span>
       </span>
     </span>
-  </td>
+  </dd>

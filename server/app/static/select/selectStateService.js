@@ -14,6 +14,7 @@
         searchText: "",
         nameLogic: "or",
         finalID: "0",
+        clearSearchText: clearSearchText,
         SaveState: SaveState,
         RestoreState: RestoreState
       }
@@ -26,6 +27,9 @@
       $rootScope.$broadcast('savestate');
     };
   
+    function clearSearchText() {
+      service.masterList.searchText = "";
+    }
     function SaveState() {
       sessionStorage.selectStateService = angular.toJson(service.masterList);
     }

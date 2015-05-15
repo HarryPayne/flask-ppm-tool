@@ -65,13 +65,33 @@
         "name": $state.current.name,
         "params": params
       };
-      var prefix = $state.current.name == "select" ? "" : $state.current.name;
-      prefix = prefix.substring(0,8) == "project." ? prefix.substring(0, prefix.indexOf(".")) : prefix;
-      var projectID = prefix == "project" ? "/" + projectID : "";
-      var url = "/" + prefix + projectID + "#" + (service.guid().substr(0, 8));
+      var url = getUrlFromState(projectID);
       stateHistoryService.set(url, entry);
       service.preventCall.push('locationChange');
       $location.url(url);
+    }
+    
+    function getUrlFromState(projectID) {
+      var hash = "#" + service.guid().substr(0, 8);
+      
+      if ($state.current.name == "select") {
+        return "/" + hash;
+      }
+      else if ($state.current.name == "project.detail") {
+        return "/project/" + projectID + hash;
+      }
+      else if ($state.current.name == "project.edit") {
+        return "/project/edit/" + projectID + hash;
+      }
+      else if ($state.current.name == "project.comment") {
+        return "/project/comment/" + projectID + hash;
+      }
+      else if ($state.current.name == "project.attach") {
+        return "/project/attach/" + projectID + hash;
+      }
+      else {
+        return "/" + $state.current.name;
+      }
     }
     
     function saveState() {

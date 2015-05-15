@@ -1,58 +1,116 @@
 <html>
   <head></head>
   <body>
+    <ul class="list-inline text-right col-lg-8 clearfix">
+      <li>Add a project</li>
+      <li>Comments by user</li>
+    </ul>
     <h3>Select a Project</h3>
 
     <div>
       <ul>
         <li>
-          <form name="myform" novalidate ng-submit="select.jumpToProject(projectID)">
-            <label for="projectID"> Jump directly to project ID </label>
-            <input type="text" name="projectID" id="projectID" ng-model="projectID" 
-              placeholder="project ID" autofocus>
-            &nbsp;
-            <button type="submit"> Go </button>
+          <form name="myform" class="form-inline" novalidate ng-submit="select.jumpToProject(projectID)">
+            <div class="form-group">
+              <label for="projectID"> 
+                Jump directly to project ID:
+              </label>
+              <div class="input-group">
+                <input type="text"  name="projectID" id="projectID"
+                  class="form-control col-lg-3" 
+                  ng-model="projectID" 
+                  placeholder="project ID" autofocus>
+                <span class="input-group-btn">
+                  <button class="btn btn-default" type="submit"> Go </button>
+                </span>
+              </div>
+            </div>
           </form>
         </li>
         
         <li>
-          <form name="myform2" novalidate ng-submit="select.jumpToProject(option.projectID)">
-            <label> Jump directly to project </label> 
-            <select name="projectID" ng-model="option"
-              ng-options="item.projectID+'. '+item.name for item in select.masterList().allProjects track by item.projectID"
-              ng-change="select.jumpToProject(option.projectID)">
-            </select>
-            &nbsp;
-            <button type="submit(); return false;"> Go </button>
-          </form>
+          <form name="myform2" class="form-inline" novalidate ng-submit="select.jumpToProject(option.projectID)">
+            <div class="form-group">
+              <label for="projectID2"> 
+                Jump directly to project:
+              </label>
+              <div class="input-group">
+                <select name="projectID" id="projectID2" 
+                  class="form-control col-lg-3"
+                  ng-model="option" 
+                  ng-options="item.projectID+'. '+item.name for item in select.masterList().allProjects track by item.projectID"
+                  ng-change="select.jumpToProject(option.projectID)">
+                </select>
+                <span class="input-group-btn">
+                  <button class="btn btn-default" type="submit"> Go </button>
+                </span>
+              </div>
+            </div>
+        </form>
         </li>
         
         <li>
-          <form action="/projectView" method="post" novalidate>
-            <label for="searchText"> Search in project names and descriptions </label>
-            <input type="text" name="searchText" id="searchText" ng-model="select.selectState.searchText"
-              placeholder="keywords or phrase"><br/>
+          <form method="post" class-"form-horizontal col-lg-8 clearfix" novalidate>
+            <div class="form-group">
+              <label for="searchText">
+                Search project names and descriptions:
+              </label>
+              <div class="input-group col-lg-2">
+                <input type="text" name="searchText" id="searchText" 
+                  class="form-control col-lg-2"
+                  ng-model="select.selectState.searchText"
+                  placeholder="keywords or phrase">
+                <span class="input-group-btn">
+                  <button class="btn btn-default" type="button" ng-click="select.selectState.clearSearchText()"> Clear </button>
+                </span>
+              </div>
+            <div class="row col-lg-8">
+              Join words: &nbsp;&nbsp;
+              <div class="radio-inline">
+                <label>
+                  <input type="radio" name="nameLogic" id="nameLogic_or" value="or" 
+                    ng-model="select.selectState.nameLogic"> with 'or'
+                </label>
+              </div>
+              <div class="radio-inline">
+                <label>
+                  <input type="radio" name="nameLogic" id="nameLogic_and" value="and" 
+                    ng-model="select.selectState.nameLogic"> with 'and'
+                </label>
+              </div>
+              <div class="radio-inline">
+                <label>
+                  <input type="radio" name="nameLogic" id="nameLogic_phrase" value="phrase" 
+                    ng-model="select.selectState.nameLogic">as a phrase
+                </label>
+              </div>
+            </div>
     
-            Join words: &nbsp;&nbsp;
-            <input type="radio" name="nameLogic" id="nameLogic_or" value="or" ng-model="select.selectState.nameLogic">
-            <label for="nameLogic_or">with 'or'</label>, &nbsp;&nbsp;
-            <input type="radio" name="nameLogic" id="nameLogic_and" value="and" ng-model="select.selectState.nameLogic"> 
-            <label for="nameLogic_and"> with 'and'</label>, or &nbsp;&nbsp;
-            <input type="radio" name="nameLogic" id="nameLogic_phrase" value="phrase" ng-model="select.selectState.nameLogic">
-            <label for="nameLogic_phrase"> as a phrase</label>.<br/>
-    
-            Search scope: &nbsp;&nbsp;
-            <label> <input type="radio" value="0" name="finalID" ng-model="select.selectState.finalID"> active projects </label>, &nbsp;&nbsp;
-            <label> <input type="radio" value="" name="finalID" ng-model="select.selectState.finalID"> all projects</label>.
+            <div class="row col-lg-8">
+              Search scope: &nbsp;&nbsp;
+              <div class="radio-inline">
+                <label>
+                  <input type="radio" value="0" name="finalID" ng-model="select.selectState.finalID"> active projects only
+                </label>
+              </div>
+              <div class="radio-inline">
+                <label>
+                  <input type="radio" value="" name="finalID" ng-model="select.selectState.finalID"> all projects
+                </label>
+              </div>
+            </div>
           </form>
 
-          <div ng-show="select.selectState.searchText">
+          <div id="searchTextResult" ng-show="select.selectState.searchText">
             <p>There are {{ filtered.length }} matches:</p>
             <dl ng-repeat="project in filtered = (select.masterList().allProjects | nameSearch:select.selectState.searchText:select.selectState.nameLogic:select.selectState.finalID)"> 
               <dt>{{project.projectID}}. <a href="#" onclick="return false;" ng-click="select.jumpToProject(project.projectID)">{{project.name}}</a>
               </dt>
               <dd read-more content="{{ project.description }}" limit="200" style="width: 800px;"></dd>
             </dl>
+            <div class="row col-lg-4">
+              <button class="btn btn-default" type="button" ng-click="select.selectState.clearSearchText()"> Clear </button>
+            </div>
           </div>
         </li>
         

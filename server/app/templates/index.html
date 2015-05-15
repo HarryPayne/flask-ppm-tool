@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html ng-app="PPT" ng-controller="PPTCtrl as app">
   <head ng-controller="Title as title">
     {% raw %}
@@ -30,46 +31,44 @@
     
   </head>
   <body>
-    <div id="page">
-      <header class="container" ng-controller="Header as header">
-        <div class="navbar navbar-default" id="menu">
-            <div class="navbar-header">
-              <button class="btn btn-success navbar-toggle"></button>
-              <div id="logo" style="float:left;"><h2>Project Portfolio Tool</h2></div>
-            </div>
-            <div class="navbar-collapse collapse">
+    <div id="page" class="container">
+      <header ng-controller="Header as header">
+        <div class="nav navbar-default" id="menu">
+          <div id="logo" class="text-left;"><h2>Project Portfolio Tool</h2></div>
+          {% raw %}
+          <ul class="list-inline text-right">
+            <li ng-hide="currentUser">
+              <a href="#" ng-click="header.login();">Login</a></li>
+            <li ng-show="currentUser">Logged in as {{ currentUser.name }}</li>
+            <li ng-show="currentUser"><a href="#" ng-click="header.logout();">Logout</a></li>
+          </ul>
+          {% endraw %}
+            <div role="presentation">
               {% raw %}
-              <span style="float:right;margin-top: 40px;">
-                <span ng-hide="currentUser"><a href="#" ng-click="header.login();">Login</a></span>
-                <span ng-show="currentUser">Logged in as {{ currentUser.name }}&nbsp;&nbsp;&nbsp;&nbsp;<a href="#" ng-click="header.logout();">Logout</a></span>
-              </span>
-              <br/>
-              {% endraw %}
-            </div>
-            <div class="navbar-collapse collapse">
-              {% raw %}
-                <ul class="nav navbar-nav navbar-right">
-                  <li style="clear;both;" role="presentation" ng-class="{active:header.isActive('comment')}" ng-show="currentUser.roles.indexOf('ContentProvider') > -1 || currentUser.roles.indexOf('Curator') > -1"><a ui-sref="comment">Comments</a></li>
-                  <li role="presentation" ng-class="{active:header.isActive('curate')}" ng-show="currentUser.roles.indexOf('Curator') > -1"><a ui-sref="curate">Curate</a></li>
-                  <li role="presentation" ng-class="{active:header.isActive('manage')}" ng-show="currentUser.roles.indexOf('Manager') > -1"><a ui-sref="manage">Manage</a></li>
+                <ul class="nav nav-tabs">
                   <li role="presentation" ng-class="{active:header.isActive('select')}"><a ui-sref="select">Select</a></li>
                   <li role="presentation" ng-class="{active:header.isActive('filter')}"><a ui-sref="filter">Filter Builder</a></li>
                   <li role="presentation" ng-class="{active:header.isActive('browse')}"><a ui-sref="browse">Browse</a></li>
                   <li role="presentation" ng-class="{active:header.isActive('project') || header.isActive('project.detail') || header.isActive('project.edit')}"><a ui-sref="project.detail">Project</a></li>
                   <li role="presentation" ng-class="{active:header.hasPrevious()}"><a href="#" onclick="return false;" ng-click="header.jumpToPreviousProject()">Previous</a></li>
                   <li role="presentation" ng-class="{active:header.hasNext()}"><a href="#" onclick="return false;" ng-click="header.jumpToNextProject()">Next</a></li>
+                  <li role="presentation" ng-class="{active:header.isActive('comment')}" 
+                    ng-show="currentUser.roles.indexOf('ContentProvider') > -1 || currentUser.roles.indexOf('Curator') > -1">
+                    <a ui-sref="comment">Comments</a></li>
+                  <li role="presentation" ng-class="{active:header.isActive('curate')}" ng-show="currentUser.roles.indexOf('Curator') > -1"><a ui-sref="curate">Curate</a></li>
+                  <li role="presentation" ng-class="{active:header.isActive('manage')}" ng-show="currentUser.roles.indexOf('Manager') > -1"><a ui-sref="manage">Manage</a></li>
                 </ul>
               {% endraw %}
             </div>
         </div>
       </header>
-      <section class="container" id="body">
-          <div ui-view></div>
+      <section id="body">
+        <div ui-view></div>
       </section>
  
       <hr/>
  
-      <footer class="container">
+      <footer>
       </footer>
     </div>
 

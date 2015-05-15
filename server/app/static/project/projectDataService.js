@@ -11,11 +11,13 @@
   function projectDataService($rootScope, $http, $state, $stateParams, $location) {
     var service = {
       "attributes": [],
-      "currentMode": currentMode,
       "changeMode": changeMode,
+      "currentMode": currentMode,
       "getProjectData": getProjectData,
       "getAttributes": getAttributes,
       "getProjectDataFromLocation": getProjectDataFromLocation,
+      "jumpToAtachFile": jumpToAtachFile,
+      "jumpToCommentEntry": jumpToCommentEntry,
       "projectID": $stateParams.projectID,
       "RestoreState": RestoreState,
       "SaveState": SaveState,
@@ -30,6 +32,15 @@
     $rootScope.$on("restorestate", service.RestoreState);
     $rootScope.$on("$locationChangeSuccess", service.getProjectDataFromLocation);
     
+    function changeMode() {
+      if (this.currentMode() == "view") {
+        $state.go("project.edit", {projectID: service.projectID});
+      }
+      else {
+        $state.go("project.detail", {projectID: service.projectID});
+      }
+    }
+    
     function currentMode() {
       if ($state.current.name == "project.detail") {
         return "view";
@@ -37,14 +48,11 @@
       else if ($state.current.name == "project.edit") {
         return "edit";
       }
-    }
-    
-    function changeMode() {
-      if (this.currentMode() == "view") {
-        $state.go("project.edit", {projectID: service.projectID});
+      else if ($state.current.name == "project.comment") {
+        return "comment";
       }
-      else {
-        $state.go("project.detail", {projectID: this.projectID});
+      else if ($state.current.name == "project.attach") {
+        return "attach";
       }
     }
     
@@ -66,10 +74,20 @@
         projectID = projectID.substring(0, projectID.indexOf("#"));
         if (projectID) {
           projectID = parseInt(projectID);
-          service.getProjectData(projectID);
+          if (projectID != service.projectID) {
+            service.getProjectData(projectID);
+          }
         }
       }
-    };
+    }
+
+    function jumpToAtachFile() {
+      $state.go("project.attach", {projectID: service.projectID});
+    }
+    
+    function jumpToCommentEntry() {
+      $state.go("project.comment", {projectID: service.projectID});
+    }
     
     function RestoreState() {
         service.attributes = angular.fromJson(sessionStorage.projectDataServiceAttributes);

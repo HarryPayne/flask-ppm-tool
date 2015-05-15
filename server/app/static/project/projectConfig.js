@@ -13,7 +13,7 @@
           url: '/project',
           controller: "Project",
           controllerAs: "project",
-          templateUrl:"static/project/view.html",
+          templateUrl:"static/project/project.html",
           data: {
             requiresLogin: false
           }
@@ -25,9 +25,9 @@
             console.log($stateParams);
           },
           controllerAs: "project",
-          templateUrl: "static/project/view.html",
           data: {
             requiresLogin: false,
+            viewUrl: "static/project/project.html"
           }
       })
       .state('project.edit', {
@@ -37,9 +37,33 @@
             console.log($stateParams);
           },
           controllerAs: "project",
-          templateUrl: "static/project/edit.html",
           data: {
             requiresLogin: true,
+            viewUrl: "static/project/project.html"
+          }
+      })
+      .state('project.comment', {
+          name: 'project',
+          url: '/comment/:projectID',
+          controller: function ($stateParams) {
+            console.log($stateParams);
+          },
+          controllerAs: "project",
+          data: {
+            requiresLogin: true,
+            viewUrl: "static/project/project.html"
+          }
+      })
+      .state('project.attach', {
+          name: 'project',
+          url: '/attach/:projectID',
+          controller: function ($stateParams) {
+            console.log($stateParams);
+          },
+          controllerAs: "project",
+          data: {
+            requiresLogin: true,
+            viewUrl: "static/project/project.html"
           }
       });
   };
