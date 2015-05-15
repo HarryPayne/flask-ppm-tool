@@ -81,6 +81,9 @@
         return "/project/" + projectID + hash;
       }
       else if ($state.current.name == "project.edit") {
+        if (projectListService.getMasterList().allProjects.length == 0) {
+          return "/project/" + projectID + hash;
+        }
         return "/project/edit/" + projectID + hash;
       }
       else if ($state.current.name == "project.comment") {

@@ -15,28 +15,25 @@
     this.pageTitle = "PPT: Select";
     
     $scope.$on("$stateChangeSuccess", function(e, toState){
-      if (toState.name == "select") {
+      if (toState.name.split(".")[0] == "select") {
         vm.pageTitle = "PPT: Select";
       }
-      else if (toState.name == "filter") {
+      else if (toState.name.split(".")[0] == "filter") {
         vm.pageTitle = "PPT: Filter Builder";
       }
-      else if (toState.name == "browse") {
+      else if (toState.name.split(".")[0] == "browse") {
         vm.pageTitle = "PPT: Browse";
       }
-      else if (toState.name == "project") {
+      else if (toState.name.split(".")[0] == "project") {
         vm.pageTitle = vm.masterList().projectID + ". " + vm.masterList().projectName;
       }  
-      else if (toState.name == "project.detail") {
-        vm.pageTitle = vm.masterList().projectID + ". " + vm.masterList().projectName;
-      } 
-      else if (toState.name == "comment") {
+      else if (toState.name.split(".")[0] == "comment") {
         vm.pageTitle = "PPT: Comments";
       }
-      else if (toState.name == "curate") {
+      else if (toState.name.split(".")[0] == "curate") {
         vm.pageTitle = "PPT: Curate";
       }
-      else if (toState.name == "manage") {
+      else if (toState.name.split(".")[0] == "manage") {
         vm.pageTitle = "PPT: Manage";
       }
       else {
