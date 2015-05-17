@@ -6,27 +6,34 @@
     .module("app.project")
     .factory("projectDataService", projectDataService);
   
-  projectDataService.$inject = ["$rootScope", "$http", "$state", "$stateParams", "$location"];
+  projectDataService.$inject = ["$rootScope", "$http", "$state", "$stateParams", 
+                                "$location", "attributesService"];
   
-  function projectDataService($rootScope, $http, $state, $stateParams, $location) {
+  function projectDataService($rootScope, $http, $state, $stateParams, 
+                              $location, attributesService) {
     var service = {
-      "attributes": [],
-      "changeMode": changeMode,
-      "currentMode": currentMode,
-      "getProjectData": getProjectData,
-      "getAttributes": getAttributes,
-      "getProjectDataFromLocation": getProjectDataFromLocation,
-      "jumpToAtachFile": jumpToAtachFile,
-      "jumpToCommentEntry": jumpToCommentEntry,
-      "projectID": $stateParams.projectID,
-      "RestoreState": RestoreState,
-      "SaveState": SaveState,
-      "setProjectData": setProjectData,
-      "viewUrl": $state.current.data ? $state.current.data.viewUrl : "",
-      "url": $location.url
+      attributes: attributesService.getAttributes,
+      changeMode: changeMode,
+      currentMode: currentMode,
+      getProjectData: getProjectData,
+      getAttributes: getAttributes,
+      getProjectDataFromLocation: getProjectDataFromLocation,
+      jumpToAtachFile: jumpToAtachFile,
+      jumpToCommentEntry: jumpToCommentEntry,
+      printValue: attributesService.printValue,
+      projectID: $stateParams.projectID,
+      RestoreState: RestoreState,
+      saveProject: saveProject,
+      SaveState: SaveState,
+      setProjectData: setProjectData,
+      viewUrl: $state.current.data ? $state.current.data.viewUrl : "",
+      url: $location.url
     };
     
-    service.getProjectData(service.projectID);
+    //service.RestoreState();
+    if (typeof service.attributes == "undefined") {
+      service.getProjectData(service.projectID);
+    }
     
     $rootScope.$on("savestate", service.SaveState);
     $rootScope.$on("restorestate", service.RestoreState);
@@ -90,39 +97,19 @@
     }
     
     function RestoreState() {
-        service.attributes = angular.fromJson(sessionStorage.projectDataServiceAttributes);
+      service.attributes = angular.fromJson(sessionStorage.projectDataServiceAttributes);
     };
 
+    function saveProject() {
+      
+    };
+    
     function SaveState() {
-        sessionStorage.projectDataServiceAttributes = angular.toJson(service.attributes);
+      sessionStorage.projectDataServiceAttributes = angular.toJson(service.attributes);
     };
       
     function setProjectData(result) {
-      service.attributes = result.data.attributes;
-      service.projectID = parseInt(result.data.projectID);
-      angular.forEach(service.attributes, function(attr){
-        if (attr.format == "multipleSelect") {
-          if (attr.multiple) {
-            var values = attr.value.slice(0);
-            attr.value = [];
-            angular.forEach(values, function(val) {
-              angular.forEach(attr.choices, function(choice) {
-                if (val == choice[0]){
-                  attr.value.push( choice );
-                }
-              });
-            });
-          }
-          else {
-            angular.forEach(attr.choices, function(choice) {
-              if (attr.value == choice[0]) {
-                attr.value = choice;
-               }
-            });
-          }
-        }
-      });
-      service.SaveState();
+      attributesService.updateProjectAttributes(result);
     }
 
     return service;

@@ -2,6 +2,7 @@
   
   angular
     .module("PPT", [
+      'app.attributes',
       'app.browse',
       'app.comment',
       'app.curate',

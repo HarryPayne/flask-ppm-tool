@@ -165,6 +165,7 @@
           }
         });
       }
+      service.SaveState();
     };
   }
     

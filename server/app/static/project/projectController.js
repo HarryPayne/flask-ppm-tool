@@ -6,15 +6,16 @@
     .module("app.project")
     .controller("Project", Project);
   
-  Project.$inject = ["projectDataService", "projectListService"];
+  Project.$inject = ["projectDataService", "projectListService", "attributesService"];
   
-  function Project(projectDataService, projectListService){
+  function Project(projectDataService, projectListService, attributesService){
     
-    this.ls = projectListService;
-    this.masterList = this.ls.getMasterList;
-    
+    this.as = attributesService;
     this.ds = projectDataService;
-    this.attributes = projectDataService.getAttributes;
+    this.ls = projectListService;
+    
+    this.masterList = this.ls.getMasterList;
+    this.attributes = attributesService.getAttributes;
     this.changeMode = projectDataService.changeMode;
     this.currentMode = projectDataService.currentMode;
     this.jumpToAtachFile = projectDataService.jumpToAtachFile;

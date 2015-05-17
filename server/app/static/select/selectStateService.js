@@ -23,13 +23,12 @@
     $rootScope.$on("savestate, service.SaveState");
     $rootScope.$on("restorestate, service.RestoreState");
     
-    window.onbeforeunload = function (event) {
-      $rootScope.$broadcast('savestate');
-    };
-  
+    return service;    
+      
     function clearSearchText() {
       service.masterList.searchText = "";
     }
+
     function SaveState() {
       sessionStorage.selectStateService = angular.toJson(service.masterList);
     }
@@ -37,9 +36,6 @@
     function RestoreState() {
       service.masterList = angular.fromJson(sessionStorage.selectStateService);
     }
-
-    return service;    
-      
   };
   
 }());

@@ -12,7 +12,7 @@ from wtforms import StringField, BooleanField, TextAreaField, SelectField
 from json import dumps
 
 from app import app, db, lm, jwt #, cors 
-from .forms import Description, SelectForm, LoginForm  # ProjectViewForm, EditForm, PostForm
+from .forms import Description, SelectForm, LoginForm, ChildForm  # ProjectViewForm, EditForm, PostForm
 from .models import User
 from widgets import ChoicesSelect
 import alchemy_models as alch
@@ -91,6 +91,50 @@ def selectView():
     return render_template('select.html',
                            title='Select')
 
+@app.route("/getAllAttributes")
+def getAllAttributes():
+    rows = alch.Attributelist.query.order_by("attributeID").all()
+    attributes = {}
+    for row in rows:
+        attr = {"name": row.attributeName,
+                "label": row.label,
+                "format": row.format,
+                "attributeHelp": row.attributeHelp,
+                "help": row.help,
+                "multi": row.multipleValued,
+                "choices": [],
+                "computed": row.computed}
+        if row.format == "multipleSelect":
+            # build the choices attributes, the available values for this attribute
+            Table = row.attributeName[:-2].capitalize()
+            table = row.attributeName[:-2]
+            id = "{}ID".format(table)
+            desc = "{}Desc".format(table)
+            help = "{}Text".format(table)
+            cstr = "alch.{Table}list.query.order_by('{table}ID').all()".format(Table = Table,
+                                                                               table = table)
+            choices = eval(cstr)
+            # sort by id or by description
+            if row.orderByID:
+                for item in choices:
+                    attr["choices"].append({"id": getattr(item, id),
+                                           "desc": getattr(item, desc),
+                                           "help": getattr(item, help)})
+            else:
+                attr["choices"].append({"id": getattr(choices[0], id),
+                                        "desc": getattr(choices[0], desc),
+                                        "help": getattr(choices[0], help)})
+                raw = []
+                for item in choices[1:]:
+                    raw.append({"id": getattr(item, id),
+                                "desc": getattr(item, desc),
+                                "help": getattr(item, help)})
+                
+                attr["choices"] += sorted(raw, key = lambda x: x["desc"])
+        
+        attributes[attr["name"]] = attr
+    return dumps(attributes)
+    
 @app.route("/getBriefDescriptions")
 def get_brief_descriptions():
     """ return list of project descriptions """
@@ -125,81 +169,40 @@ def getProjectAttributesJSON(projectID):
     return dumps(attributes)
 
 def getProjectAttributes(projectID):
+    """ Render a WT Forms form from the request/db, pick out the data from the
+        widgets, and send them out as JSON.
+    """
     p = alch.Description.query.filter_by(projectID=projectID).first_or_404()
     form = Description(request.form, p)
     attributes = []
     index = 0
-    for row in alch.Attributelist.query.filter_by(table="description").all():
-        if row.attributeName == "driver":
-            attr = form[row.attributeName]
-            values = [item.driverID for item in attr.data] 
-            attributes.append({"name": row.attributeName,
-                               "label": row.label,
-                               "format": row.format,
-                               "help": row.help,
-                               "multi": row.multipleValued,
-                               "value": values if attr.widget.multiple else values[0],
-                               "choices": attr.query_factory,
-                               "multiple": attr.widget.multiple,
-                               "index": index,
-                               "computed": row.computed})
-            index += 1
-            continue
-        elif row.attributeName == "child":
-            continue
-            attr = form[row.attributeName]
-            value = [{"driverID": item.driverlist.driverID, "driverDesc": item.driverlist.driverDesc} for item in attr.data]
-            attributes.append({"name": row.attributeName,
-                               "label": row.label,
-                               "format": row.format,
-                               "help": row.help,
-                               "multi": row.multipleValued,
-                               "value": value,
-                               "choices": attr.query_factory,
-                               "multiple": attr.widget.multiple,
-                               "index": index,
-                               "computed": row.computed})
-            index += 1
-            continue
-        elif row.attributeName == "stakeholder":
-            attr = form[row.attributeName]
-            values = [item.stakeholderID for item in attr.data]
-            attributes.append({"name": row.attributeName,
-                               "label": row.label,
-                               "format": row.format,
-                               "help": row.help,
-                               "multi": row.multipleValued,
-                               "value": values if attr.widget.multiple else values[0],
-                               "choices": attr.query_factory,
-                               "multiple": attr.widget.multiple,
-                               "index": index,
-                               "computed": row.computed})
-            index += 1
-            continue
-        if row.format == "dateRangeSelect" and form[row.attributeName].data:
-            value = form[row.attributeName].data.isoformat()
-        attributes.append({"name": row.attributeName,
-                           "label": row.label,
-                           "format": row.format,
-                           "help": row.help,
-                           "multi": row.multipleValued,
-                           "value": value if (row.format == "dateRangeSelect" and form[row.attributeName].data) else form[row.attributeName].data,
-                           "choices": form[row.attributeName].choices if row.format == "multipleSelect" and not form[row.attributeName].type == "ModelFieldList" else None,
-                           "multiple": form[row.attributeName].widget.multiple if row.format == "multipleSelect" and not form[row.attributeName].type == "ModelFieldList" else None,
-                           "index": index,
-                           "computed": row.computed})
-        index += 1
+
+    attrs = alch.Attributelist.query.filter_by(table="description").order_by("attributeID").all()
+    multipleValued = [item.attributeName for item in attrs if item.multipleValued == 1]
     
-    attributes.append({"name": row.attributeName,
-                       "label": row.label,
-                       "format": row.format,
-                       "help": row.help,
-                       "multi": row.multipleValued,
-                       "value": value if (row.format == "dateRangeSelect" and form[row.attributeName].data) else form[row.attributeName].data,
-                       "choices": form[row.attributeName].choices if row.format == "multipleSelect" and not form[row.attributeName].type == "ModelFieldList" else None,
-                       "multiple": form[row.attributeName].widget.multiple if row.format == "multipleSelect" and not form[row.attributeName].type == "ModelFieldList" else None,
-                       "index": index,
-                       "computed": True})
+    for row in attrs:
+        if row.attributeName in multipleValued:
+            # Work through a list of table result items to get the data.
+            # Form field does not end in "ID" but attribute name does.
+            name = row.attributeName
+            values = [getattr(item, name) for item in form[name[:-2]].data] 
+            qf = form[name[:-2]].query_factory
+            descs = [str(item[1]) for item in qf if item[0] in values]
+            printValue = ", ".join(descs)
+            attributes.append({"name": name,
+                               "value": values,
+                               "printValue": printValue
+                               })
+            
+        elif row.format == "dateRangeSelect":
+            data = form[row.attributeName].data
+            attributes.append({"name": row.attributeName,
+                               "value": data.isoformat() if data else ""})
+    
+        else:
+            attributes.append({"name": row.attributeName,
+                               "value": form[row.attributeName].data})
+
     return {"projectID": projectID, "attributes": attributes}
 
 @app.route("/projectTemplate")

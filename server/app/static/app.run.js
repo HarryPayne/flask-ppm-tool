@@ -4,15 +4,19 @@
   
   angular
     .module("PPT")
-    .run(initializeServices);
+    .run(initializeApp);
   
-  initializeServices.$inject = ["$rootScope", "projectListService", "projectDataService", 
+  initializeApp.$inject = ["$rootScope", "projectListService", "projectDataService", 
                                "stateLocationService"];
   
-  function initializeServices($rootScope, projectListService, projectDataService, stateLocationService) {
-    $rootScope.$on("$stateChangeSuccess", _initializeServices);
+  function initializeApp($rootScope, projectListService, projectDataService, stateLocationService) {
+    $rootScope.$on("$stateChangeSuccess", _initializeApp);
     
-    function _initializeServices(e, toState, toParams, fromState, fromParams){
+    function _initializeApp(e, toState, toParams, fromState, fromParams){
+      window.onbeforeunload = function (event) {
+        $rootScope.$broadcast('savestate');
+      };
+  
       if (toState.name =="select" || toState.name == "filter") {
         projectListService.updateAllProjects();
         projectListService.setList(projectListService.getIDListFromAllProjects());

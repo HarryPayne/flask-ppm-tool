@@ -89,9 +89,9 @@ class Description(ModelForm):
     class Meta:
         model = alch.Description
         include_primary_keys = True
-        only = ["projectID", "name", "description", "rationale", "businesscase", "dependencies", 
-                "maturityID", "proposer", "customer", "sponsorID", "fundingsourceID", "finalID",
-                "hostID", "technologyID", "typeID", "created", "ended" ]
+#         only = ["projectID", "name", "description", "rationale", "businesscase", "dependencies", 
+#                 "maturityID", "proposer", "customer", "sponsorID", "fundingsourceID", "finalID",
+#                 "hostID", "technologyID", "typeID", "created", "ended" ]
     
 #     maturity = ModelFormField(MaturitylistForm)
 #     maturity.info["choices"] = alch.MATURITY_CHOICES
@@ -109,7 +109,7 @@ class Description(ModelForm):
     #stakeholder.info["choices"] = stakeholder_choices()
     #driver = ModelFieldList(FormField(DriverForm))
     driver = QuerySelectMultipleField(query_factory=alch.DRIVER_CHOICES)
-    child = ModelFieldList(FormField(ChildForm))
+    child = QuerySelectMultipleField(query_factory=alch.CHILD_CHOICES)
         
 class SelectForm(Form):
     projectID = SelectField(u"Jump directly to project ", coerce=int)

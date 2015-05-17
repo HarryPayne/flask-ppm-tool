@@ -19,6 +19,10 @@
       "s4": s4
     };
     
+    window.onbeforeunload = function (event) {
+      $rootScope.$broadcast('savestate');
+    };
+  
     return service;
     
     function locationChange() {

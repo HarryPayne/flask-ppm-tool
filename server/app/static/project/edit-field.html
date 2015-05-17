@@ -1,52 +1,67 @@
   <dt>
-    <label ng-bind="project.attributes()[attr.index].label" class="text-capitalize"></label>
+    <label ng-bind="attr.label" class="text-capitalize"></label>
   </dt>
   <dd>
     <span ng-switch on="attr.format">
       <span ng-switch-when="string">
-        <p ng-bind="project.attributes()[attr.index].help"></p>
+        <p ng-bind="attr.help"></p>
         <input type="text" size="60"
           class="form-control col-lg-4"
-          ng-model="project.attributes()[attr.index].value"
+          ng-model="attr.value"
          />
       </span>
       <span ng-switch-when="textArea">
-        <p ng-bind="project.attributes()[attr.index].help"></p>
+        <p ng-bind="attr.help"></p>
         <textarea rows="8" cols="80"
           class="form-control col-lg-4"
-          ng-model="project.attributes()[attr.index].value"
-          ng-bind="project.attributes()[attr.index].value"></textarea>
+          ng-model="attr.value"
+          ng-bind="attr.value"></textarea>
       </span>
       <span ng-switch-when="multipleSelect">
         <table style="width: 100%">
           <tr>
-            <td ng-if="attr.multiple" style="width: 25%; vertical-align: top;">
+            <td ng-if="attr.multi" style="width: 25%; vertical-align: top;">
               <select multiple size="8" style="float:left"
                 class="form-control col-lg-4"
-                ng-model="project.attributes()[attr.index].value"
-                ng-options="item[1] for item in project.attributes()[attr.index].choices track by item[0]"></select>
+                ng-model="attr.value"
+                ng-options="item.desc for item in attr.choices track by item.id"></select>
             </td>
-            <td ng-if="!attr.multiple" style="width: 25%; vertical-align: top;">
+            <td ng-if="!attr.multi" style="width: 25%; vertical-align: top;">
               <select
-                class="form-control col-lg-4" 
-                ng-model="project.attributes()[attr.index].value"
-                ng-options="item[1] for item in project.attributes()[attr.index].choices track by item[0]"></select>
+                class="select form-control col-lg-4" 
+                ng-model="attr.value"
+                ng-options="item.desc for item in attr.choices track by item.id"></select>
             </td>
             <td style="width: 60%; vertical-align: top;">
-              <p ng-bind="project.attributes()[attr.index].help" class="col-lg-4"></p>        
+              <p ng-bind="attr.help" class="col-lg-4"></p>        
+            </td>
+          </tr>
+        </table>
+      </span>
+      <span ng-switch-when="lines">
+        <table style="width: 100%">
+          <tr>
+            <td ng-if="attr.multi" style="width: 25%; vertical-align: top;">
+              <select multiple size="8" style="float:left"
+                class="form-control col-lg-4"
+                ng-model="attr.value"
+                ng-options="item for item in attr.choices track by item"></select>
+            </td>
+            <td style="width: 60%; vertical-align: top;">
+              <p ng-bind="attr.help" class="col-lg-4"></p>        
             </td>
           </tr>
         </table>
       </span>
       <span ng-switch-when="dateRangeSelect">
-        <p ng-bind="project.attributes()[attr.index].help"></p>
+        <p ng-bind="attr.help"></p>
         <span ng-if="attr.computed == 1">
-          <span ng-bind="project.attributes()[attr.index].value"></span>
+          <span ng-bind="attr.value"></span>
         </span>
         <span ng-if="attr.computed == 0">
           <input
             class="form-control col-lg-4"
-            ng-model="project.attributes()[attr.index].value"
+            ng-model="attr.value"
             type="text"
            />
         </span>
