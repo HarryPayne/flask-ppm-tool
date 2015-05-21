@@ -32,6 +32,7 @@
     </div>
 
     <div ng-show="project.currentMode() == 'edit'">
+      <div ng-show="project.as.errors">An error occurred</div>
       <dl class="dl-horizontal"
         ng-repeat="attr in project.as.getProjectAttributes()" 
         ng-include src="'static/project/edit-field.html'">

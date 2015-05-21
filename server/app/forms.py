@@ -13,6 +13,7 @@ from wtforms_alchemy import model_form_factory
 from app import db
 from widgets import ChoicesSelect
 
+
 BaseModelForm = model_form_factory(Form)
 
 class ModelForm(BaseModelForm):
@@ -21,20 +22,10 @@ class ModelForm(BaseModelForm):
         return db.session
 
 # Forms for select field choices
-class ChildForm(ModelForm):
-    class Meta:
-        model = alch.Child
- 
 class DriverlistForm(ModelForm): 
     class Meta:
         model= alch.Driverlist
               
-class DriverForm(ModelForm):
-    class Meta:
-        model = alch.Driver
-    
-    driverlist = ModelFormField(DriverlistForm)
-        
 class FinallistForm(ModelForm):
     class Meta:
         model = alch.Finallist
@@ -66,12 +57,6 @@ class StakeholderlistForm(ModelForm):
     class Meta:
         model = alch.Stakeholderlist
         
-class StakeholderForm(ModelForm):
-    class Meta:
-        model = alch.Stakeholder
-    
-    stakeholderlist = ModelFormField(StakeholderlistForm)
-        
 class TechnologylistForm(ModelForm):
     class Meta:
         model = alch.Technologylist
@@ -82,34 +67,29 @@ class TypelistForm(ModelForm):
         model = alch.Typelist
 
 def maturity_choices():
-    return alch.Maturitylist.query.all()
+    return alch.Maturitylist.query
+
+def child_choices():
+    return alch.Description.query
+
+def driver_choices():
+    return alch.Driverlist.query
+
+def stakeholder_choices():
+    return alch.Stakeholderlist.query
 
 # Primary table forms
 class Description(ModelForm):
     class Meta:
         model = alch.Description
         include_primary_keys = True
-#         only = ["projectID", "name", "description", "rationale", "businesscase", "dependencies", 
-#                 "maturityID", "proposer", "customer", "sponsorID", "fundingsourceID", "finalID",
-#                 "hostID", "technologyID", "typeID", "created", "ended" ]
-    
-#     maturity = ModelFormField(MaturitylistForm)
-#     maturity.info["choices"] = alch.MATURITY_CHOICES
-#     sponsor = ModelFormField(SponsorlistForm)
-#     host = ModelFormField(HostlistForm)
-#     host.field_class.widget = ChoicesSelect(choices=alch.HOST_CHOICES)
-#     technology = ModelFormField(TechnologylistForm)
-#     initiative = ModelFormField(InitiativelistForm)
-#     type = ModelFormField(TypelistForm)
-#     fundingsource = ModelFormField(FundingsourcelistForm)
-#     final = ModelFormField(FinallistForm)
+        only = ["projectID", "name", "description", "rationale", "businesscase", "dependencies", 
+                "maturityID", "proposer", "customer", "sponsorID", "fundingsourceID", "finalID",
+                "hostID", "technologyID", "typeID", "created", "ended" ]    
 
-#    maturity = QuerySelectField(query_factory=maturity_choices, allow_blank=True)
-    stakeholder = QuerySelectMultipleField(query_factory=alch.STAKEHOLDER_CHOICES, allow_blank=False)
-    #stakeholder.info["choices"] = stakeholder_choices()
-    #driver = ModelFieldList(FormField(DriverForm))
-    driver = QuerySelectMultipleField(query_factory=alch.DRIVER_CHOICES)
-    child = QuerySelectMultipleField(query_factory=alch.CHILD_CHOICES)
+    childID = QuerySelectMultipleField(query_factory=child_choices)
+    driverID = QuerySelectMultipleField(query_factory=driver_choices)
+    stakeholderID = QuerySelectMultipleField(query_factory=stakeholder_choices, allow_blank=False)
         
 class SelectForm(Form):
     projectID = SelectField(u"Jump directly to project ", coerce=int)

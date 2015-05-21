@@ -272,52 +272,36 @@ class Comment(Base):
     comment = Column(Text, nullable=False)
 
 # vocabularies for rendering IDs as a select dropdown.
-# MATURITY_CHOICES = []
-# for row in Maturitylist.query.all():
-#     MATURITY_CHOICES.append((row.maturityID, row.maturityDesc))
-# SPONSOR_CHOICES = []
-# for row in Sponsorlist.query.all():
-#     SPONSOR_CHOICES.append((row.sponsorID, row.sponsorDesc))
-# HOST_CHOICES = []
-# for row in Hostlist.query.all():
-#     HOST_CHOICES.append((row.hostID, row.hostDesc))
-# TECHNOLOGY_CHOICES = []
-# for row in Technologylist.query.all():
-#     TECHNOLOGY_CHOICES.append((row.technologyID, row.technologyDesc))
-# INITIATIVE_CHOICES = []
-# for row in Initiativelist.query.all():
-#     INITIATIVE_CHOICES.append((row.initiativeID, row.initiativeDesc))
-# CRITICAL_CHOICES = []
-# for row in Criticallist.query.all():
-#     CRITICAL_CHOICES.append((row.criticalID, row.criticalDesc))
-# TYPE_CHOICES = []
-# for row in Typelist.query.all():
-#     TYPE_CHOICES.append((row.typeID, row.typeDesc))
-# FUNDINGSOURCE_CHOICES = []
-# for row in Fundingsourcelist.query.all():
-#     FUNDINGSOURCE_CHOICES.append((row.fundingsourceID, row.fundingsourceDesc))
-# FINAL_CHOICES = []
-# for row in Finallist.query.all():
-#     FINAL_CHOICES.append((row.finalID, row.finalDesc))
-# INITIATIVE_CHOICES = []
-# for row in Initiativelist.query.all():
-#     INITIATIVE_CHOICES.append((row.initiativeID, row.initiativeDesc))
-# t_stakeholder = Table(
-#     'stakeholder', metadata,
-#     Column('projectID', SmallInteger, nullable=False, index=True, server_default=text("'0'")),
-#     Column('stakeholderID', Integer, nullable=False, index=True, server_default=text("'0'"))
-# )
-
-class Child(Base):
-    __tablename__ = 'child'
-    
-    childID = Column(Integer, primary_key=True)
-    projectID = Column(Integer, ForeignKey("description.projectID"))
-
-CHILD_CHOICES = []
-for row in Child.query.all():
-    CHILD_CHOICES.append((row.childID, row.projectID))
-
+MATURITY_CHOICES = []
+for row in Maturitylist.query.all():
+    MATURITY_CHOICES.append((row.maturityID, row.maturityDesc))
+SPONSOR_CHOICES = []
+for row in Sponsorlist.query.all():
+    SPONSOR_CHOICES.append((row.sponsorID, row.sponsorDesc))
+HOST_CHOICES = []
+for row in Hostlist.query.all():
+    HOST_CHOICES.append((row.hostID, row.hostDesc))
+TECHNOLOGY_CHOICES = []
+for row in Technologylist.query.all():
+    TECHNOLOGY_CHOICES.append((row.technologyID, row.technologyDesc))
+INITIATIVE_CHOICES = []
+for row in Initiativelist.query.all():
+    INITIATIVE_CHOICES.append((row.initiativeID, row.initiativeDesc))
+CRITICAL_CHOICES = []
+for row in Criticallist.query.all():
+    CRITICAL_CHOICES.append((row.criticalID, row.criticalDesc))
+TYPE_CHOICES = []
+for row in Typelist.query.all():
+    TYPE_CHOICES.append((row.typeID, row.typeDesc))
+FUNDINGSOURCE_CHOICES = []
+for row in Fundingsourcelist.query.all():
+    FUNDINGSOURCE_CHOICES.append((row.fundingsourceID, row.fundingsourceDesc))
+FINAL_CHOICES = []
+for row in Finallist.query.all():
+    FINAL_CHOICES.append((row.finalID, row.finalDesc))
+INITIATIVE_CHOICES = []
+for row in Initiativelist.query.all():
+    INITIATIVE_CHOICES.append((row.initiativeID, row.initiativeDesc))
 
 class Stakeholderlist(Base):
     __tablename__ = 'stakeholderlist'
@@ -326,14 +310,11 @@ class Stakeholderlist(Base):
     stakeholderDesc = Column(String(100), nullable=False, server_default=text("''"))
     stakeholderText = Column(Text, nullable=False)
 
-STAKEHOLDER_CHOICES = []
-for row in Stakeholderlist.query.all():
-    STAKEHOLDER_CHOICES.append((row.stakeholderID, row.stakeholderDesc))
-
-class Stakeholder(Base):
-    __tablename__ = 'stakeholder'
-    projectID = Column(Integer, ForeignKey("description.projectID"))
-    stakeholderID = Column(Integer, ForeignKey("stakeholderlist.stakeholderID"), primary_key=True)
+t_stakeholder = Table(
+    'stakeholder', metadata,
+    Column('projectID', SmallInteger, ForeignKey("description.projectID"),nullable=False, index=True, server_default=text("'0'")),
+    Column('stakeholderID', Integer, ForeignKey("stakeholderlist"),nullable=False, index=True, server_default=text("'0'"))
+)
 
 class Driverlist(Base):
     __tablename__ = 'driverlist'
@@ -342,15 +323,25 @@ class Driverlist(Base):
     driverDesc = Column(String(100), nullable=False, server_default=text("''"))
     driverText = Column(Text, nullable=False)
 
-DRIVER_CHOICES = []
-for row in Driverlist.query.all():
-    DRIVER_CHOICES.append((row.driverID, row.driverDesc))
+t_driver = Table(
+    'driver', metadata,
+    Column('projectID', Integer, ForeignKey("description.projectID"), nullable=False, index=True, server_default=text("'0'")),
+    Column('driverID', Integer, ForeignKey("driverlist.driverID"),nullable=False, index=True, server_default=text("'0'"))
+)
 
-class Driver(Base):
-    __tablename__ = 'driver'
-    projectID = Column(Integer, ForeignKey("description.projectID"))
-    driverID = Column(Integer, ForeignKey("driverlist.driverID"), primary_key=True)
-#    driverlist = db.relationship(Driverlist, uselist=False, backref="driver")
+# class Child(Base):
+#     __tablename__ = 'child'
+#        
+#     childID = Column(Integer, ForeignKey("description.projectID"), primary_key=True,
+#            nullable=False, index=True, server_default=text("'0'"))
+#     projectID = Column(Integer, ForeignKey("description.projectID"), primary_key=True,
+#            nullable=False, index=True, server_default=text("'0'"))
+
+t_child = Table(
+    'child', metadata,
+    Column('projectID', Integer, ForeignKey("description.projectID"), primary_key=True),
+    Column('childID', Integer, ForeignKey("description.projectID"), primary_key=True)
+)
 
 class Description(Base):
     __tablename__ = 'description'
@@ -361,37 +352,49 @@ class Description(Base):
     rationale = Column(Text, nullable=True, index=True, server_default=text("''"))
     businesscase = Column(Text, nullable=True, index=True, server_default=text("''"))
     dependencies = Column(Text, nullable=True, index=True, server_default=text("''"))
-    maturityID = Column(Integer, nullable=False, index=True, server_default=text("'0'"))
+    maturityID = Column(Integer, ForeignKey(Maturitylist.maturityID), 
+                        info={"choices": MATURITY_CHOICES},
+                        nullable=False, index=True, server_default=text("'0'"))
     proposer = Column(String(100), nullable=False, server_default=text("''"))
     customer = Column(String(100), nullable=True, server_default=text("''"))
-    sponsorID = Column(Integer, nullable=False, index=True, server_default=text("'0'"))
-    hostID = Column(Integer, nullable=False, index=True, server_default=text("'0'"))
-    technologyID = Column(Integer,nullable=False, server_default=text("'0'"))
-    initiativeID = Column(Integer, nullable=False, server_default=text("'0'"))
+    sponsorID = Column(Integer, ForeignKey(Sponsorlist.sponsorID), 
+                       info={"choices": SPONSOR_CHOICES},
+                       nullable=False, index=True, server_default=text("'0'"))
+    hostID = Column(Integer, ForeignKey(Hostlist.hostID),
+                    info={"choices": HOST_CHOICES}, 
+                    nullable=False, index=True, server_default=text("'0'"))
+    technologyID = Column(Integer, ForeignKey(Technologylist.technologyID),
+                          info={"choices": TECHNOLOGY_CHOICES}, 
+                          nullable=False, server_default=text("'0'"))
+    initiativeID = Column(Integer, ForeignKey(Initiativelist.initiativeID),
+                          info={"choices": INITIATIVE_CHOICES}, 
+                          nullable=False, server_default=text("'0'"))
     criticalID = Column(Integer, nullable=False, server_default=text("'0'"))
-    typeID = Column(Integer, nullable=False, server_default=text("'0'"))
-    fundingsourceID = Column(Integer, nullable=False, server_default=text("'0'"))
+    typeID = Column(Integer, ForeignKey(Typelist.typeID),
+                    info={"choices": TYPE_CHOICES}, 
+                    nullable=False, server_default=text("'0'"))
+    fundingsourceID = Column(Integer, ForeignKey(Fundingsourcelist.fundingsourceID),
+                             #info={"choices": FUNDINGSOURCE_CHOICES}, 
+                             nullable=False, server_default=text("'0'"))
     created = Column(Date, nullable=False, server_default=text("'0000-00-00'"))
-    ended = Column(Date, nullable=False, server_default=text("'0000-00-00'"))
-    finalID = Column(Integer, nullable=False, index=True, server_default=text("'0'"))
+    ended = Column(Date, nullable=True, server_default=text("'0000-00-00'"))
+    finalID = Column(Integer, ForeignKey(Finallist.finalID),
+                     #info={"choices": FINAL_CHOICES}, 
+                     nullable=False, index=True, server_default=text("'0'"))
     lastModified = Column(DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"))
     lastModifiedBy = Column(String(100), nullable=False, server_default=text("''"))
     
-    child = db.relationship('Child', backref='description')
-    driver = db.relationship('Driver', backref='description')
-    stakeholder = db.relationship('Stakeholder', backref='description')
+#     childID = db.relationship("Child",
+#                               primaryjoin=projectID==Child.projectID,
+#                               backref="children")
+    childID = db.relationship("Description", 
+                              secondary=t_child,
+                              primaryjoin=projectID==t_child.c.projectID,
+                              secondaryjoin=projectID==t_child.c.childID,
+                              backref="parent")
+    driverID = db.relationship("Driverlist", secondary=t_driver)
+    stakeholderID = db.relationship("Stakeholderlist", secondary=t_stakeholder)
     
-# t_child = Table(
-#     'child', metadata,
-#     Column('projectID', Integer, nullable=False, index=True, server_default=text("'0'")),
-#     Column('childID', Integer, nullable=False, server_default=text("'0'"))
-# )
-
-# t_driver = Table(
-#     'driver', metadata,
-#     Column('projectID', Integer, nullable=False, index=True, server_default=text("'0'")),
-#     Column('driverID', Integer, nullable=False, index=True, server_default=text("'0'"))
-# )
 
 class Disposition(Base):
     __tablename__ = 'disposition'

@@ -10,19 +10,21 @@
   
   function ProjectListService($rootScope, $http, $state, $stateParams, $location) {
     var service = {
-      "getAllProjectResults": getAllProjectResults,
-      "getIDListFromAllProjects": getIDListFromAllProjects,
-      "getMasterList": getMasterList,
-      "hasProjects": hasProjects,
-      "initModel": initModel,
-      "jumpToProject": jumpToProject,
-      "jumpToProjectInList": jumpToProjectInList,
-      "RestoreState": RestoreState,
-      "SaveState": SaveState,
-      "setDescription": setDescription,
-      "setList": setList,
-      "updateAllProjects": updateAllProjects,
-      "updateProjectListProjectID": updateProjectListProjectID
+      getAllProjectResults: getAllProjectResults,
+      getIDListFromAllProjects: getIDListFromAllProjects,
+      getMasterList: getMasterList,
+      getProjectID: getProjectID,
+      getProjectIDFromLocation: getProjectIDFromLocation,
+      hasProjects: hasProjects,
+      initModel: initModel,
+      jumpToProject: jumpToProject,
+      jumpToProjectInList: jumpToProjectInList,
+      RestoreState: RestoreState,
+      SaveState: SaveState,
+      setDescription: setDescription,
+      setList: setList,
+      updateAllProjects: updateAllProjects,
+      updateProjectListProjectID: updateProjectListProjectID
     };
   
     service.RestoreState();
@@ -53,7 +55,32 @@
     function getMasterList() {
       return service.masterList;
     };
+
+    function getProjectID() {
+      if (typeof service.projectID == "undefined") {
+        return service.getProjectIDFromLocation();
+      }
+      return service.projectID;
+    }
     
+    function getProjectIDFromLocation() {
+      var url = $location.url();
+      if (url.substring(0,8) == "/project") {
+        var projectID = url.substring(9);
+        if (projectID.substring(0,5) == "edit/") projectID = projectID.substring(5);
+        projectID = projectID.substring(0, projectID.indexOf("#"));
+        try {
+          return parseInt(projectID);
+        }
+        catch(e) {
+          return false;
+        }
+        if (projectID) {
+          projectID = parseInt(projectID);
+        }
+      }
+    };
+
     function hasProjects() {
       return Boolean(service.getMasterList().allProjects.length > 0);
     }

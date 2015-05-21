@@ -6,13 +6,16 @@ from flask.ext.jwt import current_user
 from flask.ext.login import login_user, logout_user, login_required
 from flask.ext.cors import cross_origin
 from datetime import datetime
-from flask.ext.wtf import Form
 from wtforms.ext.sqlalchemy.orm import model_form
 from wtforms import StringField, BooleanField, TextAreaField, SelectField
+from wtforms.widgets import Select
+from wtforms.ext.sqlalchemy.fields import QuerySelectMultipleField
+import wtforms_json
 from json import dumps
+from werkzeug import datastructures
 
 from app import app, db, lm, jwt #, cors 
-from .forms import Description, SelectForm, LoginForm, ChildForm  # ProjectViewForm, EditForm, PostForm
+from .forms import Description, SelectForm, LoginForm # ProjectViewForm, EditForm, PostForm
 from .models import User
 from widgets import ChoicesSelect
 import alchemy_models as alch
@@ -59,6 +62,21 @@ def logout():
     logout_user()
     return redirect(url_for("index"))
 
+# @app.before_request
+# def before_request():
+#     # Fix jQuery.params renaming attributes with multiple values.
+#     import pydevd
+#     pydevd.settrace()
+#     
+#     form = request.form
+#     if False:
+#         newform = datastructures.MultiDict()
+#         for key in form.keys():
+#             if key[-2:] == "[]":
+#                 newform.add(key[:-2], form.getlist(key))
+#             else:
+#                 newform.add(key, form.getlist(key))
+#         request.form = newform
 
 # @app.before_request
 # def before_request():
@@ -95,6 +113,9 @@ def selectView():
 def getAllAttributes():
     rows = alch.Attributelist.query.order_by("attributeID").all()
     attributes = {}
+    
+    attributes["csrf_token"] = {"name": "csrf_token",
+                                "format": "hidden"}
     for row in rows:
         attr = {"name": row.attributeName,
                 "label": row.label,
@@ -185,10 +206,14 @@ def getProjectAttributes(projectID):
             # Work through a list of table result items to get the data.
             # Form field does not end in "ID" but attribute name does.
             name = row.attributeName
-            values = [getattr(item, name) for item in form[name[:-2]].data] 
-            qf = form[name[:-2]].query_factory
-            descs = [str(item[1]) for item in qf if item[0] in values]
-            printValue = ", ".join(descs)
+            if name == "childID":
+                values = [item.projectID for item in form["childID"].data]
+                printValue = ""     # Computed on the client side
+            else:
+                values = [getattr(item, name) for item in form[name].data] 
+                qf = form[name].query_factory
+                descs = [getattr(item, name[:-2]+"Desc") for item in qf().all() if getattr(item, name) in values]
+                printValue = ", ".join(descs)
             attributes.append({"name": name,
                                "value": values,
                                "printValue": printValue
@@ -203,7 +228,7 @@ def getProjectAttributes(projectID):
             attributes.append({"name": row.attributeName,
                                "value": form[row.attributeName].data})
 
-    return {"projectID": projectID, "attributes": attributes}
+    return {"projectID": projectID, "csrf_token": form["csrf_token"].current_token, "attributes": attributes}
 
 @app.route("/projectTemplate")
 def projectTemplate():
@@ -228,7 +253,6 @@ def projectView(projectID):
 @cross_origin(headers=['Content-Type', 'Authorization'])
 @jwt_required()
 def projectEdit(projectID):
-
     if 'Curator' not in current_user.groups:
         # Must be a Curator to edit project metadata
         abort(401)
@@ -236,33 +260,18 @@ def projectEdit(projectID):
     if projectID:
         p = alch.Description.query.filter_by(projectID=projectID).first_or_404()
         form = Description(request.form, p)
-        form.projectID.raw_data = [form.projectID.data]
+        #form.projectID.raw_data = [form.projectID.data]
         if form.validate_on_submit():
             form.populate_obj(p)
             db.session.add(p)
             db.session.commit()
             flash("Project {id} was updated".format(id=projectID))
-            return redirect(url_for('projectEdit', projectID=projectID))
-        title = "PPT {id}: {name}".format(
-            id = p.projectID,
-            name = p.name
-            )
-        attributes = getProjectAttributes(projectID)
-#         for row in alch.Attributelist.query.filter_by(table="description").all():
-#             attributes.append({"name": row.attributeName,
-#                                "label": row.label,
-#                                "format": row.format,
-#                                "help": row.help,
-#                                "multi": row.multipleValued,
-#                                "value": form[row.attributeName].data,
-#                                "choices": form[row.attributeName].choices if form[row.type] == "SelectField" else None,
-#                                "multiple": form[row.attributeName].widget.multiple if form[row.type] == "SelectField" else None})
-        return render_template("edit.html",
-                               title=title,
-                               projectID=projectID,
-                               form=form,
-                               attributes=attributes)
 
+        response = getProjectAttributes(projectID)
+        if form.errors:
+            response["errors"] = form.errors
+        return dumps(response)
+        
 @app.route("/filterView", methods=["GET", "POST"])
 def filterView():
     attributes = []

@@ -12,6 +12,7 @@
     var service = {
       getAttribute: getAttribute,
       getAllAttributes: getAllAttributes,
+      getFormData: getFormData,
       getProjectAttributes: getProjectAttributes,
       getSelectedChoices:getSelectedChoices, 
       makeProjectLink: makeProjectLink,
@@ -23,10 +24,10 @@
       updateProjectAttributes: updateProjectAttributes
     };
 
-    //service.RestoreState();
-    //if (typeof service.attributes == "undefined") {
+    service.RestoreState();
+    if (typeof service.attributes == "undefined") {
       service.updateAllAttributes();
-    //}
+    }
     
     $rootScope.$on("savestate", service.SaveState);
     $rootScope.$on("restorestate", service.RestoreState);
@@ -39,6 +40,34 @@
     
     function getAllAttributes() {
       return service.allAttributes;
+    };
+    
+    function getFormData() {
+      var formData = new Object;
+      formData.projectID = service.projectID;
+      formData.csrf_token = service.csrf_token;
+      _.each(service.allAttributes, function(attr) {
+        if (attr.name == "csrf_token") {
+          // Do nothing
+        }
+        else if (attr.name == "childID") {
+          formData.childID = attr.value
+        }
+        else if (attr.multi) {
+          formData[attr.name] = _.map(attr.value, function(a) {
+            return a.id;
+          })
+        }
+        else if (attr.format == "multipleSelect") {
+          if (attr.value) {
+            formData[attr.name] = attr.value.id;            
+          }
+        }
+        else {
+          formData[attr.name] = attr.value;
+        }
+      });
+      return formData;
     };
 
     function getProjectAttributes() {
@@ -91,16 +120,22 @@
     }
     
     function RestoreState() {
-      service.allAttributes = angular.fromJson(sessionStorage.attributesService);
+      var data = angular.fromJson(sessionStorage.attributesService);
+      if (data) {
+        service.allAttributes = data.allAttributes;
+        service.projectID = data.projectID;
+      }
     };
 
     function SaveState() {
-      sessionStorage.attributesService = angular.toJson(service.allAttributes);
+      var data = new Object;
+      data.allAttributes = service.allAttributes;
+      data.projectID = service.projectID;
+      sessionStorage.attributesService = angular.toJson(data);
     };
     
     function setAllAttributes(response) {
       service.allAttributes = response.data;
-      service.SaveState()
     };
     
     function updateAllAttributes() {
@@ -109,6 +144,9 @@
     };
     
     function updateProjectAttributes(result) {
+      service.projectID = result.data.projectID;
+      service.csrf_token = result.data.csrf_token;
+      service.errors = result.data.errors;
       service.projectAttributes = [];
       angular.forEach(result.data.attributes, mergeAttributeWithValue);
     };

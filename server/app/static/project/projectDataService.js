@@ -7,10 +7,10 @@
     .factory("projectDataService", projectDataService);
   
   projectDataService.$inject = ["$rootScope", "$http", "$state", "$stateParams", 
-                                "$location", "attributesService"];
+                                "$location", "projectListService", "attributesService"];
   
   function projectDataService($rootScope, $http, $state, $stateParams, 
-                              $location, attributesService) {
+                              $location, projectListService, attributesService) {
     var service = {
       attributes: attributesService.getAttributes,
       changeMode: changeMode,
@@ -75,18 +75,12 @@
     }
     
     function getProjectDataFromLocation() {
-      var url = $location.url();
-      if (url.substring(0,8) == "/project") {
-        var projectID = url.substring(9);
-        projectID = projectID.substring(0, projectID.indexOf("#"));
-        if (projectID) {
-          projectID = parseInt(projectID);
-          if (projectID != service.projectID) {
-            service.getProjectData(projectID);
-          }
-        }
+      var idByLocation = projectListService.getProjectIDFromLocation();
+      if (idByLocation && idByLocation != service.projectID) {
+        service.projectID = idByLocation;
+        service.getProjectData(idByLocation);
       }
-    }
+    };
 
     function jumpToAtachFile() {
       $state.go("project.attach", {projectID: service.projectID});
@@ -97,21 +91,38 @@
     }
     
     function RestoreState() {
-      service.attributes = angular.fromJson(sessionStorage.projectDataServiceAttributes);
+      service.projectID = angular.fromJson(sessionStorage.projectDataServiceAttributes);
     };
 
+
     function saveProject() {
-      
+      var formData = attributesService.getFormData();
+      var projectID = projectListService.getProjectID();
+      var request = {
+        method: "POST",
+        url: "/projectEdit/" + projectID,
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+        },
+        data: jQuery.param(formData, true)
+      };
+      $http(request)
+        .then(service.setProjectData);
     };
-    
+
     function SaveState() {
-      sessionStorage.projectDataServiceAttributes = angular.toJson(service.attributes);
+      var data = new Object;
+      sessionStorage.projectDataServiceAttributes = angular.toJson(service.projectID);
     };
       
     function setProjectData(result) {
+      //return;
       attributesService.updateProjectAttributes(result);
+      service.SaveState();
+      attributesService.SaveState();
     }
 
+    service.SaveState();
     return service;
   }
 
