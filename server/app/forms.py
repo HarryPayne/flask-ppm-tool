@@ -78,6 +78,9 @@ def driver_choices():
 def stakeholder_choices():
     return alch.Stakeholderlist.query
 
+def strategy_choices():
+    return alch.Strategylist.query
+
 # Primary table forms
 class Description(ModelForm):
     class Meta:
@@ -85,12 +88,48 @@ class Description(ModelForm):
         include_primary_keys = True
         only = ["projectID", "name", "description", "rationale", "businesscase", "dependencies", 
                 "maturityID", "proposer", "customer", "sponsorID", "fundingsourceID", "finalID",
-                "hostID", "technologyID", "typeID", "created", "ended" ]    
+                "hostID", "technologyID", "typeID", "created", "ended"]
 
     childID = QuerySelectMultipleField(query_factory=child_choices)
     driverID = QuerySelectMultipleField(query_factory=driver_choices)
     stakeholderID = QuerySelectMultipleField(query_factory=stakeholder_choices, allow_blank=False)
         
+class Portfolio(ModelForm):
+    class Meta:
+        model = alch.Portfolio
+        include_primary_keys = True
+        only = ["latest_disposeID", "criticalID", "flavorID", "initiativeID", 
+                "scopeID", "visibilityID", "complexityID", "risklevelID",
+                "costlevelID", "rpu", "budgetInFY", "budgetInQ"]    
+
+    strategyID = QuerySelectMultipleField(query_factory=strategy_choices, allow_blank=False)
+
+class Project(ModelForm):
+    class Meta:
+        model = alch.Project
+        include_primary_keys = True
+        only = ['org_branchID', 'proj_manager', 'tech_manager', 'proj_visibilityID', 
+                'project_url', 'progressID', 'statusID', 'startedOn', 'finishedOn']
+
+class Disposition(ModelForm):
+    class Meta:
+        model = alch.Disposition
+        include_primary_keys = True
+        only = ['disposeID', 'dispositionID', 'explanation', 'disposedInFY', 
+                'disposedInQ', 'reconsiderInFY', 'reconsiderInQ', 'startInY', 
+                'startInM', 'finishInY', 'finishInM']
+
+class Comment(ModelForm):
+    class Meta:
+        model = alch.Comment
+        include_primary_keys = True
+
+# class Upload(ModelForm):
+#     class Meta:
+#         model = alch.Upload
+#         include_primary_keys = True        
+
+# Other forms
 class SelectForm(Form):
     projectID = SelectField(u"Jump directly to project ", coerce=int)
 

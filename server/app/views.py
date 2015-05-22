@@ -7,7 +7,7 @@ from flask.ext.login import login_user, logout_user, login_required
 from flask.ext.cors import cross_origin
 from datetime import datetime
 from wtforms.ext.sqlalchemy.orm import model_form
-from wtforms import StringField, BooleanField, TextAreaField, SelectField
+from wtforms import BooleanField, DateField, SelectField, StringField, TextAreaField
 from wtforms.widgets import Select
 from wtforms.ext.sqlalchemy.fields import QuerySelectMultipleField
 import wtforms_json
@@ -15,7 +15,8 @@ from json import dumps
 from werkzeug import datastructures
 
 from app import app, db, lm, jwt #, cors 
-from .forms import Description, SelectForm, LoginForm # ProjectViewForm, EditForm, PostForm
+from .forms import (Description, Portfolio, Disposition, Project, Comment, # Upload, 
+                    SelectForm, LoginForm)
 from .models import User
 from widgets import ChoicesSelect
 import alchemy_models as alch
@@ -157,7 +158,7 @@ def getAllAttributes():
     return dumps(attributes)
     
 @app.route("/getBriefDescriptions")
-def get_brief_descriptions():
+def getBriefDescriptions():
     """ return list of project descriptions """
     columns = ["projectID", "name", "description", "finalID"]
     descriptions = []
@@ -193,8 +194,15 @@ def getProjectAttributes(projectID):
     """ Render a WT Forms form from the request/db, pick out the data from the
         widgets, and send them out as JSON.
     """
+    import pydevd
+    pydevd.settrace()
     p = alch.Description.query.filter_by(projectID=projectID).first_or_404()
-    form = Description(request.form, p)
+    descriptionForm = Description(request.form, p)
+    portfolioForm = Portfolio(request.form, p.portfolio[0])
+    projectForm = Project(request.form, p.project[0])
+    dispositionForm = Disposition(request.form, p.disposition[0])
+    commentForm = Comment(request.form, p.comments[0])
+#     uploadForm = Comment(request.form, p.uploads[0])
     attributes = []
     index = 0
 
@@ -207,11 +215,11 @@ def getProjectAttributes(projectID):
             # Form field does not end in "ID" but attribute name does.
             name = row.attributeName
             if name == "childID":
-                values = [item.projectID for item in form["childID"].data]
+                values = [item.projectID for item in descriptionForm["childID"].data]
                 printValue = ""     # Computed on the client side
             else:
-                values = [getattr(item, name) for item in form[name].data] 
-                qf = form[name].query_factory
+                values = [getattr(item, name) for item in descriptionForm[name].data] 
+                qf = descriptionForm[name].query_factory
                 descs = [getattr(item, name[:-2]+"Desc") for item in qf().all() if getattr(item, name) in values]
                 printValue = ", ".join(descs)
             attributes.append({"name": name,
@@ -220,16 +228,49 @@ def getProjectAttributes(projectID):
                                })
             
         elif row.format == "dateRangeSelect":
-            data = form[row.attributeName].data
+            data = descriptionForm[row.attributeName].data
             attributes.append({"name": row.attributeName,
                                "value": data.isoformat() if data else ""})
     
         else:
             attributes.append({"name": row.attributeName,
-                               "value": form[row.attributeName].data})
+                               "value": descriptionForm[row.attributeName].data})
 
-    return {"projectID": projectID, "csrf_token": form["csrf_token"].current_token, "attributes": attributes}
+    return {"projectID": projectID, "csrf_token": descriptionForm["csrf_token"].current_token, "attributes": attributes}
 
+def getAttributesFromForm(form, table):
+    token = ""
+    attributes = []
+
+    for field in form:
+        if field.name == "csrf_token":
+            token = field.current_token
+        
+        elif isinstance(field, QuerySelectMultipleField):
+            name = field.name
+            if name == "childID":
+                values = [item.projectID for item in field.data]
+                printValue = ""     # Computed on the client side
+            else:
+                values = [getattr(item, name) for item in field.data] 
+                qf = field.query_factory
+                descs = [getattr(item, name[:-2]+"Desc") for item in qf().all() if getattr(item, name) in values]
+                printValue = ", ".join(descs)
+            attributes.append({"name": name,
+                               "value": values,
+                               "printValue": printValue})
+       
+        elif isinstance(field, DateField):
+            data = field.data
+            attributes.append({"name": field.name,
+                               "value": data.isoformat() if data else ""})
+           
+        else:
+            attributes.append({"name": field.name,
+                               "value": field.data})
+    
+    return {"table": table, "data": {"csrf_token": token, "attributes": attributes}}
+    
 @app.route("/projectTemplate")
 def projectTemplate():
     return render_template("view.html")

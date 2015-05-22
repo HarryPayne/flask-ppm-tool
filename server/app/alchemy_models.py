@@ -1,7 +1,7 @@
 # coding: utf-8
 import sqlalchemy as sa
-from sqlalchemy import (Column, Date, DateTime, Enum, Float, Integer, SmallInteger, String, Table, Text, text,
-                        ForeignKey, orm)
+from sqlalchemy import (BLOB, Column, Date, DateTime, Enum, ForeignKey, Float, Integer, 
+                        orm, SmallInteger, String, Table, Text, text)
 from sqlalchemy_utils import ChoiceType
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.dialects.mysql.base import MEDIUMBLOB
@@ -14,6 +14,7 @@ from widgets import ChoicesSelect
 from app import db
 Base = db.Model
 metadata = db.metadata
+
 
 class Attributelist(Base):
     __tablename__ = 'newattributelist'
@@ -75,7 +76,7 @@ t_distributionlist = Table(
 t_edit_log = Table(
     'edit_log', metadata,
     Column('user', String(100), nullable=False, index=True, server_default=text("''")),
-    Column('projectID', SmallInteger, nullable=False, index=True, server_default=text("'0'")),
+    Column('projectID', SmallInteger, ForeignKey("description.projectID"), nullable=False, index=True, server_default=text("'0'")),
     Column('action', String(100), nullable=False, server_default=text("''")),
     Column('timestamp', DateTime, nullable=False, index=True, server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"))
 )
@@ -197,13 +198,6 @@ class Statuslist(Base):
     statusDesc = Column(String(100), nullable=False, server_default=text("''"))
 
 
-t_strategy = Table(
-    'strategy', metadata,
-    Column('projectID', Integer, nullable=False, index=True, server_default=text("'0'")),
-    Column('strategyID', Integer, nullable=False, index=True, server_default=text("'0'"))
-)
-
-
 class Strategylist(Base):
     __tablename__ = 'strategylist'
 
@@ -244,7 +238,7 @@ class Typelist(Base):
 t_upload = Table(
     'upload', metadata,
     Column('uploadID', Integer, nullable=False, index=True),
-    Column('projectID', Integer, nullable=False),
+    Column('projectID', Integer, ForeignKey("description.projectID"), nullable=False),
     Column('uploadName', String(64), nullable=False),
     Column('uploadType', String(32), nullable=False),
     Column('uploadDesc', Text, nullable=False),
@@ -252,6 +246,21 @@ t_upload = Table(
     Column('lastModifiedBy', String(100), nullable=False),
     Column('lastModified', DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"))
 )
+
+# class Upload(Base):
+#     __tablename__ = "upload"
+# 
+#     uploadID = Column(Integer, primary_key=True, nullable=False, index=True)
+#     projectID = Column(Integer, ForeignKey("description.projectID"), nullable=False)
+#     uploadName = Column(String(64), nullable=False)
+#     uploadType = Column(String(32), nullable=False)
+#     uploadDesc = Column(Text, nullable=False)
+#     uploadData = Column(BLOB, nullable=False)
+#     lastModifiedBy = Column(String(100), nullable=False)
+#     lastModified = Column(DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"))
+#     
+#     description = db.relationship("Description", backref="uploads")
+
 
 
 class Visibilitylist(Base):
@@ -266,42 +275,44 @@ class Comment(Base):
     __tablename__ = 'comment'
 
     commentID = Column(Integer, primary_key=True)
-    projectID = Column(Integer, nullable=False, index=True, server_default=text("'0'"))
+    projectID = Column(Integer, ForeignKey("description.projectID"), nullable=False, index=True, server_default=text("'0'"))
     user = Column(String(100), nullable=False, index=True, server_default=text("''"))
     date = Column(DateTime, nullable=False, index=True, server_default=text("'0000-00-00 00:00:00'"))
     comment = Column(Text, nullable=False)
 
+    description = db.relationship("Description", backref="comments")
+
 # vocabularies for rendering IDs as a select dropdown.
-MATURITY_CHOICES = []
-for row in Maturitylist.query.all():
-    MATURITY_CHOICES.append((row.maturityID, row.maturityDesc))
-SPONSOR_CHOICES = []
-for row in Sponsorlist.query.all():
-    SPONSOR_CHOICES.append((row.sponsorID, row.sponsorDesc))
-HOST_CHOICES = []
-for row in Hostlist.query.all():
-    HOST_CHOICES.append((row.hostID, row.hostDesc))
-TECHNOLOGY_CHOICES = []
-for row in Technologylist.query.all():
-    TECHNOLOGY_CHOICES.append((row.technologyID, row.technologyDesc))
-INITIATIVE_CHOICES = []
-for row in Initiativelist.query.all():
-    INITIATIVE_CHOICES.append((row.initiativeID, row.initiativeDesc))
-CRITICAL_CHOICES = []
-for row in Criticallist.query.all():
-    CRITICAL_CHOICES.append((row.criticalID, row.criticalDesc))
-TYPE_CHOICES = []
-for row in Typelist.query.all():
-    TYPE_CHOICES.append((row.typeID, row.typeDesc))
-FUNDINGSOURCE_CHOICES = []
-for row in Fundingsourcelist.query.all():
-    FUNDINGSOURCE_CHOICES.append((row.fundingsourceID, row.fundingsourceDesc))
-FINAL_CHOICES = []
-for row in Finallist.query.all():
-    FINAL_CHOICES.append((row.finalID, row.finalDesc))
-INITIATIVE_CHOICES = []
-for row in Initiativelist.query.all():
-    INITIATIVE_CHOICES.append((row.initiativeID, row.initiativeDesc))
+# MATURITY_CHOICES = []
+# for row in Maturitylist.query.all():
+#     MATURITY_CHOICES.append((row.maturityID, row.maturityDesc))
+# SPONSOR_CHOICES = []
+# for row in Sponsorlist.query.all():
+#     SPONSOR_CHOICES.append((row.sponsorID, row.sponsorDesc))
+# HOST_CHOICES = []INITIATIVE_CHOICES
+# for row in Hostlist.query.all():
+#     HOST_CHOICES.append((row.hostID, row.hostDesc))
+# TECHNOLOGY_CHOICES = []
+# for row in Technologylist.query.all():
+#     TECHNOLOGY_CHOICES.append((row.technologyID, row.technologyDesc))
+# INITIATIVE_CHOICES = []
+# for row in Initiativelist.query.all():
+#     INITIATIVE_CHOICES.append((row.initiativeID, row.initiativeDesc))
+# CRITICAL_CHOICES = []
+# for row in Criticallist.query.all():
+#     CRITICAL_CHOICES.append((row.criticalID, row.criticalDesc))
+# TYPE_CHOICES = []
+# for row in Typelist.query.all():
+#     TYPE_CHOICES.append((row.typeID, row.typeDesc))
+# FUNDINGSOURCE_CHOICES = []
+# for row in Fundingsourcelist.query.all():
+#     FUNDINGSOURCE_CHOICES.append((row.fundingsourceID, row.fundingsourceDesc))
+# FINAL_CHOICES = []
+# for row in Finallist.query.all():
+#     FINAL_CHOICES.append((row.finalID, row.finalDesc))
+# INITIATIVE_CHOICES = []
+# for row in Initiativelist.query.all():
+#     INITIATIVE_CHOICES.append((row.initiativeID, row.initiativeDesc))
 
 class Stakeholderlist(Base):
     __tablename__ = 'stakeholderlist'
@@ -313,7 +324,7 @@ class Stakeholderlist(Base):
 t_stakeholder = Table(
     'stakeholder', metadata,
     Column('projectID', SmallInteger, ForeignKey("description.projectID"),nullable=False, index=True, server_default=text("'0'")),
-    Column('stakeholderID', Integer, ForeignKey("stakeholderlist"),nullable=False, index=True, server_default=text("'0'"))
+    Column('stakeholderID', Integer, ForeignKey("stakeholderlist.stakeholderID"),nullable=False, index=True, server_default=text("'0'"))
 )
 
 class Driverlist(Base):
@@ -353,25 +364,25 @@ class Description(Base):
     businesscase = Column(Text, nullable=True, index=True, server_default=text("''"))
     dependencies = Column(Text, nullable=True, index=True, server_default=text("''"))
     maturityID = Column(Integer, ForeignKey(Maturitylist.maturityID), 
-                        info={"choices": MATURITY_CHOICES},
+                        #info={"choices": MATURITY_CHOICES},
                         nullable=False, index=True, server_default=text("'0'"))
     proposer = Column(String(100), nullable=False, server_default=text("''"))
     customer = Column(String(100), nullable=True, server_default=text("''"))
     sponsorID = Column(Integer, ForeignKey(Sponsorlist.sponsorID), 
-                       info={"choices": SPONSOR_CHOICES},
+                       #info={"choices": SPONSOR_CHOICES},
                        nullable=False, index=True, server_default=text("'0'"))
     hostID = Column(Integer, ForeignKey(Hostlist.hostID),
-                    info={"choices": HOST_CHOICES}, 
+                    #info={"choices": HOST_CHOICES}, 
                     nullable=False, index=True, server_default=text("'0'"))
     technologyID = Column(Integer, ForeignKey(Technologylist.technologyID),
-                          info={"choices": TECHNOLOGY_CHOICES}, 
+                         #info={"choices": TECHNOLOGY_CHOICES}, 
                           nullable=False, server_default=text("'0'"))
     initiativeID = Column(Integer, ForeignKey(Initiativelist.initiativeID),
-                          info={"choices": INITIATIVE_CHOICES}, 
+                          #info={"choices": INITIATIVE_CHOICES}, 
                           nullable=False, server_default=text("'0'"))
     criticalID = Column(Integer, nullable=False, server_default=text("'0'"))
     typeID = Column(Integer, ForeignKey(Typelist.typeID),
-                    info={"choices": TYPE_CHOICES}, 
+                    #info={"choices": TYPE_CHOICES}, 
                     nullable=False, server_default=text("'0'"))
     fundingsourceID = Column(Integer, ForeignKey(Fundingsourcelist.fundingsourceID),
                              #info={"choices": FUNDINGSOURCE_CHOICES}, 
@@ -388,19 +399,23 @@ class Description(Base):
 #                               primaryjoin=projectID==Child.projectID,
 #                               backref="children")
     childID = db.relationship("Description", 
-                              secondary=t_child,
-                              primaryjoin=projectID==t_child.c.projectID,
-                              secondaryjoin=projectID==t_child.c.childID,
-                              backref="parent")
+                               secondary=t_child,
+                               primaryjoin=projectID==t_child.c.projectID,
+                               secondaryjoin=projectID==t_child.c.childID,
+                               order_by=projectID,
+                               backref="children")
     driverID = db.relationship("Driverlist", secondary=t_driver)
     stakeholderID = db.relationship("Stakeholderlist", secondary=t_stakeholder)
     
-
+#     portfolios = db.relationship("Portfolio", 
+#                                 primaryjoin="description.projectID==portfolio.projectID",
+#                                 backref="description")
+        
 class Disposition(Base):
     __tablename__ = 'disposition'
 
     disposeID = Column(SmallInteger, primary_key=True)
-    projectID = Column(SmallInteger, nullable=False, index=True, server_default=text("'0'"))
+    projectID = Column(SmallInteger, ForeignKey("description.projectID"), nullable=False, index=True, server_default=text("'0'"))
     dispositionID = Column(Integer, nullable=False, index=True, server_default=text("'0'"))
     explanation = Column(Text, nullable=False, index=True)
     disposedInFY = Column(SmallInteger, nullable=False, index=True, server_default=text("'0'"))
@@ -414,12 +429,14 @@ class Disposition(Base):
     lastModified = Column(DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"))
     lastModifiedBy = Column(String(100), nullable=False, server_default=text("''"))
 
+    description = db.relationship("Description", backref="disposition")
+
 
 class History(Base):
     __tablename__ = 'history'
 
     historyID = Column(Integer, primary_key=True)
-    projectID = Column(Integer, nullable=False, index=True, server_default=text("'0'"))
+    projectID = Column(Integer, ForeignKey("description.projectID"), nullable=False, index=True, server_default=text("'0'"))
     attributeName = Column(String(100), nullable=False, server_default=text("''"))
     oldValue = Column(Integer, nullable=False, server_default=text("'0'"))
     newValue = Column(Integer, nullable=False, server_default=text("'0'"))
@@ -434,11 +451,18 @@ t_months = Table(
     Column('monthDesc', String(3), nullable=False, server_default=text("''"))
 )
 
+t_strategy = Table(
+    'strategy', metadata,
+    Column('projectID', Integer, ForeignKey("portfolio.projectID"),
+           nullable=False, index=True, server_default=text("'0'")),
+    Column('strategyID', Integer, ForeignKey("strategylist.strategyID"),
+           nullable=False, index=True, server_default=text("'0'"))
+)
 
 class Portfolio(Base):
     __tablename__ = 'portfolio'
 
-    projectID = Column(SmallInteger, primary_key=True)
+    projectID = Column(SmallInteger, ForeignKey("description.projectID"), primary_key=True)
     latest_disposeID = Column(SmallInteger, nullable=False, server_default=text("'0'"))
     criticalID = Column(Integer, nullable=False, server_default=text("'0'"))
     flavorID = Column(Integer, nullable=False, index=True, server_default=text("'0'"))
@@ -454,11 +478,13 @@ class Portfolio(Base):
     lastModified = Column(DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"))
     lastModifiedBy = Column(String(100), nullable=False, server_default=text("''"))
 
+    strategyID = db.relationship("Strategylist", secondary=t_strategy)
+    description = db.relationship("Description", backref="portfolio")
 
 class Project(Base):
     __tablename__ = 'project'
 
-    projectID = Column(SmallInteger, primary_key=True, server_default=text("'0'"))
+    projectID = Column(SmallInteger, ForeignKey("description.projectID"), primary_key=True, server_default=text("'0'"))
     org_branchID = Column(Integer, nullable=False, index=True, server_default=text("'0'"))
     proj_manager = Column(String(100), nullable=False, index=True, server_default=text("''"))
     tech_manager = Column(String(100), nullable=False, index=True, server_default=text("''"))
@@ -470,6 +496,8 @@ class Project(Base):
     finishedOn = Column(Date, nullable=False, index=True, server_default=text("'0000-00-00'"))
     lastModified = Column(DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"))
     lastModifiedBy = Column(String(100), nullable=False, server_default=text("''"))
+    
+    description = db.relationship("Description", backref="project")
 
 
 class Quarter(Base):
