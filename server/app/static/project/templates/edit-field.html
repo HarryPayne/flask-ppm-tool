@@ -45,7 +45,7 @@
               <select multiple size="8" style="float:left"
                 class="form-control col-lg-4"
                 ng-model="attr.value"
-                ng-options="item for item in attr.choices track by item"></select>
+                ng-options="item.desc for item in attr.choices track by item.id"></select>
             </td>
             <td style="width: 60%; vertical-align: top;">
               <p ng-bind="attr.help" class="col-lg-4"></p>        
@@ -55,12 +55,33 @@
       </span>
       <span ng-switch-when="dateRangeSelect">
         <p ng-bind="attr.help"></p>
+        <span ng-if="attr.child.computed == 1">
+          <span ng-model="attr.child.value"></span>
+        </span>
+        <span ng-if="attr.computed == 0">
+          <select style="float: left;"
+            class="form-control col-lg-4"
+            ng-model="attr.child.value"
+            ng-options="item.desc for item in attr.child.choices track by item.id"></select>
+        </span>
         <span ng-if="attr.computed == 1">
           <span ng-bind="attr.value"></span>
         </span>
         <span ng-if="attr.computed == 0">
+          <select style="float: left;"
+            class="select form-control col-lg-4"
+            ng-model="attr.value"
+            ng-options="item.desc for item in attr.choices track by item.id"></select>
+        </span>
+      </span>
+      <span ng-switch-when="date">
+        <p ng-bind="attr.help"></p>
+        <span ng-if="attr.computed == 1">
+          <span ng-bind="attr.printValue"></span>
+        </span>
+        <span ng-if="attr.computed == 0">
           <input
-            class="form-control col-lg-4"
+            class="form-control col-lg-2"
             ng-model="attr.value"
             type="text"
            />

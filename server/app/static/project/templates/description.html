@@ -1,0 +1,21 @@
+  <h4 ng-show="project.currentMode() == 'view' || project.currentMode() == 'edit.description'">Description Attributes</h4>
+
+  <dl class="dl-horizontal" 
+    ng-show="project.currentMode() == 'view'"
+    ng-repeat="attr in project.as.getProjectAttributes('description')" 
+    ng-include src="'static/project/templates/view-field.html'">
+  </dl>
+
+  <dl class="dl-horizontal"
+    ng-show="project.currentMode() == 'edit.description'"
+    ng-repeat="attr in project.as.getProjectAttributes('description')" 
+    ng-include src="'static/project/templates/edit-field.html'">
+  </dl>
+
+  <dl class="dl-horizontal"
+    ng-show="project.currentMode() == 'edit.description'">
+    <dt></dt>
+    <dd>
+      <button type="button" ng-click="project.ds.saveProject('description')"> Save </button>
+    </dd>
+  </dl>

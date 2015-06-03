@@ -84,20 +84,14 @@
       else if ($state.current.name == "project.detail") {
         return "/project/" + projectID + hash;
       }
-      else if ($state.current.name == "project.edit") {
+      else if ($state.current.name.substring(0,8) == "project.") {
         if (projectListService.getMasterList().allProjects.length == 0) {
           return "/project/" + projectID + hash;
         }
-        return "/project/edit/" + projectID + hash;
-      }
-      else if ($state.current.name == "project.comment") {
-        return "/project/comment/" + projectID + hash;
-      }
-      else if ($state.current.name == "project.attach") {
-        return "/project/attach/" + projectID + hash;
+        return "/" + $state.current.name.replace(/\./g, "/") + "/" + projectID + hash;
       }
       else {
-        return "/" + $state.current.name;
+        return "/" + $state.current.name.replace(/\./g, "/");
       }
     }
     

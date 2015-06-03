@@ -1,12 +1,19 @@
 <html>
-  <head></head>
+  <head>
+    <script type="text/javascript">
+      window.onbeforeunload = function (event) {
+        project.ds.checkForUnsavedChanges();
+        $rootScope.$broadcast('savestate');
+      };
+    </script>
+  </head>
   <body>
     <ul class="row list-inline text-right col-lg-8 clearfix">
       <li ng-show="project.ds.currentMode() == 'view' && (currentUser.roles.indexOf('Curator') > -1 || currentUser.roles.indexOf('Manager') > -1)">
-        <a ui-sref="project.edit" ng-click="project.changeMode();">Edit this project</a>
+        <a ui-sref="project.edit.description" ng-click="project.changeMode('project.edit.description');">Edit this project</a>
       </li>
       <li ng-show="project.ds.currentMode() != 'view' && (currentUser.roles.indexOf('Curator') > -1 || currentUser.roles.indexOf('Manager') > -1)">
-        <a ui-sref="project.detail" ng-click="project.changeMode();">View this project</a>
+        <a ui-sref="project.detail" ng-click="project.changeMode('project.detail');">View this project</a>
       </li>
       <li ng-show="project.ds.currentMode() != 'comment' && (currentUser.roles.indexOf('Curator') > -1 || currentUser.roles.indexOf('Manager') > -1)">
         <a ui-sref="project.comment" ng-click="project.jumpToCommentEntry();">Add a Comment</a>
@@ -24,27 +31,24 @@
 
     <h3 class="clearfix">{{ project.masterList().projectID}}: {{project.masterList().projectName}}</h3>
 
-    <div ng-show="project.currentMode() == 'view'">
-      <dl class="dl-horizontal"
-        ng-repeat="attr in project.as.getProjectAttributes()" 
-        ng-include src="'static/project/view-field.html'">
-      </dl>
+    <ul class="nav nav-tabs" ng-show="project.currentMode().substring(0,4) == 'edit'">
+      <li role="presentation" ng-class="{active:project.currentMode() == 'edit.description'}"><a ui-sref="project.edit.description">Description</a></li>
+      <li role="presentation" ng-class="{active:project.currentMode() == 'edit.portfolio'}"><a ui-sref="project.edit.portfolio">Portfolio</a></li>
+      <li role="presentation" ng-class="{active:project.currentMode() == 'edit.disposition'}"><a ui-sref="project.edit.disposition">Dispositions</a></li>
+      <li role="presentation" ng-class="{active:project.currentMode() == 'edit.projectMan'}"><a ui-sref="project.edit.projectMan">Project Management</a></li>
+      <li role="presentation" ng-class="{active:project.currentMode() == 'edit.comment'}"><a ui-sref="project.edit.comment">Comments</a></li>
+      <li role="presentation" ng-class="{active:project.currentMode() == 'edit.attach'}"><a ui-sref="project.edit.attach">Attach a File</a></li>
+    </ul>
+              
+    <div ng-show="project.currentMode().substring(0,4) == 'edit'">
+      <div ng-show="project.as.errors" ng-bind="project.as.errors"></div>
     </div>
 
-    <div ng-show="project.currentMode() == 'edit'">
-      <div ng-show="project.as.errors">An error occurred</div>
-      <dl class="dl-horizontal"
-        ng-repeat="attr in project.as.getProjectAttributes()" 
-        ng-include src="'static/project/edit-field.html'">
-      </dl>
-      <button type="button" ng-click="project.ds.saveProject()"> Save </button>
-    </div>
+    <span ng-include src="'static/project/templates/description.html'"></span>
+    <span ng-include src="'static/project/templates/portfolio.html'"></span>
+    <span ng-include src="'static/project/templates/disposition.html'"></span>
+    <span ng-include src="'static/project/templates/projectMan.html'"></span>
+    <span ng-include src="'static/project/templates/comment.html'"></span>
 
-    <div ng-show="project.currentMode() == 'comment'">
-      Enter a comment
-    </div>
-    <div ng-show="project.currentMode() == 'attach'">
-      Attach a file
-    </div>
   </body>
 </html>

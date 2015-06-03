@@ -10,7 +10,7 @@
                                "stateLocationService"];
   
   function initializeApp($rootScope, projectListService, projectDataService, stateLocationService) {
-    $rootScope.$on("$stateChangeSuccess", _initializeApp);
+    $rootScope.$on("$stateChangeStart", _initializeApp);
     
     function _initializeApp(e, toState, toParams, fromState, fromParams){
       window.onbeforeunload = function (event) {

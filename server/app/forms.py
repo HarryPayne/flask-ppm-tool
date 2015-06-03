@@ -22,6 +22,11 @@ class ModelForm(BaseModelForm):
         return db.session
 
 # Forms for select field choices
+class CalendaryearForm(ModelForm):
+    class Meta:
+        model = alch.Calendaryear
+        only= ["calendaryearID", "calendaryearDesc"]
+        
 class DriverlistForm(ModelForm): 
     class Meta:
         model= alch.Driverlist
@@ -30,6 +35,11 @@ class FinallistForm(ModelForm):
     class Meta:
         model = alch.Finallist
         only = ["finalID", "finalDesc"]
+        
+class FiscalyearForm(ModelForm):
+    class Meta:
+        model = alch.Fiscalyear
+        only = ["fiscalyearID", "fiscalyearDesc"]
         
 class FundingsourcelistForm(ModelForm):
     class Meta:
@@ -66,9 +76,6 @@ class TypelistForm(ModelForm):
     class Meta:
         model = alch.Typelist
 
-def maturity_choices():
-    return alch.Maturitylist.query
-
 def child_choices():
     return alch.Description.query
 
@@ -98,9 +105,8 @@ class Portfolio(ModelForm):
     class Meta:
         model = alch.Portfolio
         include_primary_keys = True
-        only = ["latest_disposeID", "criticalID", "flavorID", "initiativeID", 
-                "scopeID", "visibilityID", "complexityID", "risklevelID",
-                "costlevelID", "rpu", "budgetInFY", "budgetInQ"]    
+        only = ["flavorID", "initiativeID", "scopeID", "visibilityID", 
+                "complexityID", "risklevelID", "costlevelID", "rpu", "budgetInFY", "budgetInQ"]    
 
     strategyID = QuerySelectMultipleField(query_factory=strategy_choices, allow_blank=False)
 
@@ -108,16 +114,16 @@ class Project(ModelForm):
     class Meta:
         model = alch.Project
         include_primary_keys = True
-        only = ['org_branchID', 'proj_manager', 'tech_manager', 'proj_visibilityID', 
-                'project_url', 'progressID', 'statusID', 'startedOn', 'finishedOn']
+        only = ["proj_manager", "tech_manager", "proj_visibilityID", 
+                "project_url", "progressID", "startedOn", "finishedOn"]
 
 class Disposition(ModelForm):
     class Meta:
         model = alch.Disposition
         include_primary_keys = True
-        only = ['disposeID', 'dispositionID', 'explanation', 'disposedInFY', 
-                'disposedInQ', 'reconsiderInFY', 'reconsiderInQ', 'startInY', 
-                'startInM', 'finishInY', 'finishInM']
+        only = ["disposeID", "dispositionID", "explanation", "disposedInFY", 
+                "disposedInQ", "reconsiderInFY", "reconsiderInQ", "startInY", 
+                "startInM", "finishInY", "finishInM"]
 
 class Comment(ModelForm):
     class Meta:
@@ -135,8 +141,8 @@ class SelectForm(Form):
 
 class LoginForm(Form): 
     username = TextField("Username", [validators.Length(min=2, max=25)])
-    password = PasswordField('Password', [validators.Required()])
-    remember_me = BooleanField('remember_me', default=False)
+    password = PasswordField("Password", [validators.Required()])
+    remember_me = BooleanField("remember_me", default=False)
 
 
 # class ProjectViewForm(Form):

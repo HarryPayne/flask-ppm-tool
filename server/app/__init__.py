@@ -20,4 +20,4 @@ cors = CORS(app)
 
 wtforms_json.init()
 
-from app import views, models
+from app import models, views

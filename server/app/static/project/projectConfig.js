@@ -32,7 +32,14 @@
       })
       .state('project.edit', {
           name: 'project',
-          url: '/edit/:projectID',
+          url: '/edit',
+          data: {
+            requiresLogin: true
+          }
+      })
+      .state("project.edit.description", {
+          name: 'project',
+          url: "/description/:projectID",
           controller: function ($stateParams) {
             console.log($stateParams);
           },
@@ -41,9 +48,8 @@
             requiresLogin: true
           }
       })
-      .state('project.comment', {
-          name: 'project',
-          url: '/comment/:projectID',
+      .state("project.edit.portfolio", {
+          url: "/portfolio/:projectID",
           controller: function ($stateParams) {
             console.log($stateParams);
           },
@@ -52,9 +58,38 @@
             requiresLogin: true
           }
       })
-      .state('project.attach', {
-          name: 'project',
-          url: '/attach/:projectID',
+      .state("project.edit.disposition", {
+          url: "/disposition/:projectID",
+          controller: function ($stateParams) {
+            console.log($stateParams);
+          },
+          controllerAs: "project",
+          data: {
+            requiresLogin: true
+          }
+      })
+      .state("project.edit.projectMan", {
+          url: "/projectMan/:projectID",
+          controller: function ($stateParams) {
+            console.log($stateParams);
+          },
+          controllerAs: "project",
+          data: {
+            requiresLogin: true
+          }
+      })
+      .state("project.edit.comment", {
+          url: "/comment/:projectID",
+          controller: function ($stateParams) {
+            console.log($stateParams);
+          },
+          controllerAs: "project",
+          data: {
+            requiresLogin: true
+          }
+      })
+      .state("project.edit.attach", {
+          url: "/attach/:projectID",
           controller: function ($stateParams) {
             console.log($stateParams);
           },

@@ -1,0 +1,22 @@
+  <h4 ng-show="project.currentMode() == 'view' || project.currentMode() == 'edit.comment'">Comments</h4>
+  
+  <dl class="dl-horizontal"
+    ng-show="project.currentMode() == 'view'"
+    ng-repeat="comment in project.as.getProjectAttributes('comment')">
+    <dt>
+      <label ng-bind="comment.user.value"></label>
+    </dt>
+    <dd>
+      <span ng-bind="comment.comment.value"></span><br/>
+      <span ng-bind="comment.date.label"  class="text-capitalize"></span>
+      <span ng-bind="comment.date.printValue"></span>
+    </dd>
+  </dl>
+
+  <dl class="dl-horizontal"
+    ng-show="project.currentMode() == 'edit.comment'">
+    <dt></dt>
+    <dd>
+      <button type="button" ng-click="project.ds.saveProject('comment', comment.commentID.value)"> Save </button>
+    </dd>
+  </dl>

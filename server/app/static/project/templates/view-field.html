@@ -1,0 +1,23 @@
+  <dt ng-if="attr.value" ng-bind="attr.label" class="text-capitalize"></dt>
+  <dd ng-if="attr.value">
+    <span ng-switch on="attr.format">
+      <span ng-switch-when="multipleSelect">
+        <span ng-if="!attr.multi">
+          <span ng-bind="attr.value.desc"></span>
+        </span>
+        <span ng-if="attr.multi">
+          <span ng-bind="attr.printValue"></span>
+        </span>
+      </span>
+      <span ng-switch-when="dateRangeSelect">
+         <span ng-bind="attr.value.desc"></span>
+         <span ng-bind="attr.child.value.desc"></span>
+      </span>
+      <span ng-switch-when="date">
+         <span ng-bind="attr.printValue"></span>
+      </span>
+      <span ng-switch-default>
+        <span ng-bind="attr.value"></span>
+      </span>
+    </span>
+  </dd>

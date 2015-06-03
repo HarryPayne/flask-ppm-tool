@@ -66,17 +66,13 @@
     function getProjectIDFromLocation() {
       var url = $location.url();
       if (url.substring(0,8) == "/project") {
-        var projectID = url.substring(9);
-        if (projectID.substring(0,5) == "edit/") projectID = projectID.substring(5);
-        projectID = projectID.substring(0, projectID.indexOf("#"));
+        var temp = url.substring(0, url.indexOf("#"));
+        temp  = temp.substring(_.lastIndexOf(url, "/")+1);
         try {
-          return parseInt(projectID);
+          return parseInt(temp);
         }
         catch(e) {
           return false;
-        }
-        if (projectID) {
-          projectID = parseInt(projectID);
         }
       }
     };

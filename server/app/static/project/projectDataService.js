@@ -14,6 +14,7 @@
     var service = {
       attributes: attributesService.getAttributes,
       changeMode: changeMode,
+      checkForUnsavedChanges: checkForUnsavedChanges,
       currentMode: currentMode,
       getProjectData: getProjectData,
       getAttributes: getAttributes,
@@ -23,6 +24,7 @@
       printValue: attributesService.printValue,
       projectID: $stateParams.projectID,
       RestoreState: RestoreState,
+      saveDisposition: saveDisposition,
       saveProject: saveProject,
       SaveState: SaveState,
       setProjectData: setProjectData,
@@ -30,7 +32,7 @@
       url: $location.url
     };
     
-    //service.RestoreState();
+    service.RestoreState();
     if (typeof service.attributes == "undefined") {
       service.getProjectData(service.projectID);
     }
@@ -39,13 +41,17 @@
     $rootScope.$on("restorestate", service.RestoreState);
     $rootScope.$on("$locationChangeSuccess", service.getProjectDataFromLocation);
     
-    function changeMode() {
-      if (this.currentMode() == "view") {
-        $state.go("project.edit", {projectID: service.projectID});
-      }
-      else {
+    function changeMode(mode) {
+      if (!mode) {
         $state.go("project.detail", {projectID: service.projectID});
       }
+      else {
+        $state.go(mode, {projectID: service.projectID});
+      }
+    }
+    
+    function checkForUnsavedChanges() {
+      var state = $state.current.name;
     }
     
     function currentMode() {
@@ -55,11 +61,23 @@
       else if ($state.current.name == "project.edit") {
         return "edit";
       }
-      else if ($state.current.name == "project.comment") {
-        return "comment";
+      else if ($state.current.name == "project.edit.description") {
+        return "edit.description";
       }
-      else if ($state.current.name == "project.attach") {
-        return "attach";
+      else if ($state.current.name == "project.edit.portfolio") {
+        return "edit.portfolio";
+      }
+      else if ($state.current.name == "project.edit.disposition") {
+        return "edit.disposition";
+      }
+      else if ($state.current.name == "project.edit.projectMan") {
+        return "edit.projectMan";
+      }
+      else if ($state.current.name == "project.edit.comment") {
+        return "edit.comment";
+      }
+      else if ($state.current.name == "project.edit.attach") {
+        return "edit.attach";
       }
     }
     
@@ -80,27 +98,30 @@
         service.projectID = idByLocation;
         service.getProjectData(idByLocation);
       }
-    };
+    }
 
     function jumpToAtachFile() {
       $state.go("project.attach", {projectID: service.projectID});
-    }
+    };
     
     function jumpToCommentEntry() {
       $state.go("project.comment", {projectID: service.projectID});
-    }
+    };
     
     function RestoreState() {
       service.projectID = angular.fromJson(sessionStorage.projectDataServiceAttributes);
     };
 
+    function saveDisposition(disposeID) {
+      var dispositions = attributesService.getProjectAttributes("disposition");
+      var disposition = _.where(dispositions, {disposeID: disposeID})[0];
+    };
 
-    function saveProject() {
-      var formData = attributesService.getFormData();
-      var projectID = projectListService.getProjectID();
-      var request = {
+    function saveProject(tableName, key) {
+      var formData = attributesService.getFormData(tableName, key);
+       var request = {
         method: "POST",
-        url: "/projectEdit/" + projectID,
+        url: "/projectEdit/" + formData.projectID + "/" + tableName,
         headers: {
           "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
         },
