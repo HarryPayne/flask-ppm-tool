@@ -25,8 +25,6 @@ from widgets import ChoicesSelect
 import alchemy_models as alch
 #from alchemy_models import Attributelist, Month, Quarter, Year
 
-ALL_ATTRIBUTES = {}
-
 @jwt.authentication_handler
 def authenticate(username, password):
     user = User(id=username, passwd=password)
@@ -118,14 +116,16 @@ def selectView():
 
 @app.route("/getAllAttributes")
 def getAllAttributesJSON():
-    if ALL_ATTRIBUTES:
-        allAttrsFromDB = ALL_ATTRIBUTES
+    if "ALL_ATTRIBUTES_JSON" in session:
+        allAttrsFromDBJSON = session["ALL_ATTRIBUTES_JSON"]
     else:
-        allAttrsFromDB = getAllAttributes()
-    return dumps(allAttrsFromDB)
-    #return dumps(getAllAttributes())
+        allAttrsFromDBJSON = dumps(getAllAttributes())
+        session["ALL_ATTRIBUTES_JSON"] = allAttrsFromDBJSON
+    return allAttrsFromDBJSON
 
 def getAllAttributes():
+    if "ALL_ATTRIBUTES" in session:
+        return session["ALL_ATTRIBUTES"]
     attrs = alch.Attributelist.query.order_by("attributeID").all()
     allAttrsFromDB = {}
     for attr in attrs:
@@ -145,19 +145,19 @@ def getAllAttributes():
     attributesByTable["description"] = getAttributesFromForm(Description, allAttrsFromDB)
     attributes.update(attributesByTable["description"])
     
-    Portfolio = forms.Portfolio(ImmutableMultiDict([]), p.portfolio[0])
+    Portfolio = forms.Portfolio(ImmutableMultiDict([]), p.portfolio)
     attributesByTable["portfolio"] = getAttributesFromForm(Portfolio, allAttrsFromDB)
     attributes.update(attributesByTable["portfolio"])
     
-    Disposition = forms.Disposition(ImmutableMultiDict([]), p.disposition[0])
+    Disposition = forms.Disposition(ImmutableMultiDict([]), p.dispositions)
     attributesByTable["disposition"] = getAttributesFromForm(Disposition, allAttrsFromDB)
     attributes.update(attributesByTable["disposition"])
     
-    Project = forms.Project(ImmutableMultiDict([]), p.project[0])
+    Project = forms.Project(ImmutableMultiDict([]), p.project)
     attributesByTable["project"] = getAttributesFromForm(Project, allAttrsFromDB)
     attributes.update(attributesByTable["project"])
     
-    Comment = forms.Comment(ImmutableMultiDict([]), p.comments[0])
+    Comment = forms.Comment(ImmutableMultiDict([]), p.comments)
     attributesByTable["comment"] = getAttributesFromForm(Comment, allAttrsFromDB)
     attributes.update(attributesByTable["comment"])
     
@@ -165,7 +165,7 @@ def getAllAttributes():
 #     attributesByTable["upload"] = getAttributesFromForm(Upload, allAttrsFromDB)
 #     attributes.update(attributesByTable["upload"])
     
-    ALL_ATTRIBUTES = attributes
+    session["ALL_ATTRIBUTES"] = attributes
     return attributes
         
 def getAttributesFromForm(form, allAttrsFromDB):
@@ -315,47 +315,53 @@ def getProjectAttributesJSON(projectID):
     
     return dumps(attributes)
 
-def getProjectAttributes(projectID):
+def getProjectAttributes(projectID, tableName=None):
     """ Render a WT Forms form from the request/db, pick out the data from the
         widgets, and send them out as JSON.
     """
-    if ALL_ATTRIBUTES:
-        allAttrsFromDB = ALL_ATTRIBUTES
+    if "ALL_ATTRIBUTES" in session:
+        allAttrsFromDB = session["ALL_ATTRIBUTES"]
     else:
         allAttrsFromDB = getAllAttributes()
         
     formData = []
+    
     p = alch.Description.query.filter_by(projectID=projectID).first_or_404()
-
     descriptionForm = forms.Description(request.form, p)
-    formData.append(getAttributeValuesFromForm(descriptionForm, allAttrsFromDB))
-    
-    portfolioForm = forms.Portfolio(request.form, p.portfolio[0])
-    formData.append(getAttributeValuesFromForm(portfolioForm, allAttrsFromDB))
-    
-    projectForm = forms.Project(request.form, p.project[0] if p.project else [])
-    formData.append(getAttributeValuesFromForm(projectForm, allAttrsFromDB))
-    
-    if len(p.disposition) == 0:
-        dispositions = [forms.Disposition(request.form, [])]
-    else:
-        dispositions = [forms.Disposition(request.form, disposition) for disposition in p.disposition]
-    formData.append({"tableName": "disposition",
-                     "attributes": [{"tableName": "disposition", 
-                                     "attributes": getAttributeValuesFromForm(item, allAttrsFromDB)["attributes"]} for item in dispositions]})
-        
-    if len(p.comments) == 0:
-        comments = [forms.Comment(request.form, [])]
-    else:
-        comments = [forms.Comment(request.form, comment) for comment in p.comments]
-    formData.append({"tableName": "comment",
-                     "attributes": [{"tableName": "comment", 
-                                     "attributes": getAttributeValuesFromForm(item, allAttrsFromDB)["attributes"]} for item in comments]})
-    
-#     uploadForm = forms.Upload(request.form, p.uploads[0])
-    
     csrf_token = descriptionForm["csrf_token"].current_token
 
+    if tableName in ("description", None):
+         formData.append(getAttributeValuesFromForm(descriptionForm, allAttrsFromDB))
+    
+    if tableName in ("portfolio", None):
+        portfolioForm = forms.Portfolio(request.form, p.portfolio[0])
+        formData.append(getAttributeValuesFromForm(portfolioForm, allAttrsFromDB))
+    
+    if tableName in ("project", None):
+        projectForm = forms.Project(request.form, p.project[0])
+        formData.append(getAttributeValuesFromForm(projectForm, allAttrsFromDB))
+    
+    if tableName in ("disposition", None):
+        # You can't use request.form when rendering forms here. It makes all forms identical.
+        if len(p.dispositions):
+            d = alch.Disposition.query.filter_by(projectID=projectID)\
+                                      .order_by(db.desc("disposedInFY"))\
+                                      .order_by(db.desc("disposedInQ"))
+            dispositions = [forms.Disposition(ImmutableMultiDict([]), disposition) for disposition in d]
+            formData.append({"tableName": "disposition",
+                             "attributes": [{"tableName": "disposition", 
+                                             "attributes": getAttributeValuesFromForm(item, allAttrsFromDB)["attributes"]} for item in dispositions]})
+        
+    if tableName in ("comment", None):
+        if len(p.comments):
+            comments = [forms.Comment(ImmutableMultiDict([]), comment) for comment in p.comments]
+            formData.append({"tableName": "comment",
+                             "attributes": [{"tableName": "comment", 
+                                             "attributes": getAttributeValuesFromForm(item, allAttrsFromDB)["attributes"]} for item in comments]})
+    
+#    if tableName in ("description", None):
+#     uploadForm = forms.Upload(request.form, p.uploads[0])
+    
     return {"projectID": projectID,
             "csrf_token": csrf_token,
             "formData": formData}
@@ -395,7 +401,10 @@ def getAttributeValuesFromForm(form, allAttrsFromDB):
             printValue = ", ".join([item["desc"] for item in value])
         
         elif dbattr["format"] == "multipleSelect" and dbattr["multi"] == False:
-            value = [item for item in dbattr["choices"] if item["id"] == field.data][0]
+            data = field.data
+            if data == None:
+                pass
+            value = [item for item in dbattr["choices"] if item["id"] == data][0]
             
         elif dbattr["format"] == "dateRangeSelect":
             value = [item for item in dbattr["choices"] if item["id"] == field.data][0]
@@ -476,6 +485,7 @@ def projectEdit(projectID, tableName):
         errors = {}
         
         if tableName == "description":
+            description_errors = []
             descriptionForm = forms.Description(request.form, p)
             if descriptionForm.validate_on_submit():
                 try:
@@ -483,75 +493,101 @@ def projectEdit(projectID, tableName):
                     db.session.add(p)
                     db.session.commit()
                 except:
-                    errors["description"] = sys.exc_info()[0]
+                    description_errors.append(sys.exc_info()[0])
             else:
-                errors["description"] = descriptionForm.errors
+                description_errors = descriptionForm.errors
         
+            response = getProjectAttributes(projectID, tableName)
+            if description_errors:
+                response["errors"] = description_errors
+
         elif tableName == "portfolio":
-            portfolioForm = forms.Portfolio(request.form, p.portfolio[0])
+            portfolio_errors = []
+            portfolioForm = forms.Portfolio(request.form, p.portfolio)
             if portfolioForm.validate_on_submit():
                 try:
-                    portfolioForm.populate_obj(p.portfolio[0])
-                    db.session.add(p.portfolio[0])
+                    portfolioForm.populate_obj(p.portfolio)
+                    db.session.add(p.portfolio)
                     db.session.commit()
                 except:
-                    errors["portfolio"] = sys.exc_info()[0]
+                    portfolio_errors.append(sys.exc_info()[0])
             else:
-                errors["portfolio"] = portfolioForm.errors
+                portfolio_errors = portfolioForm.errors
+
+            response = getProjectAttributes(projectID, tableName)
+            if portfolio_errors:
+                response["errors"] = portfolio_errors
 
         elif tableName == "project":
-            projectForm = forms.Project(request.form, p.project[0])
+            project_errors = []
+            projectForm = forms.Project(request.form, p.project)
             if projectForm.validate_on_submit():
                 try:
-                    projectForm.populate_obj(p.project[0])
-                    db.session.add(p.project[0])
+                    projectForm.populate_obj(p.project)
+                    db.session.add(p.project)
                     db.session.commit()
                 except:
-                    errors["project"] = sys.exc_info()[0]
+                    project_errors.append(sys.exc_info()[0])
             else:
-                errors["project"] = projectForm.errors
+                project_errors = projectForm.errors
+
+            response = getProjectAttributes(projectID, tableName)
+            if project_errors:
+                response["errors"] = project_errors
 
         elif tableName == "disposition":
-            if len(p.disposition) and request.form.get("disposeID"):
-                disposeID = int(request.form.get("disposeID"))
-                disp_errors = []
-                for disposition in p.disposition:
-                    if disposition.disposeID != disposeID:
-                        continue
-                    dispositionForm = forms.Disposition(request.form, disposition)
-                    if dispositionForm.validate_on_submit():
-                        try:
-                            dispositionForm.populate_obj(disposition)
-                            db.session.add(disposition)
-                            db.session.commit()
-                            disp_errors.append({})
-                        except:
-                            errors["disposition"] = sys.exc_info()[0]
-                    else:
-                        disp_errors.append(dispositionForm.errors)
-                    break
-                errors["disposition"] = disp_errors
+            disp_errors = []
+            disposedInFY = request.form.get("disposedInFY")
+            disposedInQ = request.form.get("disposedInQ")
+            d = alch.Disposition.query.filter_by(projectID=projectID)\
+                                      .filter_by(disposedInFY=disposedInFY)\
+                                      .filter_by(disposedInQ=disposedInQ).first()
+            if not d:
+                # No matching primary key. Generate model from request and insert.
+                d = alch.Disposition(disposedInFY = disposedInFY,
+                                      disposedInQ = disposedInQ,
+                                      dispositionID = request.form.get("dispositionID"),
+                                      explanation = request.form.get("explanation"),
+                                      finishInM = request.form.get("finishInM"),
+                                      finishInY = request.form.get("finishInY"),
+                                      projectID = projectID,
+                                      reconsiderInFY = request.form.get("reconsiderInFY"),
+                                      reconsiderInQ= request.form.get("reconsiderInQ"),
+                                      startInM = request.form.get("startInM"),
+                                      startInY = request.form.get("requestInY"),
+                                      lastModifiedBy = current_user.get_id())
+            dispositionForm = forms.Disposition(request.form, d)
+            if dispositionForm.validate_on_submit():
+                try:
+                    dispositionForm.populate_obj(d)
+                    db.session.add(d)
+                    db.session.commit()
+                except:
+                    disp_errors.append(sys.exc_info()[0])
+            else:
+                disp_errors.append(dispositionForm.errors)
+
+            response = getProjectAttributes(projectID, tableName)
+            if disp_errors:
+                response["errors"] = disp_errors
 
         elif tableName == "comment":
-            if len(p.comments) and request.form.get("commentID"):
-                comment_errors = []
-                for comment in p.comments:
-                    commentForm = forms.Comment(request.form, comment)
-                    if commentForm.validate_on_submit():
-                        try:
-                            commentForm.populate_obj(comment)
-                            db.session.add(comment)
-                            db.session.commit()
-                            comment_errors.append({})
-                        except:
-                            errors["comments"] = sys.exc_info()[0]
-                    else:
-                        comment_errors.append(commentForm.errors)
-                errors["comments"] = comment_errors
+            comment_errors = []
+            commentForm = forms.Comment(request.form, p.comments)
+            if commentForm.validate_on_submit():
+                try:
+                    commentForm.populate_obj(p.comments)
+                    db.session.add(p.comments)
+                    db.session.commit()
+                except:
+                    comment_errors.append(sys.exc_info()[0])
+            else:
+                comment_errors.append(commentForm.errors)
         
-        response = getProjectAttributes(projectID)
-        if errors:
-            response["errors"] = errors
+            response = getProjectAttributes(projectID, tableName)
+            if disp_errors:
+                response["errors"] = disp_errors
+
         return dumps(response)
         
 @app.route("/filterView", methods=["GET", "POST"])

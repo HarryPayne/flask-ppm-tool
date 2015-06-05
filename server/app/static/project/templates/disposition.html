@@ -4,30 +4,25 @@
     ng-show="project.currentMode() == 'view'"
     ng-repeat="disp in project.as.getRawAttributes('disposition')">
     <dt>
+      <label ng-bind="disp.attributes[2].value.desc"></label>
       <label ng-bind="disp.attributes[3].value.desc"></label>
-      <label ng-bind="disp.attributes[4].value.desc"></label>
     </dt>
     <dd>
-      <span ng-bind="disp.attributes[1].value.desc" class="text-capitalize"></span>.
+      <span ng-bind="disp.attributes[0].value.desc" class="text-capitalize"></span>.
   
-      <span ng-show="disp.attributes[5].value.desc || disp.attributes[6].value.desc">
-        Reconsider in <span ng-bind="disp.attributes[5].value.desc"></span>
-        <span ng-bind="disp.attributes[6].value.desc"></span>.
+      <span ng-show="disp.attributes[4].value.desc || disp.attributes[5].value.desc">
+        Reconsider in <span ng-bind="disp.attributes[4].value.desc"></span>
+        <span ng-bind="disp.attributes[5].value.desc"></span>.
       </span>
   
-      <span ng-show="disp.attributes[7].value.desc || disp.attributes[8].value.desc">
-        Start in <span ng-bind="disp.attributes[7].value.desc"></span>
-        <span ng-bind="disp.attributes[8].value.desc"></span>.
+      <span ng-show="disp.attributes[6].value.desc || disp.attributes[7].value.desc">
+        Start in <span ng-bind="disp.attributes[6].value.desc"></span>
+        <span ng-bind="disp.attributes[7].value.desc"></span>.
       </span>
   
-      <span ng-show="disp.attributes[9].value.desc || disp.attributes[10].value.desc">
-        Finish in <span ng-bind="disp.attributes[9].value.desc"></span>
-        <span ng-bind="disp.attributes[10].value.desc"></span>.
-      </span>
-  
-      <span ng-show="disp.attributes[11].value">
-        <br/>
-        <span ng-bind="disp.attributes[11].value"></span>
+      <span ng-show="disp.attributes[8].value.desc || disp.attributes[9].value.desc">
+        Finish in <span ng-bind="disp.attributes[8].value.desc"></span>
+        <span ng-bind="disp.attributes[9].value.desc"></span>.
       </span>
     </dd>
   </dl>
@@ -36,37 +31,32 @@
     ng-show="project.currentMode() == 'edit.disposition'"
     ng-repeat="disp in project.as.getRawAttributes('disposition')">
     <dt ng-hide="showDetails">
+      <label ng-bind="disp.attributes[2].value.desc"></label>
       <label ng-bind="disp.attributes[3].value.desc"></label>
-      <label ng-bind="disp.attributes[4].value.desc"></label>
     </dt>
     <dt ng-show="showDetails">
       <label ng-bind="project.as.getAttribute('disposedInQ').value.desc"></label>
       <label ng-bind="project.as.getAttribute('disposedInFY').value.desc"></label>
     </dt>
     <dd ng-hide="showDetails">
-      <span ng-bind="disp.attributes[1].value.desc" class="text-capitalize"></span>.
+      <span ng-bind="disp.attributes[0].value.desc" class="text-capitalize"></span>.
   
-      <span ng-show="disp.attributes[5].value.desc || disp.attributes[6].value.desc">
-        Reconsider in <span ng-bind="disp.attributes[5].value.desc"></span>
-        <span ng-bind="disp.attributes[6].value.desc"></span>.
+      <span ng-show="disp.attributes[4].value.desc || disp.attributes[5].value.desc">
+        Reconsider in <span ng-bind="disp.attributes[4].value.desc"></span>
+        <span ng-bind="disp.attributes[5].value.desc"></span>.
       </span>
   
-      <span ng-show="disp.attributes[7].value.desc || disp.attributes[8].value.desc">
-        Start in <span ng-bind="disp.attributes[7].value.desc"></span>
-        <span ng-bind="disp.attributes[8].value.desc"></span>.
+      <span ng-show="disp.attributes[6].value.desc || disp.attributes[7].value.desc">
+        Start in <span ng-bind="disp.attributes[6].value.desc"></span>
+        <span ng-bind="disp.attributes[7].value.desc"></span>.
       </span>
   
-      <span ng-show="disp.attributes[9].value.desc || disp.attributes[10].value.desc">
-        Finish in <span ng-bind="disp.attributes[9].value.desc"></span>
-        <span ng-bind="disp.attributes[10].value.desc"></span>.
-      </span>
-  
-      <span ng-show="disp.attributes[11].value">
-        <br/>
-        <span ng-bind="disp.attributes[11].value"></span>
+      <span ng-show="disp.attributes[8].value.desc || disp.attributes[9].value.desc">
+        Finish in <span ng-bind="disp.attributes[8].value.desc"></span>
+        <span ng-bind="disp.attributes[9].value.desc"></span>.
       </span>
 
-      <button type="button" ng-hide="showDetails" ng-click="showDetails = !showDetails; project.as.showDetails('disposition', disp.attributes[0].value)"> Edit </button>
+      <button type="button" ng-hide="showDetails" ng-click="showDetails = !showDetails; project.as.showDetails('disposition', [disp.attributes[2], disp.attributes[3]])"> Edit </button>
     </dd>
     <dd ng-show="showDetails">
       <span ng-bind="project.as.getAttribute('dispositionID').value.desc" class="text-capitalize"></span>.
@@ -97,7 +87,8 @@
     
     <dt ng-show="showDetails"></dt>
     <dd ng-show="showDetails">
-      <button type="button" ng-click="showDetails = !showDetails; project.ds.saveProject('disposition', project.as.getAttribute('disposeID'))"> Save </button>
+      <button type="button" ng-click="showDetails = !showDetails; project.ds.saveProject('disposition', [project.as.getAttribute('disposedInFY'),
+        project.as.getAttribute('disposedInQ')])"> Save </button>
     </dd>
 </dl>
 

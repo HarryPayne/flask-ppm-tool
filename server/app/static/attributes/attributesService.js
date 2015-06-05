@@ -136,7 +136,9 @@ Data attributes:
       var formData = new Object;
       formData.projectID = service.projectID;
       formData.csrf_token = service.csrf_token;
-      formData[key.name] = key.value;
+      if (typeof key != "undefined") {
+        formData[key.name] = key.value;
+      }
       if (_.contains(["description", "portfolio", "disposition", "project"], tableName)) {
         _.each(service.getProjectAttributes(tableName), addAttrToDataObj, formData);
       }
@@ -245,16 +247,26 @@ Data attributes:
       });
     };
 
-    function showDetails(tableName, keyID) {
-      var keyName = "disposeID";
-      if (tableName == "comments") keyName = "commentID";
+    function showDetails(tableName, keys) {
       var raw_items = getRawAttributes(tableName);
-      var selected = _.filter(raw_items, function(attr) {
-         if (attr.attributes[0].value == keyID) return true
-        })[0];
-      _.each(selected.attributes, function(attr) {
-        service.allAttributes[attr.name].value = attr.value;
-      })
+      _.each(keys, function(key) {
+        raw_items = _.filter(raw_items, function(item) {
+          var match = _.filter(item.attributes, function(attr) {
+            if (attr.name == key.name && attr.value.id == key.value.id) {
+              return true;
+            }
+          });
+          if (match.length) {
+            return true;
+          }
+        });
+      });
+      if (raw_items.length) {
+        var selected = raw_items[0];
+        _.each(selected.attributes, function(attr) {
+          service.allAttributes[attr.name].value = attr.value;
+        });
+      }
     }
     
     function updateAllAttributes() {
@@ -270,27 +282,93 @@ Data attributes:
       service.projectID = result.data.projectID;
       service.csrf_token = result.data.csrf_token;
       service.errors = result.data.errors;
-      service.projectAttributes = new Object;
-      service.rawAttributes = new Object;
-      _.each(result.data.formData, updateProjectAttributesFromForm);
       service.clearAllErrors();
       service.updateErrors(result.data.errors);
+      if (result.statusText == "OK") {
+        _.each(result.data.formData, updateProjectAttributesFromForm);
+      }
+      return;
     };
 
+    /**
+     *  updateProjectAttributesFromForm
+     *
+     *  Update old results with new results where possible. If a new item appears,
+     *  make it be the live item. A bit more care is required for the tables that
+     *  can have multiple results (disposition or comments). Look for matches by
+     *  unique ID column on the table.
+     */
     function updateProjectAttributesFromForm(form) {
       var tableData = new Object;
       tableData.tableName = form.tableName;
-      service.projectAttributes[tableData.tableName] = [];
-      if (_.isArray(form.attributes[0].attributes)) {
-        service.rawAttributes[tableData.tableName] = form.attributes.reverse();
-        _.each(service.rawAttributes[tableData.tableName][0].attributes, function(attr) {
-          var merged = service.getAttribute(attr.name);
-          merged.value = attr.value;
-          if (merged.format.substring(0, "child_for".length) == "child_for") return;
-          service.projectAttributes[merged.table].push(merged);
-        });
+
+      if (_.isArray(form.attributes[0].attributes)) { // disposition or comments
+        var keyNames = ["disposedInFY", "disposedInQ"];
+        if (tableData.tableName == "comments") idAttrName = ["commentID"];
+        if (typeof service.rawAttributes == "undefined") {
+          service.rawAttributes = new Object;
+        }
+        if (typeof service.rawAttributes[tableData.tableName] == "undefined") {
+          service.rawAttributes[tableData.tableName] = [];
+        }
+        var old_items = service.rawAttributes[tableData.tableName];
+        if (old_items.length == 0) { // just slap the new items into place
+          service.rawAttributes[tableData.tableName] = form.attributes;
+          if (typeof service.projectAttributes[tableData.tableName] == "undefined") {
+            service.projectAttributes[tableData.tableName] = [];
+            _.each(form.attributes[0].attributes, function(attr) { // make first item live
+              var merged = service.getAttribute(attr.name);
+              merged.value = attr.value;
+              if (merged.format.substring(0, "child_for".length) != "child_for") {
+                service.projectAttributes[merged.table].push(merged);
+              }
+            });
+          }
+        }
+        else {
+          _.each(service.rawAttributes[tableData.tableName][0].attributes, function(attr) {
+            // break links between rawAttributes and allAttributes.
+            delete service.getAttribute(attr.name).value;
+          });
+          _.each(form.attributes, function(new_item) {
+            var found_match = false;
+            var old_items = service.rawAttributes[tableData.tableName]
+            _.each(keyNames, function(keyName){
+              var newIdAttr = _.filter(new_item.attributes, {name: keyName})[0];
+              old_items = _.filter(old_items, function(old_item) {
+                var oldIdAttr = _.filter(old_item.attributes, {name: keyName})[0];
+                if (newIdAttr.value.id == oldIdAttr.value.id) {
+                  return true;
+                }
+              });
+            });
+            if (old_items.length) {
+              var match = old_items[0];
+              found_match = true;
+              _.each(new_item.attributes, function(attr) { 
+                // copy values from new item to matching old item
+                var old_attr = _.where(match.attributes, {name: attr.name})[0];
+                old_attr.value = attr.value;
+                if (typeof attr.printValue != "undefined") {
+                  old_attr.printValue = attr.printValue;
+                }
+              });
+            }
+            if (!found_match) {
+              // the new guy. make live
+              _.each(new_item.attributes, function(attr) { 
+                var merged = service.getAttribute(attr.name);
+                merged.value = attr.value;
+              });
+            }
+          });
+        }
       }
       else {
+        if (typeof service.projectAttributes == "undefined") {
+          service.projectAttributes = new Object;
+        }
+        service.projectAttributes[tableData.tableName] = [];
         _.each(form.attributes, mergeAttributeWithValue,
           tableData.tableName);
       }

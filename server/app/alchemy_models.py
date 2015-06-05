@@ -427,18 +427,18 @@ class Comment(Base):
     description = db.relationship("Description", backref="comments")
 
 class Disposition(Base):
-    __tablename__ = "disposition"
+    __tablename__ = "newdisposition"
 
-    disposeID = Column(SmallInteger, primary_key=True)
-    projectID = Column(SmallInteger, ForeignKey("description.projectID"), nullable=False, index=True, server_default=text("'0'"))
+    disposeID = Column(SmallInteger)
+    projectID = Column(SmallInteger, ForeignKey("description.projectID"), primary_key=True, nullable=False, index=True, server_default=text("'0'"))
     dispositionID = Column(Integer, ForeignKey(Dispositionlist.dispositionID),
                            info={"choices": DISPOSITION_CHOICES},
                            nullable=False, index=True, server_default=text("'0'"))
     explanation = Column(Text, nullable=True, index=True)
-    disposedInFY = Column(SmallInteger, ForeignKey("fiscalyears.fiscalyearID"),
+    disposedInFY = Column(SmallInteger, ForeignKey("fiscalyears.fiscalyearID"), primary_key=True,
                           info={"choices": FY_CHOICES},
                           nullable=False, index=True, server_default=text("'0'"))
-    disposedInQ = Column(Integer, ForeignKey("quarters.quarterID"),
+    disposedInQ = Column(Integer, ForeignKey("quarters.quarterID"), primary_key=True,
                          info={"choices": Q_CHOICES},
                          nullable=False, index=True, server_default=text("'0'"))
     reconsiderInFY = Column(SmallInteger, ForeignKey("fiscalyears.fiscalyearID"),
@@ -462,7 +462,7 @@ class Disposition(Base):
     lastModified = Column(DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"))
     lastModifiedBy = Column(String(100), nullable=False, server_default=text("''"))
 
-    description = db.relationship("Description", backref="disposition")
+    description = db.relationship("Description", backref="dispositions")
 
 
 class History(Base):

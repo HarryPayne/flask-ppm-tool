@@ -121,7 +121,7 @@ class Disposition(ModelForm):
     class Meta:
         model = alch.Disposition
         include_primary_keys = True
-        only = ["disposeID", "dispositionID", "explanation", "disposedInFY", 
+        only = ["dispositionID", "explanation", "disposedInFY", 
                 "disposedInQ", "reconsiderInFY", "reconsiderInQ", "startInY", 
                 "startInM", "finishInY", "finishInM"]
 

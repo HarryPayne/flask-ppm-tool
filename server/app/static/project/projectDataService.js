@@ -119,9 +119,9 @@
 
     function saveProject(tableName, key) {
       var formData = attributesService.getFormData(tableName, key);
-       var request = {
+      var request = {
         method: "POST",
-        url: "/projectEdit/" + formData.projectID + "/" + tableName,
+        url: "/projectEdit/" + service.projectID + "/" + tableName,
         headers: {
           "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
         },
