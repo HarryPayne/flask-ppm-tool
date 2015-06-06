@@ -129,6 +129,7 @@ class Comment(ModelForm):
     class Meta:
         model = alch.Comment
         include_primary_keys = True
+        only = ["commentID", "comment", "user", "date"]
 
 # class Upload(ModelForm):
 #     class Meta:

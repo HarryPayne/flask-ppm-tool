@@ -88,9 +88,11 @@ Data attributes:
           this[attr.child.name] = attr.child.value.id;
         }
       }
+      /*
       else if (attr.computed) {
         return;
       }
+      */
       else {
         this[attr.name] = attr.value;
       }      
@@ -132,25 +134,16 @@ Data attributes:
       return service.allAttributes;
     };
     
-    function getFormData(tableName, key) {
+    function getFormData(tableName, keys) {
       var formData = new Object;
       formData.projectID = service.projectID;
       formData.csrf_token = service.csrf_token;
-      if (typeof key != "undefined") {
-        formData[key.name] = key.value;
+      if (typeof keys != "undefined") {
+        _.each(keys, function(key) {
+          formData[key.name] = key.value;
+        });
       }
-      if (_.contains(["description", "portfolio", "disposition", "project"], tableName)) {
-        _.each(service.getProjectAttributes(tableName), addAttrToDataObj, formData);
-      }
-      else {
-        var instances = getProjectAttributes(tableName);
-        var keyName = key.name;
-        var instance = _.filter(instances, function(instance) {
-          if (instance[key.name].value == key.value) {return true;}
-          else {return false;}
-        })[0];
-        _.each(instance, addAttrToDataObj, formData);
-      }
+      _.each(service.getProjectAttributes(tableName), addAttrToDataObj, formData);
       return formData;
     };
 
@@ -251,20 +244,20 @@ Data attributes:
       var raw_items = getRawAttributes(tableName);
       _.each(keys, function(key) {
         raw_items = _.filter(raw_items, function(item) {
-          var match = _.filter(item.attributes, function(attr) {
-            if (attr.name == key.name && attr.value.id == key.value.id) {
-              return true;
-            }
-          });
-          if (match.length) {
+          if (item[key.name].id == key.id) {
             return true;
           }
         });
       });
       if (raw_items.length) {
         var selected = raw_items[0];
-        _.each(selected.attributes, function(attr) {
-          service.allAttributes[attr.name].value = attr.value;
+        service.projectAttributes[tableName] = [];
+        _.each(Object.keys(selected), function(key) {
+          try {
+            service.allAttributes[key].value = selected[key];
+            service.projectAttributes[tableName].push(service.allAttributes[key]);
+          }
+          catch(e) {}
         });
       }
     }
@@ -303,66 +296,17 @@ Data attributes:
       tableData.tableName = form.tableName;
 
       if (_.isArray(form.attributes[0].attributes)) { // disposition or comments
-        var keyNames = ["disposedInFY", "disposedInQ"];
-        if (tableData.tableName == "comments") idAttrName = ["commentID"];
         if (typeof service.rawAttributes == "undefined") {
           service.rawAttributes = new Object;
         }
-        if (typeof service.rawAttributes[tableData.tableName] == "undefined") {
-          service.rawAttributes[tableData.tableName] = [];
-        }
-        var old_items = service.rawAttributes[tableData.tableName];
-        if (old_items.length == 0) { // just slap the new items into place
-          service.rawAttributes[tableData.tableName] = form.attributes;
-          if (typeof service.projectAttributes[tableData.tableName] == "undefined") {
-            service.projectAttributes[tableData.tableName] = [];
-            _.each(form.attributes[0].attributes, function(attr) { // make first item live
-              var merged = service.getAttribute(attr.name);
-              merged.value = attr.value;
-              if (merged.format.substring(0, "child_for".length) != "child_for") {
-                service.projectAttributes[merged.table].push(merged);
-              }
-            });
-          }
-        }
-        else {
-          _.each(service.rawAttributes[tableData.tableName][0].attributes, function(attr) {
-            // break links between rawAttributes and allAttributes.
-            delete service.getAttribute(attr.name).value;
+        service.rawAttributes[tableData.tableName] = [];
+        _.each(form.attributes, function(subform) {
+          var formObj = new Object;
+          _.each(subform.attributes, function(attr) {
+            formObj[attr.name] = attr.value;
           });
-          _.each(form.attributes, function(new_item) {
-            var found_match = false;
-            var old_items = service.rawAttributes[tableData.tableName]
-            _.each(keyNames, function(keyName){
-              var newIdAttr = _.filter(new_item.attributes, {name: keyName})[0];
-              old_items = _.filter(old_items, function(old_item) {
-                var oldIdAttr = _.filter(old_item.attributes, {name: keyName})[0];
-                if (newIdAttr.value.id == oldIdAttr.value.id) {
-                  return true;
-                }
-              });
-            });
-            if (old_items.length) {
-              var match = old_items[0];
-              found_match = true;
-              _.each(new_item.attributes, function(attr) { 
-                // copy values from new item to matching old item
-                var old_attr = _.where(match.attributes, {name: attr.name})[0];
-                old_attr.value = attr.value;
-                if (typeof attr.printValue != "undefined") {
-                  old_attr.printValue = attr.printValue;
-                }
-              });
-            }
-            if (!found_match) {
-              // the new guy. make live
-              _.each(new_item.attributes, function(attr) { 
-                var merged = service.getAttribute(attr.name);
-                merged.value = attr.value;
-              });
-            }
-          });
-        }
+          service.rawAttributes[tableData.tableName].push(formObj);
+        });
       }
       else {
         if (typeof service.projectAttributes == "undefined") {

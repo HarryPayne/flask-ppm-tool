@@ -420,9 +420,9 @@ class Comment(Base):
 
     commentID = Column(Integer, primary_key=True)
     projectID = Column(Integer, ForeignKey("description.projectID"), nullable=False, index=True, server_default=text("'0'"))
-    user = Column(String(100), nullable=False, index=True, server_default=text("''"))
-    date = Column(DateTime, nullable=False, index=True, server_default=text("'0000-00-00 00:00:00'"))
-    comment = Column(Text, nullable=False)
+    user = Column(String(100), nullable=True, index=True, server_default=text("''"))
+    date = Column(DateTime, nullable=True, index=True, server_default=text("'0000-00-00 00:00:00'"))
+    comment = Column(Text, nullable=True)
 
     description = db.relationship("Description", backref="comments")
 

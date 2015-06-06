@@ -117,8 +117,8 @@
       var disposition = _.where(dispositions, {disposeID: disposeID})[0];
     };
 
-    function saveProject(tableName, key) {
-      var formData = attributesService.getFormData(tableName, key);
+    function saveProject(tableName, keys) {
+      var formData = attributesService.getFormData(tableName, keys);
       var request = {
         method: "POST",
         url: "/projectEdit/" + service.projectID + "/" + tableName,

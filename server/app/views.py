@@ -227,6 +227,8 @@ def getFormatFromField(field, allAttrsFromDB):
         return "multipleSelect"
     elif field.type == "QuerySelectMultipleField":
         return "multipleSelect"
+    elif field.type == "IntegerField":
+        return "number"
     elif "InY" in field.name or "InFY" in field.name:
         return "dateRangeSelect"
     elif "InQ" in field.name or "InM" in field.name:
@@ -354,13 +356,16 @@ def getProjectAttributes(projectID, tableName=None):
         
     if tableName in ("comment", None):
         if len(p.comments):
-            comments = [forms.Comment(ImmutableMultiDict([]), comment) for comment in p.comments]
+            c = alch.Comment.query.filter_by(projectID=projectID)\
+                                  .order_by(db.desc("date"))
+            comments = [forms.Comment(ImmutableMultiDict([]), comment) for comment in c]
             formData.append({"tableName": "comment",
                              "attributes": [{"tableName": "comment", 
                                              "attributes": getAttributeValuesFromForm(item, allAttrsFromDB)["attributes"]} for item in comments]})
     
 #    if tableName in ("description", None):
 #     uploadForm = forms.Upload(request.form, p.uploads[0])
+
     
     return {"projectID": projectID,
             "csrf_token": csrf_token,
@@ -482,10 +487,32 @@ def projectEdit(projectID, tableName):
     if projectID:
         p = alch.Description.query.filter_by(projectID=projectID).first_or_404()
 
-        errors = {}
+        errors = []
+        success = []
         
         if tableName == "description":
             description_errors = []
+            if not p:
+                p = alch.Description(name = request.form.get("name"),
+                                     description = request.form.get("description"),
+                                     rationale = request.form.get("rationale"),
+                                     businesscase = request.form.get("businesscase"),
+                                     dependencies = request.form.get("dependencies"),
+                                     maturityID = request.form.get("maturityID"),
+                                     proposer = request.form.get("proposer"),
+                                     customer = request.form.get("customer"),
+                                     sponsorID = request.form.get("sponsorID"),
+                                     hostID = request.form.get("hostID"),
+                                     technologyID = request.form.get("technologyID"),
+                                     typeID = request.form.get("typeID"),
+                                     fundingsourceID = request.form.get("fundingsourceID"),
+                                     created = datetime.today(),
+                                     finalID = request.form.get("finalID"),
+                                     lastModifiedBy = current_user.get_id())
+                description_success = "Created new project description."
+            else:
+                description_success = "Updated project description."
+
             descriptionForm = forms.Description(request.form, p)
             if descriptionForm.validate_on_submit():
                 try:
@@ -500,43 +527,83 @@ def projectEdit(projectID, tableName):
             response = getProjectAttributes(projectID, tableName)
             if description_errors:
                 response["errors"] = description_errors
+            else:
+                response["success"] = description_success            
 
         elif tableName == "portfolio":
-            portfolio_errors = []
-            portfolioForm = forms.Portfolio(request.form, p.portfolio)
+            pt_errors = []
+            if not p.portfolio:
+                pt = alch.Portfolio(flavorID = request.form.get("flavorID"),
+                                    initiativeID = request.form.get("initiativeID"),
+                                    scopeID = request.form.get("scopeID"),
+                                    visibilityID = request.form.get("visiibilityID"),
+                                    complexityID = request.form.get("complexityID"),
+                                    risklevelID = request.form.get("risklevelID"),
+                                    costlevelID = request.form.get("costlevelID"),
+                                    rpu = request.form.get("rpu"),
+                                    budgetInFY = request.form.get("budgetInFY"),
+                                    budgetInQ = request.form.get("budgetInQ"),
+                                    lastModifiedBy = current_user.get_id()
+                                    )
+                pt_success = "Created new project portfolio entry."
+            else:
+                pt = p.portfolio
+                pt_success = "Updated project portfolio entry."
+
+            portfolioForm = forms.Portfolio(request.form, pt)
             if portfolioForm.validate_on_submit():
                 try:
-                    portfolioForm.populate_obj(p.portfolio)
-                    db.session.add(p.portfolio)
+                    portfolioForm.populate_obj(pt)
+                    db.session.add(pt)
                     db.session.commit()
                 except:
-                    portfolio_errors.append(sys.exc_info()[0])
+                    pt_errors.append(sys.exc_info()[0])
             else:
-                portfolio_errors = portfolioForm.errors
+                pt_errors = portfolioForm.errors
 
             response = getProjectAttributes(projectID, tableName)
-            if portfolio_errors:
-                response["errors"] = portfolio_errors
+            if pt_errors:
+                response["errors"] = pt_errors
+            else:
+                response["success"] = pt_success
 
         elif tableName == "project":
-            project_errors = []
-            projectForm = forms.Project(request.form, p.project)
+            pr_errors = []
+            if not p.project:
+                pr = alch.Project(projectID = request.form.get("projectID"),
+                                  proj_manager = request.form.get("proj_manager"),
+                                  tech_manager = request.form.get("tech_manager"),
+                                  proj_visibilityID = request.form.get("proj_visibilityID"),
+                                  project_url = request.form.get("project_url"),
+                                  progressID = request.form.get("progressID"),
+                                  startedOn = request.form.get("startedOn"),
+                                  finishedOn = request.form.get("finishedOn"),
+                                  lastModifiedBy = current_user.get_id()
+                                  )
+                pr_success = "Created new project management entry."
+            else:
+                pr = p.project
+                pr_success = "Updated project management entry."
+            
+            projectForm = forms.Project(request.form, pr)
             if projectForm.validate_on_submit():
                 try:
-                    projectForm.populate_obj(p.project)
-                    db.session.add(p.project)
+                    projectForm.populate_obj(pr)
+                    db.session.add(pr)
                     db.session.commit()
                 except:
-                    project_errors.append(sys.exc_info()[0])
+                    pr_errors.append(sys.exc_info()[0])
             else:
-                project_errors = projectForm.errors
+                pr_errors = projectForm.errors
 
             response = getProjectAttributes(projectID, tableName)
-            if project_errors:
-                response["errors"] = project_errors
+            if pr_errors:
+                response["errors"] = pr_errors
+            else:
+                response["success"] = pr_success
 
         elif tableName == "disposition":
-            disp_errors = []
+            d_errors = []
             disposedInFY = request.form.get("disposedInFY")
             disposedInQ = request.form.get("disposedInQ")
             d = alch.Disposition.query.filter_by(projectID=projectID)\
@@ -545,17 +612,21 @@ def projectEdit(projectID, tableName):
             if not d:
                 # No matching primary key. Generate model from request and insert.
                 d = alch.Disposition(disposedInFY = disposedInFY,
-                                      disposedInQ = disposedInQ,
-                                      dispositionID = request.form.get("dispositionID"),
-                                      explanation = request.form.get("explanation"),
-                                      finishInM = request.form.get("finishInM"),
-                                      finishInY = request.form.get("finishInY"),
-                                      projectID = projectID,
-                                      reconsiderInFY = request.form.get("reconsiderInFY"),
-                                      reconsiderInQ= request.form.get("reconsiderInQ"),
-                                      startInM = request.form.get("startInM"),
-                                      startInY = request.form.get("requestInY"),
-                                      lastModifiedBy = current_user.get_id())
+                                     disposedInQ = disposedInQ,
+                                     dispositionID = request.form.get("dispositionID"),
+                                     explanation = request.form.get("explanation"),
+                                     finishInM = request.form.get("finishInM"),
+                                     finishInY = request.form.get("finishInY"),
+                                     projectID = projectID,
+                                     reconsiderInFY = request.form.get("reconsiderInFY"),
+                                     reconsiderInQ= request.form.get("reconsiderInQ"),
+                                     startInM = request.form.get("startInM"),
+                                     startInY = request.form.get("requestInY"),
+                                     lastModifiedBy = current_user.get_id())
+                d_success = "Created new project disposition for cycle "
+            else:
+                d_success = "Updated project disposition for cycle "
+            
             dispositionForm = forms.Disposition(request.form, d)
             if dispositionForm.validate_on_submit():
                 try:
@@ -563,30 +634,52 @@ def projectEdit(projectID, tableName):
                     db.session.add(d)
                     db.session.commit()
                 except:
-                    disp_errors.append(sys.exc_info()[0])
+                    d_errors.append(sys.exc_info()[0])
             else:
-                disp_errors.append(dispositionForm.errors)
+                d_errors.append(dispositionForm.errors)
 
             response = getProjectAttributes(projectID, tableName)
-            if disp_errors:
-                response["errors"] = disp_errors
+            if d_errors:
+                response["errors"] = d_errors
+            else:
+                disposedInFY = dispositionForm["disposedInFY"].data
+                FY = [item[1] for item in dispositionForm["disposedInFY"].choices if item[0] == disposedInFY][0]
+                disposedInQ = dispositionForm["disposedInQ"].data
+                Q = [item[1] for item in dispositionForm["disposedInQ"].choices if item[0] == disposedInQ][0]
+                cycle = "{FY} {Q}.".format( FY = FY,
+                                           Q = Q)
+                response["success"] = d_success + cycle
 
         elif tableName == "comment":
-            comment_errors = []
-            commentForm = forms.Comment(request.form, p.comments)
+            c_errors = []
+            commentID = request.form.get("commentID")
+            c = alch.Comment.query.filter_by(projectID=projectID)\
+                                  .filter_by(commentID=commentID).first()
+            if not c:
+                c = alch.Comment(commentID = commentID,
+                                 projectID = projectID,
+                                 user = current_user.get_id(),
+                                 comment = request.form.get("comment"))
+                c_success = "Created new comment."
+            else:
+                c_success = "Updated comment."
+            
+            commentForm = forms.Comment(request.form, c)
             if commentForm.validate_on_submit():
                 try:
-                    commentForm.populate_obj(p.comments)
-                    db.session.add(p.comments)
+                    commentForm.populate_obj(c)
+                    db.session.add(c)
                     db.session.commit()
                 except:
-                    comment_errors.append(sys.exc_info()[0])
+                    c_errors.append(sys.exc_info()[0])
             else:
-                comment_errors.append(commentForm.errors)
+                c_errors.append(commentForm.errors)
         
             response = getProjectAttributes(projectID, tableName)
-            if disp_errors:
-                response["errors"] = disp_errors
+            if c_errors:
+                response["errors"] = c_errors
+            else:
+                response["success"] = c_success
 
         return dumps(response)
         

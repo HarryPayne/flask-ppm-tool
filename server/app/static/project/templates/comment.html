@@ -2,21 +2,40 @@
   
   <dl class="dl-horizontal"
     ng-show="project.currentMode() == 'view'"
-    ng-repeat="comment in project.as.getProjectAttributes('comment')">
+    ng-repeat="comment in project.as.getRawAttributes('comment')">
     <dt>
-      <label ng-bind="comment.user.value"></label>
+      <label ng-bind="comment.attributes[2].value"></label>
     </dt>
     <dd>
-      <span ng-bind="comment.comment.value"></span><br/>
-      <span ng-bind="comment.date.label"  class="text-capitalize"></span>
-      <span ng-bind="comment.date.printValue"></span>
+      <span ng-bind="comment.attributes[1].value"></span><br/>
+      Entered at <span ng-bind="comment.attributes[3].value"></span>
     </dd>
   </dl>
 
   <dl class="dl-horizontal"
-    ng-show="project.currentMode() == 'edit.comment'">
+    ng-show="project.currentMode() == 'edit.comment'"
+    ng-repeat="comment in project.as.getRawAttributes('comment')">
+
+    <dt ng-hide="showDetails">
+      <label ng-bind="comment.attributes[2].value"></label>
+    </dt>
+
+    <dd ng-hide="showDetails">
+      <span ng-bind="comment.attributes[1].value"></span><br/>
+      Entered on <span ng-bind="comment.attributes[3].value" class="text-capitalize"></span>
+      <button type="button" ng-click="showDetails = !showDetails; project.as.showDetails('comment', [comment.attributes[0]])"> Edit </button>
+    </dd>
+
+    <dl class="dl-horizontal" 
+      ng-show="showDetails"
+      ng-repeat="attr in project.as.getProjectAttributes('comment')"
+      ng-include src="'static/project/templates/edit-field.html'">
+    </dl>
+
     <dt></dt>
-    <dd>
-      <button type="button" ng-click="project.ds.saveProject('comment', comment.commentID.value)"> Save </button>
+    <dd ng-show="showDetails">
+      <button type="button" ng-click="showDetails = !showDetails"> Hide </button>
+      <button type="button" ng-show="showDetails" ng-click="project.ds.saveProject('comment', [project.as.getAttribute('commentID')])"> Save </button>
     </dd>
   </dl>
+
