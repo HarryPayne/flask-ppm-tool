@@ -14,12 +14,13 @@
     this.ds = projectDataService;
     this.ls = projectListService;
     
-    this.masterList = this.ls.getMasterList;
     this.attributes = attributesService.getAttributes;
     this.changeMode = projectDataService.changeMode;
+    this.dateOptions = {changeYear: true, changeMonth: true};
     this.currentMode = projectDataService.currentMode;
     this.jumpToAtachFile = projectDataService.jumpToAtachFile;
     this.jumpToCommentEntry = projectDataService.jumpToCommentEntry;
+    this.masterList = this.ls.getMasterList;
     this.viewUrl = projectDataService.viewUrl;
 
   };

@@ -1,5 +1,6 @@
-  <dt ng-if="attr.value" ng-bind="attr.label" class="text-capitalize"></dt>
-  <dd ng-if="attr.value">
+<span ng-if="project.as.hasAValue(attr)">
+  <dt ng-bind="attr.label" class="text-capitalize"></dt>
+  <dd>
     <span ng-switch on="attr.format">
       <span ng-switch-when="multipleSelect">
         <span ng-if="!attr.multi">
@@ -21,3 +22,4 @@
       </span>
     </span>
   </dd>
+</span>  

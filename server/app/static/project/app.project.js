@@ -1,6 +1,6 @@
 (function() {
   
   angular
-    .module("app.project", ["ui.router"]);
+    .module("app.project", ["ui.date", "ui.router"]);
   
 }());

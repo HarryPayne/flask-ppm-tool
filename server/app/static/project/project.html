@@ -8,47 +8,52 @@
     </script>
   </head>
   <body>
-    <ul class="row list-inline text-right col-lg-8 clearfix">
-      <li ng-show="project.ds.currentMode() == 'view' && (currentUser.roles.indexOf('Curator') > -1 || currentUser.roles.indexOf('Manager') > -1)">
-        <a ui-sref="project.edit.description" ng-click="project.changeMode('project.edit.description');">Edit this project</a>
-      </li>
-      <li ng-show="project.ds.currentMode() != 'view' && (currentUser.roles.indexOf('Curator') > -1 || currentUser.roles.indexOf('Manager') > -1)">
-        <a ui-sref="project.detail" ng-click="project.changeMode('project.detail');">View this project</a>
-      </li>
-      <li ng-show="project.ds.currentMode() != 'comment' && (currentUser.roles.indexOf('Curator') > -1 || currentUser.roles.indexOf('Manager') > -1)">
-        <a ui-sref="project.comment" ng-click="project.jumpToCommentEntry();">Add a Comment</a>
-      </li>
-      <li ng-show="project.ds.currentMode() == 'comment' && (currentUser.roles.indexOf('Curator') > -1 || currentUser.roles.indexOf('Manager') > -1)">
-        Add a Comment
-      </li>
-      <li ng-show="project.ds.currentMode() != 'attach' && (currentUser.roles.indexOf('Curator') > -1 || currentUser.roles.indexOf('Manager') > -1)">
-        <a ui-sref="project.attach" ng-click="project.jumpToAtachFile();">Attach a File</a>
-      </li>
-      <li ng-show="project.ds.currentMode() == 'attach' && (currentUser.roles.indexOf('Curator') > -1 || currentUser.roles.indexOf('Manager') > -1)">
-        Attach a File
-      </li>
-    </ul>
-
-    <h3 class="clearfix">{{ project.masterList().projectID}}: {{project.masterList().projectName}}</h3>
-
-    <ul class="nav nav-tabs" ng-show="project.currentMode().substring(0,4) == 'edit'">
-      <li role="presentation" ng-class="{active:project.currentMode() == 'edit.description'}"><a ui-sref="project.edit.description">Description</a></li>
-      <li role="presentation" ng-class="{active:project.currentMode() == 'edit.portfolio'}"><a ui-sref="project.edit.portfolio">Portfolio</a></li>
-      <li role="presentation" ng-class="{active:project.currentMode() == 'edit.disposition'}"><a ui-sref="project.edit.disposition">Dispositions</a></li>
-      <li role="presentation" ng-class="{active:project.currentMode() == 'edit.projectMan'}"><a ui-sref="project.edit.projectMan">Project Management</a></li>
-      <li role="presentation" ng-class="{active:project.currentMode() == 'edit.comment'}"><a ui-sref="project.edit.comment">Comments</a></li>
-      <li role="presentation" ng-class="{active:project.currentMode() == 'edit.attach'}"><a ui-sref="project.edit.attach">Attach a File</a></li>
-    </ul>
-              
-    <div ng-show="project.currentMode().substring(0,4) == 'edit'">
-      <div ng-show="project.as.errors" ng-bind="project.as.errors"></div>
+    <div  class="container">
+      <ul class="list-inline text-right clearfix">
+        <li ng-show="project.ds.currentMode() == 'view' && (currentUser.roles.indexOf('Curator') > -1 || currentUser.roles.indexOf('Manager') > -1)">
+          <a ui-sref="project.edit.description" ng-click="project.changeMode('project.edit.description');">Edit this project</a>
+        </li>
+        <li ng-show="project.ds.currentMode() != 'view' && (currentUser.roles.indexOf('Curator') > -1 || currentUser.roles.indexOf('Manager') > -1)">
+          <a ui-sref="project.detail" ng-click="project.changeMode('project.detail');">View this project</a>
+        </li>
+        <li ng-show="project.ds.currentMode() != 'comment' && (currentUser.roles.indexOf('Curator') > -1 || currentUser.roles.indexOf('Manager') > -1)">
+          <a ui-sref="project.comment" ng-click="project.jumpToCommentEntry();">Add a Comment</a>
+        </li>
+        <li ng-show="project.ds.currentMode() == 'comment' && (currentUser.roles.indexOf('Curator') > -1 || currentUser.roles.indexOf('Manager') > -1)">
+          Add a Comment
+        </li>
+        <li ng-show="project.ds.currentMode() != 'attach' && (currentUser.roles.indexOf('Curator') > -1 || currentUser.roles.indexOf('Manager') > -1)">
+          <a ui-sref="project.attach" ng-click="project.jumpToAtachFile();">Attach a File</a>
+        </li>
+        <li ng-show="project.ds.currentMode() == 'attach' && (currentUser.roles.indexOf('Curator') > -1 || currentUser.roles.indexOf('Manager') > -1)">
+          Attach a File
+        </li>
+      </ul>
     </div>
-
-    <span ng-include src="'static/project/templates/description.html'"></span>
-    <span ng-include src="'static/project/templates/portfolio.html'"></span>
-    <span ng-include src="'static/project/templates/disposition.html'"></span>
-    <span ng-include src="'static/project/templates/projectMan.html'"></span>
-    <span ng-include src="'static/project/templates/comment.html'"></span>
-
+  
+    <div  class="container">
+      <h3>{{ project.masterList().projectID}}: {{project.masterList().projectName}}</h3>
+  
+      <ul class="nav navbar-default nav-tabs col-lg-8" ng-show="project.currentMode().substring(0,4) == 'edit'">
+        <li role="presentation" ng-class="{active:project.currentMode() == 'edit.description'}"><a ui-sref="project.edit.description">Description</a></li>
+        <li role="presentation" ng-class="{active:project.currentMode() == 'edit.portfolio'}"><a ui-sref="project.edit.portfolio">Portfolio</a></li>
+        <li role="presentation" ng-class="{active:project.currentMode() == 'edit.disposition'}"><a ui-sref="project.edit.disposition">Dispositions</a></li>
+        <li role="presentation" ng-class="{active:project.currentMode() == 'edit.projectMan'}"><a ui-sref="project.edit.projectMan">Project Management</a></li>
+        <li role="presentation" ng-class="{active:project.currentMode() == 'edit.comment'}"><a ui-sref="project.edit.comment">Comments</a></li>
+        <li role="presentation" ng-class="{active:project.currentMode() == 'edit.attach'}"><a ui-sref="project.edit.attach">Attach a File</a></li>
+      </ul>
+                
+      <div ng-show="project.currentMode().substring(0,4) == 'edit'">
+        <div ng-show="project.as.errors" ng-bind="project.as.errors"></div>
+      </div>
+  
+      <div class="clearfix">
+        <span ng-include src="'static/project/templates/description.html'"></span>
+        <span ng-include src="'static/project/templates/portfolio.html'"></span>
+        <span ng-include src="'static/project/templates/disposition.html'"></span>
+        <span ng-include src="'static/project/templates/projectMan.html'"></span>
+        <span ng-include src="'static/project/templates/comment.html'"></span>
+      </div>
+    </div>
   </body>
 </html>

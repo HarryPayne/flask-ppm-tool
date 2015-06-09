@@ -357,7 +357,7 @@ def getProjectAttributes(projectID, tableName=None):
     if tableName in ("comment", None):
         if len(p.comments):
             c = alch.Comment.query.filter_by(projectID=projectID)\
-                                  .order_by(db.desc("date"))
+                                  .order_by(db.desc("commentAuthored"))
             comments = [forms.Comment(ImmutableMultiDict([]), comment) for comment in c]
             formData.append({"tableName": "comment",
                              "attributes": [{"tableName": "comment", 
@@ -428,10 +428,12 @@ def getAttributeValuesFromForm(form, allAttrsFromDB):
         elif isinstance(field, DateField):
             data = field.data
             value = data.isoformat() if data else ""
+            printValue = data.strftime("%m/%d/%Y") if data else ""
            
         elif isinstance(field, DateTimeField):
             data = field.data
             value = data.isoformat() if data else ""
+            printValue = data.strftime("%m/%d/%Y at %I:%M:%S %p") if data else ""
            
         attributes.append({"name": name,
                            "value": value,
@@ -532,7 +534,10 @@ def projectEdit(projectID, tableName):
 
         elif tableName == "portfolio":
             pt_errors = []
-            if not p.portfolio:
+            pt = alch.Portfolio.query.filter_by(projectID=projectID).first()
+            if pt:
+                pt_success = "Updated project portfolio entry."
+            else:
                 pt = alch.Portfolio(flavorID = request.form.get("flavorID"),
                                     initiativeID = request.form.get("initiativeID"),
                                     scopeID = request.form.get("scopeID"),
@@ -546,9 +551,6 @@ def projectEdit(projectID, tableName):
                                     lastModifiedBy = current_user.get_id()
                                     )
                 pt_success = "Created new project portfolio entry."
-            else:
-                pt = p.portfolio
-                pt_success = "Updated project portfolio entry."
 
             portfolioForm = forms.Portfolio(request.form, pt)
             if portfolioForm.validate_on_submit():
@@ -556,6 +558,7 @@ def projectEdit(projectID, tableName):
                     portfolioForm.populate_obj(pt)
                     db.session.add(pt)
                     db.session.commit()
+                    projectID = pt.projectID
                 except:
                     pt_errors.append(sys.exc_info()[0])
             else:
@@ -569,7 +572,10 @@ def projectEdit(projectID, tableName):
 
         elif tableName == "project":
             pr_errors = []
-            if not p.project:
+            pr = alch.Project.query.filter_by(projectID=projectID).first()
+            if pr:
+                pr_success = "Updated project management entry."
+            else:
                 pr = alch.Project(projectID = request.form.get("projectID"),
                                   proj_manager = request.form.get("proj_manager"),
                                   tech_manager = request.form.get("tech_manager"),
@@ -581,9 +587,6 @@ def projectEdit(projectID, tableName):
                                   lastModifiedBy = current_user.get_id()
                                   )
                 pr_success = "Created new project management entry."
-            else:
-                pr = p.project
-                pr_success = "Updated project management entry."
             
             projectForm = forms.Project(request.form, pr)
             if projectForm.validate_on_submit():
@@ -591,6 +594,7 @@ def projectEdit(projectID, tableName):
                     projectForm.populate_obj(pr)
                     db.session.add(pr)
                     db.session.commit()
+                    projectID = pr.projectID
                 except:
                     pr_errors.append(sys.exc_info()[0])
             else:
@@ -658,7 +662,7 @@ def projectEdit(projectID, tableName):
             if not c:
                 c = alch.Comment(commentID = commentID,
                                  projectID = projectID,
-                                 user = current_user.get_id(),
+                                 commentAuthor = current_user.get_id(),
                                  comment = request.form.get("comment"))
                 c_success = "Created new comment."
             else:

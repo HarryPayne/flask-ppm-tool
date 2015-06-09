@@ -1,3 +1,4 @@
+<div class="container clearfix">
   <h4 ng-show="project.currentMode() == 'view' || project.currentMode() == 'edit.disposition'">Disposition History</h4>
 
   <dl class="dl-horizontal" 
@@ -69,7 +70,7 @@
         <span ng-bind="project.as.getAttribute('reconsiderInFY').value.desc"></span>.
       </span>
   
-      <span ng-show="project.as.getAttribute('startInY').value.desc || project.as.getAttribute('startInM')].value.desc">
+      <span ng-show="project.as.getAttribute('startInY').value.desc || project.as.getAttribute('startInM').value.desc">
         Start in <span ng-bind="project.as.getAttribute('startInM').value.desc"></span>
         <span ng-bind="project.as.getAttribute('startInY').value.desc"></span>.
       </span>
@@ -93,5 +94,7 @@
       <button type="button" ng-click="showDetails = !showDetails; project.ds.saveProject('disposition', [project.as.getAttribute('disposedInFY'),
         project.as.getAttribute('disposedInQ')])"> Save </button>
     </dd>
-</dl>
+  </dl>
+  
+</div>
 

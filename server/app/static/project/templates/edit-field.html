@@ -121,7 +121,8 @@
         <span ng-bind="attr.printValue"></span>
       </span>
       <span ng-if="!attr.computed">
-        <input
+        <input ui-date="project.dateOptions" 
+          ui-date-format="MM/dd/yy"
           class="form-control col-lg-2"
           ng-model="attr.value"
           type="text"

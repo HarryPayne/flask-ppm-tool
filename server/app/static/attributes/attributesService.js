@@ -46,6 +46,7 @@ Data attributes:
       getProjectAttributes: getProjectAttributes,
       getRawAttributes: getRawAttributes,
       getSelectedChoices:getSelectedChoices, 
+      hasAValue: hasAValue,
       makeProjectLink: makeProjectLink,
       mergeAttributeWithValue: mergeAttributeWithValue,
       RestoreState: RestoreState,
@@ -88,12 +89,16 @@ Data attributes:
           this[attr.child.name] = attr.child.value.id;
         }
       }
-      /*
-      else if (attr.computed) {
-        return;
+      else if (attr.format == "date" || _.contains(["commentAuthored", "commentEdited"], attr.name)) { // list of computed attributes rendered as string 
+        if (attr.computed) return;
+        if (attr.value) {
+          this[attr.name] = new Date(attr.value).toString("yyyy-MM-ddTHH:mm:ss");
+        }
+        else {
+          this[attr.name] = null;
+        }
       }
-      */
-      else {
+       else {
         this[attr.name] = attr.value;
       }      
     }
@@ -144,6 +149,9 @@ Data attributes:
         });
       }
       _.each(service.getProjectAttributes(tableName), addAttrToDataObj, formData);
+      if (tableName == "comment") {
+        formData["commentEditor"] = $rootScope.currentUser.id;
+      }
       return formData;
     };
 
@@ -200,6 +208,16 @@ Data attributes:
       }
     };
     
+    function hasAValue(attr) {
+      if ((typeof attr.value != "undefined" && attr.value != null && attr.value != "" && attr.value != []) ||
+          (typeof attr.value.id != "undefined" && attr.value.id) || 
+          (typeof attr.value.id == "undefined" && typeof attr.value.length != "undefined" && attr.value.length) ||
+          (typeof attr.value.id == "undefined" && typeof attr.value.length == "undefined" && attr.value)) {
+        return true;
+      }
+      else return false;
+    }
+    
     function makeProjectLink(projectID) {
       return "project linke here";
     };
@@ -210,6 +228,9 @@ Data attributes:
       if (attr.printValue) merged.printValue = attr.printValue;
       if (merged.format.substring(0, "child_for_".length) == "child_for_") {
         return;
+      }
+      else if (merged.format == "date" && attr.value) {
+        merged.value = new Date(Date.parse(attr.value));
       }
       service.projectAttributes[this].push(merged);
     }
@@ -244,7 +265,10 @@ Data attributes:
       var raw_items = getRawAttributes(tableName);
       _.each(keys, function(key) {
         raw_items = _.filter(raw_items, function(item) {
-          if (item[key.name].id == key.id) {
+          if (typeof item[key.name].id == "undefined" && item[key.name] == key.id) {
+            return true;
+          }
+          else if (item[key.name].id == key.id) {
             return true;
           }
         });
@@ -304,6 +328,9 @@ Data attributes:
           var formObj = new Object;
           _.each(subform.attributes, function(attr) {
             formObj[attr.name] = attr.value;
+            if (typeof attr.printValue != "undefined") {
+              formObj[attr.name+".printValue"] = attr.printValue;
+            }
           });
           service.rawAttributes[tableData.tableName].push(formObj);
         });
