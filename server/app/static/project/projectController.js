@@ -16,10 +16,10 @@
     
     this.attributes = attributesService.getAttributes;
     this.changeMode = projectDataService.changeMode;
-    this.dateOptions = {changeYear: true, changeMonth: true};
     this.currentMode = projectDataService.currentMode;
+    this.dateOptions = {changeYear: true, changeMonth: true};
     this.jumpToAtachFile = projectDataService.jumpToAtachFile;
-    this.jumpToCommentEntry = projectDataService.jumpToCommentEntry;
+    this.jumpToAddForm = projectDataService.jumpToAddForm;
     this.masterList = this.ls.getMasterList;
     this.viewUrl = projectDataService.viewUrl;
 

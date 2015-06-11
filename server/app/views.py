@@ -607,6 +607,8 @@ def projectEdit(projectID, tableName):
                 response["success"] = pr_success
 
         elif tableName == "disposition":
+            import pydevd
+            pydevd.settrace()
             d_errors = []
             disposedInFY = request.form.get("disposedInFY")
             disposedInQ = request.form.get("disposedInQ")
@@ -655,20 +657,28 @@ def projectEdit(projectID, tableName):
                 response["success"] = d_success + cycle
 
         elif tableName == "comment":
+            import pydevd
+            pydevd.settrace()
             c_errors = []
             commentID = request.form.get("commentID")
-            c = alch.Comment.query.filter_by(projectID=projectID)\
-                                  .filter_by(commentID=commentID).first()
-            if not c:
-                c = alch.Comment(commentID = commentID,
-                                 projectID = projectID,
-                                 commentAuthor = current_user.get_id(),
-                                 comment = request.form.get("comment"))
-                c_success = "Created new comment."
-            else:
-                c_success = "Updated comment."
             
-            commentForm = forms.Comment(request.form, c)
+            if commentID:
+                c = alch.Comment.query.filter_by(projectID = projectID)\
+                                      .filter_by(commentID = commentID).first_or_404()
+                commentForm = forms.Comment(request.form, c)
+                c_success = "Updated comment."
+
+            else:
+                c = alch.Comment(projectID=projectID)
+                mock_form = ImmutableMultiDict([("csrf_token", request.form.get("csrf_token")),
+                                                ("comment", request.form.get("comment")),
+                                                ("commentAuthor", current_user.get_id()),
+                                                ("commentAuthored", datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+                                                ("commentEditor", None),
+                                                ("commentEdited", None)])
+                commentForm = forms.Comment(mock_form, c)
+                c_success = "Created new comment."
+            
             if commentForm.validate_on_submit():
                 try:
                     commentForm.populate_obj(c)

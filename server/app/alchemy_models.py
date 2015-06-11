@@ -418,7 +418,7 @@ class Description(Base):
 class Comment(Base):
     __tablename__ = "comment"
 
-    commentID = Column(Integer, primary_key=True)
+    commentID = Column(Integer, primary_key=True, nullable=True)
     projectID = Column(Integer, ForeignKey("description.projectID"), nullable=False, index=True, server_default=text("'0'"))
     commentAuthor = Column(String(100), nullable=True, index=True, server_default=text("''"))
     commentAuthored = Column(DateTime, nullable=True, index=True, server_default=text("'0000-00-00 00:00:00'"))
@@ -445,22 +445,22 @@ class Disposition(Base):
                          nullable=False, index=True, server_default=text("'0'"))
     reconsiderInFY = Column(SmallInteger, ForeignKey("fiscalyears.fiscalyearID"),
                             info={"choices": FY_CHOICES},
-                            nullable=False, server_default=text("'0'"))
+                            nullable=True, server_default=text("'0'"))
     reconsiderInQ = Column(Integer, ForeignKey("quarters.quarterID"),
                            info={"choices": Q_CHOICES},
-                           nullable=False, server_default=text("'0'"))
+                           nullable=True, server_default=text("'0'"))
     startInY = Column(SmallInteger, ForeignKey("calendaryears.calendaryearID"),
                       info={"choices": Y_CHOICES},
-                      nullable=False, server_default=text("'0'"))
+                      nullable=True, server_default=text("'0'"))
     startInM = Column(Integer, ForeignKey("months.monthID"),
                       info={"choices": M_CHOICES},
-                      nullable=False, server_default=text("'0'"))
+                      nullable=True, server_default=text("'0'"))
     finishInY = Column(SmallInteger, ForeignKey("calendaryears.calendaryearID"),
                        info={"choices": Y_CHOICES},
-                       nullable=False, server_default=text("'0'"))
+                       nullable=True, server_default=text("'0'"))
     finishInM = Column(Integer, ForeignKey("months.monthID"),
                        info={"choices": M_CHOICES},
-                       nullable=False, server_default=text("'0'"))
+                       nullable=True, server_default=text("'0'"))
     lastModified = Column(DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"))
     lastModifiedBy = Column(String(100), nullable=False, server_default=text("''"))
 

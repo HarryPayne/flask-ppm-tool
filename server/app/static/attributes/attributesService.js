@@ -52,7 +52,7 @@ Data attributes:
       RestoreState: RestoreState,
       SaveState: SaveState,
       setAllAttributes: setAllAttributes,
-      showDetails: showDetails,
+      updateProjAttrsFromRawItem: updateProjAttrsFromRawItem,
       updateAllAttributes: updateAllAttributes,
       updateErrors: updateErrors,
       updateProjectAttributes: updateProjectAttributes,
@@ -86,7 +86,12 @@ Data attributes:
           });
         }
         if (attr.child) {
-          this[attr.child.name] = attr.child.value.id;
+          if (!_.isArray(attr.child.value)) {
+            this[attr.child.name] = attr.child.value.id;
+          }
+          else {
+            this[attr.child.name] = attr.child.value;
+          }
         }
       }
       else if (attr.format == "date" || _.contains(["commentAuthored", "commentEdited"], attr.name)) { // list of computed attributes rendered as string 
@@ -98,7 +103,7 @@ Data attributes:
           this[attr.name] = null;
         }
       }
-       else {
+       else if (attr.format.substring(0, "child_for_".length) != "child_for_") {
         this[attr.name] = attr.value;
       }      
     }
@@ -141,11 +146,15 @@ Data attributes:
     
     function getFormData(tableName, keys) {
       var formData = new Object;
-      formData.projectID = service.projectID;
       formData.csrf_token = service.csrf_token;
       if (typeof keys != "undefined") {
         _.each(keys, function(key) {
-          formData[key.name] = key.value;
+          if (typeof key.value.id != "undefined") {
+            formData[key.name] = key.value.id;
+          }
+          else {
+            formData[key.name] = key.value;
+          }
         });
       }
       _.each(service.getProjectAttributes(tableName), addAttrToDataObj, formData);
@@ -156,12 +165,11 @@ Data attributes:
     };
 
     function getProjectAttributes(tableName, flag) {
-      if (_.contains(["description", "portfolio", "disposition", "project"], tableName)) {
-        try {
-          return _.sortBy(service.projectAttributes[tableName], "attributeID");
-        }
-        catch(e) {}
+      try {
+        return _.sortBy(service.projectAttributes[tableName], "attributeID");
       }
+      catch(e) {}
+      /*
       else if (_.contains(["comment"], tableName)) {
         try {
           if (service.projectAttributes[tableName].length) {
@@ -183,6 +191,7 @@ Data attributes:
         }
         catch(e) {}
       }
+      */
     };
 
     function getRawAttributes(tableName) {
@@ -261,10 +270,12 @@ Data attributes:
       });
     };
 
-    function showDetails(tableName, keys) {
+    function updateProjAttrsFromRawItem(tableName, keys) {
       var raw_items = getRawAttributes(tableName);
+      var filtered_items = raw_items;
+      var selected;
       _.each(keys, function(key) {
-        raw_items = _.filter(raw_items, function(item) {
+        filtered_items = _.filter(filtered_items, function(item) {
           if (typeof item[key.name].id == "undefined" && item[key.name] == key.id) {
             return true;
           }
@@ -273,8 +284,8 @@ Data attributes:
           }
         });
       });
-      if (raw_items.length) {
-        var selected = raw_items[0];
+      if (filtered_items.length) {
+        selected = filtered_items[0];
         service.projectAttributes[tableName] = [];
         _.each(Object.keys(selected), function(key) {
           try {
@@ -282,6 +293,21 @@ Data attributes:
             service.projectAttributes[tableName].push(service.allAttributes[key]);
           }
           catch(e) {}
+        });
+        return  selected;
+      }
+      else if (raw_items.length) {
+        var tableAttrs = _.where(service.allAttributes, {table: tableName});
+        service.projectAttributes[tableName] = [];
+        _.each(tableAttrs, function(attr) {
+          if (attr.computed) return;
+          else if (_.contains(["multipleSelect", "dateRangeSelect"], attr.format)) {
+            attr.value = [];
+          }
+          else {
+            attr.value = "";
+          }
+          service.projectAttributes[tableName].push(attr);
         });
       }
     }

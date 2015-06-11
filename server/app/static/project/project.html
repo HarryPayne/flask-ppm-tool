@@ -16,11 +16,19 @@
         <li ng-show="project.ds.currentMode() != 'view' && (currentUser.roles.indexOf('Curator') > -1 || currentUser.roles.indexOf('Manager') > -1)">
           <a ui-sref="project.detail" ng-click="project.changeMode('project.detail');">View this project</a>
         </li>
-        <li ng-show="project.ds.currentMode() != 'comment' && (currentUser.roles.indexOf('Curator') > -1 || currentUser.roles.indexOf('Manager') > -1)">
-          <a ui-sref="project.comment" ng-click="project.jumpToCommentEntry();">Add a Comment</a>
+        <li ng-show="project.ds.currentMode() != 'add.comment' && (currentUser.roles.indexOf('Curator') > -1 || currentUser.roles.indexOf('Manager') > -1)">
+          <a ui-sref="project.add.comment" ng-click="project.jumpToAddForm('comment', 
+                                                        [{name: 'commentID', id: 0}]);">Add a Comment</a>
         </li>
-        <li ng-show="project.ds.currentMode() == 'comment' && (currentUser.roles.indexOf('Curator') > -1 || currentUser.roles.indexOf('Manager') > -1)">
+        <li ng-show="project.ds.currentMode() == 'add.comment' && (currentUser.roles.indexOf('Curator') > -1 || currentUser.roles.indexOf('Manager') > -1)">
           Add a Comment
+        </li>
+        <li ng-show="project.ds.currentMode() != 'add.disposition' && (currentUser.roles.indexOf('Curator') > -1 || currentUser.roles.indexOf('Manager') > -1)">
+          <a ui-sref="project.add.disposition" ng-click="project.jumpToAddForm('disposition', 
+                                                        [{name: 'disposedInFY', id: 0}, {name: 'disposedInQ', id: 0}]);">Add a Disposition</a>
+        </li>
+        <li ng-show="project.ds.currentMode() == 'add.disposition' && (currentUser.roles.indexOf('Curator') > -1 || currentUser.roles.indexOf('Manager') > -1)">
+          Add a Disposition
         </li>
         <li ng-show="project.ds.currentMode() != 'attach' && (currentUser.roles.indexOf('Curator') > -1 || currentUser.roles.indexOf('Manager') > -1)">
           <a ui-sref="project.attach" ng-click="project.jumpToAtachFile();">Attach a File</a>
@@ -39,7 +47,7 @@
         <li role="presentation" ng-class="{active:project.currentMode() == 'edit.portfolio'}"><a ui-sref="project.edit.portfolio">Portfolio</a></li>
         <li role="presentation" ng-class="{active:project.currentMode() == 'edit.disposition'}"><a ui-sref="project.edit.disposition">Dispositions</a></li>
         <li role="presentation" ng-class="{active:project.currentMode() == 'edit.projectMan'}"><a ui-sref="project.edit.projectMan">Project Management</a></li>
-        <li role="presentation" ng-class="{active:project.currentMode() == 'edit.comment'}"><a ui-sref="project.edit.comment">Comments</a></li>
+        <li role="presentation" ng-class="{active:project.currentMode().substring(0,12) == 'edit.comment'}"><a ui-sref="project.edit.comment">Comments</a></li>
         <li role="presentation" ng-class="{active:project.currentMode() == 'edit.attach'}"><a ui-sref="project.edit.attach">Attach a File</a></li>
       </ul>
                 

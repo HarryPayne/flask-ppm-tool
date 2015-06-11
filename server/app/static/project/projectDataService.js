@@ -19,8 +19,10 @@
       getProjectData: getProjectData,
       getAttributes: getAttributes,
       getProjectDataFromLocation: getProjectDataFromLocation,
+      hideDetails: hideDetails,
       jumpToAtachFile: jumpToAtachFile,
-      jumpToCommentEntry: jumpToCommentEntry,
+      jumpToAddForm: jumpToAddForm,
+      newProject: newProject,
       printValue: attributesService.printValue,
       projectID: $stateParams.projectID,
       RestoreState: RestoreState,
@@ -28,6 +30,8 @@
       saveProject: saveProject,
       SaveState: SaveState,
       setProjectData: setProjectData,
+      showDetails: showDetails,
+      stateParams: $stateParams,
       viewUrl: $state.current.data ? $state.current.data.viewUrl : "",
       url: $location.url
     };
@@ -58,27 +62,7 @@
       if ($state.current.name == "project.detail") {
         return "view";
       }
-      else if ($state.current.name == "project.edit") {
-        return "edit";
-      }
-      else if ($state.current.name == "project.edit.description") {
-        return "edit.description";
-      }
-      else if ($state.current.name == "project.edit.portfolio") {
-        return "edit.portfolio";
-      }
-      else if ($state.current.name == "project.edit.disposition") {
-        return "edit.disposition";
-      }
-      else if ($state.current.name == "project.edit.projectMan") {
-        return "edit.projectMan";
-      }
-      else if ($state.current.name == "project.edit.comment") {
-        return "edit.comment";
-      }
-      else if ($state.current.name == "project.edit.attach") {
-        return "edit.attach";
-      }
+      return $state.current.name.substring(8);
     }
     
     function getAttributes() {
@@ -100,13 +84,24 @@
       }
     }
 
+    function hideDetails(tableName, keys) {
+      var selected = attributesService.updateProjAttrsFromRawItem(tableName, keys);
+      $state.go("project.edit." + tableName, 
+                {projectID: $state.params.projectID});
+    }
+
     function jumpToAtachFile() {
       $state.go("project.attach", {projectID: service.projectID});
     };
     
-    function jumpToCommentEntry() {
-      $state.go("project.comment", {projectID: service.projectID});
+    function jumpToAddForm(tableName, keys) {
+      attributesService.updateProjAttrsFromRawItem(tableName, keys);
+      $state.go("project.add." + tableName, {projectID: $state.params.projectID});
     };
+
+    function newProject(tableName) {
+
+    }
     
     function RestoreState() {
       service.projectID = angular.fromJson(sessionStorage.projectDataServiceAttributes);
@@ -121,7 +116,7 @@
       var formData = attributesService.getFormData(tableName, keys);
       var request = {
         method: "POST",
-        url: "/projectEdit/" + service.projectID + "/" + tableName,
+        url: "/projectEdit/" + $state.params.projectID + "/" + tableName,
         headers: {
           "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
         },
@@ -129,6 +124,7 @@
       };
       $http(request)
         .then(service.setProjectData);
+      $state.go("project.edit." + tableName, {projectID: $state.params.projectID});
     };
 
     function SaveState() {
@@ -141,6 +137,19 @@
       attributesService.updateProjectAttributes(result);
       service.SaveState();
       attributesService.SaveState();
+    }
+
+    function showDetails(tableName, keys) {
+      var selected = attributesService.updateProjAttrsFromRawItem(tableName, keys);
+      if (tableName == 'comment') {
+        $state.go("project.edit.commentDetail", 
+                  {projectID: service.projectID, commentID: selected.commentID});
+      }
+      if (tableName == 'disposition') {
+        $state.go("project.edit.dispositionDetail", 
+                  {projectID: service.projectID, disposedInFY: selected.disposedInFY.id,
+                   disposedInQ: selected.disposedInQ.id});
+      }
     }
 
     service.SaveState();
