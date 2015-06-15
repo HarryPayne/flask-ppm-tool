@@ -13,6 +13,7 @@ from wtforms.ext.sqlalchemy.orm import model_form
 from wtforms import (BooleanField, DateField, DateTimeField, SelectField, 
                      StringField, TextAreaField)
 from wtforms.widgets import Select
+from wtforms_components.widgets import ReadOnlyWidgetProxy
 from wtforms.ext.sqlalchemy.fields import QuerySelectMultipleField
 #import wtforms_json
 from werkzeug import datastructures, ImmutableMultiDict
@@ -182,16 +183,16 @@ def getAttributesFromForm(form, allAttrsFromDB):
             dbattr = allAttrsFromDB[field.name[:field.name.index("In")]]
         else:
             dbattr = allAttrsFromDB[field.name]
-        attr = {"name": field.name,
-                "label": dbattr.label,
-                "attributeID": dbattr.attributeID,
-                "attributeHelp": dbattr.attributeHelp,
-                "help": dbattr.help,
-                "computed": dbattr.computed,
-                "format": getFormatFromField(field, allAttrsFromDB), #dbattr.format,
+        attr = {"attributeID": dbattr.attributeID,
                 "choices": getChoicesFromField(field, allAttrsFromDB),
+                "computed": getReadOnlyFromField(field), # dbattr.computed, # i.e., readonly
+                "format": getFormatFromField(field, allAttrsFromDB), #dbattr.format,
+                "help": dbattr.help,
+                "label": field.label.text,
                 "multi": getMultiFromField(field),
-                "table": tableName
+                "name": field.name,
+                "required": getRequiredFromField(field),
+                "table": tableName,
                 }
         attributes[field.name] = attr
     
@@ -283,8 +284,14 @@ def getMultiFromField(field):
         return True
     else:
         return False
-   
-@app.route("/getBriefDescriptions")
+
+def getReadOnlyFromField(field):
+    return isinstance(field.widget, ReadOnlyWidgetProxy)
+
+def getRequiredFromField(field):
+    return field.flags.required
+
+@app.route("/getBriefDescriptions", methods=["GET", "POST"])
 def getBriefDescriptions():
     """ return list of project descriptions """
     columns = ["projectID", "name", "description", "finalID"]
@@ -321,6 +328,8 @@ def getProjectAttributes(projectID, tableName=None):
     """ Render a WT Forms form from the request/db, pick out the data from the
         widgets, and send them out as JSON.
     """
+    # If a tableName is supplied, only send attributes in that table
+    
     if "ALL_ATTRIBUTES" in session:
         allAttrsFromDB = session["ALL_ATTRIBUTES"]
     else:
@@ -328,7 +337,14 @@ def getProjectAttributes(projectID, tableName=None):
         
     formData = []
     
-    p = alch.Description.query.filter_by(projectID=projectID).first_or_404()
+    p = alch.Description.query.filter_by(projectID=projectID).first()
+    if not p:
+        # send back forms with no data for creating a new project
+        p = alch.Description()
+        p.portfolio = [alch.Portfolio()]
+        p.project = [alch.Project()]
+        p.comments = []
+        p.dispositions = []
     descriptionForm = forms.Description(request.form, p)
     csrf_token = descriptionForm["csrf_token"].current_token
 
@@ -344,11 +360,11 @@ def getProjectAttributes(projectID, tableName=None):
         formData.append(getAttributeValuesFromForm(projectForm, allAttrsFromDB))
     
     if tableName in ("disposition", None):
-        # You can't use request.form when rendering forms here. It makes all forms identical.
         if len(p.dispositions):
             d = alch.Disposition.query.filter_by(projectID=projectID)\
                                       .order_by(db.desc("disposedInFY"))\
                                       .order_by(db.desc("disposedInQ"))
+            # Using request.form here would step on data from db
             dispositions = [forms.Disposition(ImmutableMultiDict([]), disposition) for disposition in d]
             formData.append({"tableName": "disposition",
                              "attributes": [{"tableName": "disposition", 
@@ -409,18 +425,21 @@ def getAttributeValuesFromForm(form, allAttrsFromDB):
             data = field.data
             if data == None:
                 pass
-            value = [item for item in dbattr["choices"] if item["id"] == data][0]
+            value = [item for item in dbattr["choices"] if item["id"] == data]
+            value = value[0] if value else None
             
         elif dbattr["format"] == "dateRangeSelect":
-            value = [item for item in dbattr["choices"] if item["id"] == field.data][0]
+            value = [item for item in dbattr["choices"] if item["id"] == field.data]
+            value = value[0] if value else None
             if dbattr["child"]:
                 dbChild = dbattr["child"]
                 childName = dbChild["name"]
                 formChild = form[childName]
-                childValue = [item for item in dbChild["choices"] if item["id"] == formChild.data][0]
+                childValue = [item for item in dbChild["choices"] if item["id"] == formChild.data]
+                childValue = childValue[0] if childValue else None
                 attributes.append({"name": childName,
                                    "value": childValue,
-                                   "printValue": childValue["desc"]})
+                                   "printValue": childValue["desc"] if childValue else ""})
         
         elif "child_for_" in dbattr["format"]:
             continue
@@ -433,7 +452,7 @@ def getAttributeValuesFromForm(form, allAttrsFromDB):
         elif isinstance(field, DateTimeField):
             data = field.data
             value = data.isoformat() if data else ""
-            printValue = data.strftime("%m/%d/%Y at %I:%M:%S %p") if data else ""
+            printValue = data.strftime("%m/%d/%Y %I:%M:%S %p") if data else ""
            
         attributes.append({"name": name,
                            "value": value,
@@ -482,38 +501,20 @@ def projectView(projectID):
 @cross_origin(headers=['Content-Type', 'Authorization'])
 @jwt_required()
 def projectEdit(projectID, tableName):
+    import pydevd
+    pydevd.settrace()
     if 'Curator' not in current_user.groups:
         # Must be a Curator to edit project metadata
         abort(401)
 
     if projectID:
-        p = alch.Description.query.filter_by(projectID=projectID).first_or_404()
+        p = alch.Description.query.filter_by(projectID=projectID).first_or_404()()
 
         errors = []
         success = []
         
         if tableName == "description":
             description_errors = []
-            if not p:
-                p = alch.Description(name = request.form.get("name"),
-                                     description = request.form.get("description"),
-                                     rationale = request.form.get("rationale"),
-                                     businesscase = request.form.get("businesscase"),
-                                     dependencies = request.form.get("dependencies"),
-                                     maturityID = request.form.get("maturityID"),
-                                     proposer = request.form.get("proposer"),
-                                     customer = request.form.get("customer"),
-                                     sponsorID = request.form.get("sponsorID"),
-                                     hostID = request.form.get("hostID"),
-                                     technologyID = request.form.get("technologyID"),
-                                     typeID = request.form.get("typeID"),
-                                     fundingsourceID = request.form.get("fundingsourceID"),
-                                     created = datetime.today(),
-                                     finalID = request.form.get("finalID"),
-                                     lastModifiedBy = current_user.get_id())
-                description_success = "Created new project description."
-            else:
-                description_success = "Updated project description."
 
             descriptionForm = forms.Description(request.form, p)
             if descriptionForm.validate_on_submit():
@@ -607,8 +608,6 @@ def projectEdit(projectID, tableName):
                 response["success"] = pr_success
 
         elif tableName == "disposition":
-            import pydevd
-            pydevd.settrace()
             d_errors = []
             disposedInFY = request.form.get("disposedInFY")
             disposedInQ = request.form.get("disposedInQ")
@@ -657,8 +656,6 @@ def projectEdit(projectID, tableName):
                 response["success"] = d_success + cycle
 
         elif tableName == "comment":
-            import pydevd
-            pydevd.settrace()
             c_errors = []
             commentID = request.form.get("commentID")
             
@@ -696,7 +693,67 @@ def projectEdit(projectID, tableName):
                 response["success"] = c_success
 
         return dumps(response)
-        
+    
+@app.route("/projectCreate", methods=["POST"])   
+@cross_origin(headers=['Content-Type', 'Authorization'])
+@jwt_required()
+def projectCreate():
+    # create new project
+
+    if 'Curator' not in current_user.groups:
+        # Must be a Curator to edit project metadata
+        abort(401)
+
+    description_errors = []
+    
+    p = alch.Description(created = datetime.today().strftime("%Y-%m-%d"),
+                         lastModifiedBy = current_user.get_id())
+
+    descriptionForm = forms.Description(request.form, p)
+    if descriptionForm.validate_on_submit():
+        try:
+            descriptionForm.populate_obj(p)
+            db.session.add(p)
+            db.session.commit()
+            projectID = p.projectID
+        except:
+            description_errors.append(sys.exc_info()[0])
+    else:
+        description_errors = descriptionForm.errors
+    
+    if description_errors:
+        response = getProjectAttributes(p.projectID or 0, "description")
+        response["errors"] = description_errors
+        return dumps(response)
+
+    pt = alch.Portfolio(projectID = p.projectID,
+                        lastModifiedBy = current_user.get_id())
+    portfolioForm = forms.Portfolio(request.form, pt)
+
+    pr = alch.Project(projectID = p.projectID,
+                      lastModifiedBy = current_user.get_id())
+    projectForm = forms.Project(projectID = p.projectID)
+
+    if portfolioForm.validate_on_submit() and projectForm.validate_on_submit():
+        try:
+            portfolioForm.populate_obj(pt)
+            db.session.add(pt)
+            projectForm.populate_obj(pr)
+            db.session.add(pr)
+            db.session.commit()
+        except:
+            description_errors.append(sys.exc_info()[0])
+    else:
+        description_errors = portfolioForm.errors + projectForm.errors
+
+    response = getProjectAttributes(projectID, "description")
+    if description_errors:
+        response["errors"] = description_errors
+    else:
+        response["success"] = "Created new project"            
+
+    return dumps(response)
+         
 @app.route("/filterView", methods=["GET", "POST"])
 def filterView():
     attributes = []

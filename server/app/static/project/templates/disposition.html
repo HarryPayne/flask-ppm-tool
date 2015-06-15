@@ -4,16 +4,17 @@
     ng-show="project.currentMode() == 'add.disposition'">
 
     <dt>
-      <label ng-bind="project.as.getAttribute('disposedInQ').value.desc"></label>
       <label ng-bind="project.as.getAttribute('disposedInFY').value.desc"></label>
+      <label ng-bind="project.as.getAttribute('disposedInQ').value.desc"></label>
     </dt>
 
     <dd>
-      <span ng-bind="project.as.getAttribute('dispositionID').value.desc" class="text-capitalize"></span>.
+      <span ng-bind="project.as.getAttribute('dispositionID').value.desc" class="text-capitalize">
+        </span><span ng-show="project.as.getAttribute('dispositionID').value.desc">.</span>
   
       <span ng-show="project.as.getAttribute('reconsiderInFY').value.desc || project.as.getAttribute('reconsiderInQ').value.desc">
-        Reconsider in <span ng-bind="project.as.getAttribute('reconsiderInQ').value.desc"></span>
-        <span ng-bind="project.as.getAttribute('reconsiderInFY').value.desc"></span>.
+        Reconsider in <span ng-bind="project.as.getAttribute('reconsiderInFY').value.desc">
+        </span><span ng-bind="project.as.getAttribute('reconsiderInQ').value.desc"></span>.
       </span>
   
       <span ng-show="project.as.getAttribute('startInY').value.desc || project.as.getAttribute('startInM').value.desc">
@@ -26,7 +27,10 @@
         <span ng-bind="project.as.getAttribute('finishInY').value.desc"></span>.
       </span>
   
-      <button type="button" ng-show="showDetails" ng-click="showDetails = !showDetails"> Hide </button>
+      <button type="button" 
+        ng-click="project.ds.hideDetails('disposition', 
+                    [project.as.getAttribute('disposedInFY'),
+                     project.as.getAttribute('disposedInQ')])"> Cancel </button>
     </dd>
     
     <dl class="dl-horizontal" 
@@ -36,8 +40,14 @@
 
     <dt></dt>
     <dd>
-      <button type="button" ng-click="showDetails = !showDetails; project.ds.saveProject('disposition', [project.as.getAttribute('disposedInFY'),
-        project.as.getAttribute('disposedInQ')])"> Save </button>
+      <button type="button" 
+        ng-click="project.ds.saveProject('disposition', 
+                    [project.as.getAttribute('disposedInFY'),
+                     project.as.getAttribute('disposedInQ')])"> Save </button>
+      <button type="button" 
+        ng-click="project.ds.hideDetails('disposition', 
+                    [project.as.getAttribute('disposedInFY'),
+                     project.as.getAttribute('disposedInQ')])"> Cancel </button>
     </dd>
   </dl>
 
@@ -123,13 +133,13 @@
     
     <dd ng-show="disp['disposedInFY'].id == project.ds.stateParams.disposedInFY && disp['disposedInQ'].id == project.ds.stateParams.disposedInQ">
       <button type="button" 
-        ng-click="project.ds.hideDetails('disposition', 
-                    [project.as.getAttribute('disposedInFY'),
-                     project.as.getAttribute('disposedInQ')])"> Hide </button>
-      <button type="button" 
         ng-click="project.ds.saveProject('disposition', 
                     [project.as.getAttribute('disposedInFY'),
                      project.as.getAttribute('disposedInQ')])"> Save </button>
+      <button type="button" 
+        ng-click="project.ds.hideDetails('disposition', 
+                    [project.as.getAttribute('disposedInFY'),
+                     project.as.getAttribute('disposedInQ')])"> Cancel </button>
     </dd>
   </dl>
   

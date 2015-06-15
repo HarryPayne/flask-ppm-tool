@@ -45,10 +45,12 @@ Data attributes:
       getFormData: getFormData,
       getProjectAttributes: getProjectAttributes,
       getRawAttributes: getRawAttributes,
-      getSelectedChoices:getSelectedChoices, 
+      getSelectedChoices:getSelectedChoices,
+      getToken: getToken, 
       hasAValue: hasAValue,
       makeProjectLink: makeProjectLink,
       mergeAttributeWithValue: mergeAttributeWithValue,
+      newProjectAttributes: newProjectAttributes,
       RestoreState: RestoreState,
       SaveState: SaveState,
       setAllAttributes: setAllAttributes,
@@ -219,12 +221,14 @@ Data attributes:
     
     function hasAValue(attr) {
       if ((typeof attr.value != "undefined" && attr.value != null && attr.value != "" && attr.value != []) ||
-          (typeof attr.value.id != "undefined" && attr.value.id) || 
-          (typeof attr.value.id == "undefined" && typeof attr.value.length != "undefined" && attr.value.length) ||
-          (typeof attr.value.id == "undefined" && typeof attr.value.length == "undefined" && attr.value)) {
+          (typeof attr.value != "undefined" && attr.value != null && typeof attr.value.id != "undefined" && attr.value.id != null  && attr.value != "" && attr.value != [])) {
         return true;
       }
       else return false;
+    }
+
+    function getToken() {
+      return service.csrf_token;
     }
     
     function makeProjectLink(projectID) {
@@ -244,6 +248,13 @@ Data attributes:
       service.projectAttributes[this].push(merged);
     }
     
+    function newProjectAttributes() {
+      _.each(["description", "portfolio", "project"], function(tableName) {
+          service.projectAttributes[tableName] = [];
+          updateProjAttrsFromRawItem(tableName, []);
+      });
+    }
+
     function RestoreState() {
       var data = angular.fromJson(sessionStorage.attributesService);
       if (data) {
@@ -273,6 +284,7 @@ Data attributes:
     function updateProjAttrsFromRawItem(tableName, keys) {
       var raw_items = getRawAttributes(tableName);
       var filtered_items = raw_items;
+      if (typeof filtered_items == "undefined") filtered_items = [];
       var selected;
       _.each(keys, function(key) {
         filtered_items = _.filter(filtered_items, function(item) {
@@ -296,7 +308,7 @@ Data attributes:
         });
         return  selected;
       }
-      else if (raw_items.length) {
+      else {
         var tableAttrs = _.where(service.allAttributes, {table: tableName});
         service.projectAttributes[tableName] = [];
         _.each(tableAttrs, function(attr) {

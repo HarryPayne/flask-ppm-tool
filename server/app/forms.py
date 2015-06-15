@@ -1,6 +1,7 @@
 from wtforms_alchemy import ModelForm, ModelFormField, ModelFieldList
 from wtforms import (StringField, BooleanField, TextAreaField, SelectField, 
                      TextField, PasswordField, validators, FormField)
+from wtforms_components import read_only
 from wtforms.ext.sqlalchemy.fields import QuerySelectField, QuerySelectMultipleField
 from wtforms.validators import DataRequired, Length
 import alchemy_models as alch
@@ -97,10 +98,15 @@ class Description(ModelForm):
                 "maturityID", "proposer", "customer", "sponsorID", "fundingsourceID", "finalID",
                 "hostID", "technologyID", "typeID", "created", "ended"]
 
-    childID = QuerySelectMultipleField(query_factory=child_choices)
-    driverID = QuerySelectMultipleField(query_factory=driver_choices)
-    stakeholderID = QuerySelectMultipleField(query_factory=stakeholder_choices, allow_blank=False)
-        
+    childID = QuerySelectMultipleField(query_factory=child_choices, label="children")
+    driverID = QuerySelectMultipleField(query_factory=driver_choices, label="drivers")
+    stakeholderID = QuerySelectMultipleField(query_factory=stakeholder_choices, allow_blank=False, label="stakeholders")
+    
+    def __init__(self, *args, **kwargs):
+        super(Description, self).__init__(*args, **kwargs)
+        read_only(self.created)
+        read_only(self.ended)
+    
 class Portfolio(ModelForm):
     class Meta:
         model = alch.Portfolio
@@ -108,7 +114,7 @@ class Portfolio(ModelForm):
         only = ["flavorID", "initiativeID", "scopeID", "visibilityID", 
                 "complexityID", "risklevelID", "costlevelID", "rpu", "budgetInFY", "budgetInQ"]    
 
-    strategyID = QuerySelectMultipleField(query_factory=strategy_choices, allow_blank=False)
+    strategyID = QuerySelectMultipleField(query_factory=strategy_choices, allow_blank=False, label="strategies")
 
 class Project(ModelForm):
     class Meta:
@@ -132,6 +138,13 @@ class Comment(ModelForm):
         only = ["commentID", "comment", "commentAuthor", "commentAuthored",
                 "commentEditor", "commentEdited"]
 
+    def __init__(self, *args, **kwargs):
+        super(Comment, self).__init__(*args, **kwargs)
+        read_only(self.commentAuthor)
+        read_only(self.commentAuthored)
+        read_only(self.commentEditor)
+        read_only(self.commentEdited)
+    
 # class Upload(ModelForm):
 #     class Meta:
 #         model = alch.Upload

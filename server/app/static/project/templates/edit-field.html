@@ -8,14 +8,14 @@
       <span ng-if="attr.computed">
         <span ng-bind="attr.value"></span>
       </span>
-      <span ng-if="attr.computed == 0">
+      <span ng-if="!attr.computed">
         <input type="text" size="60"
           class="form-control col-lg-4"
           ng-model="attr.value"/>
     </dd>
   </span>
   <span ng-switch-when="number">
-    <span ng-if="attr.computed == 0">
+    <span ng-if="!attr.computed">
       <dt>
         <label ng-bind="attr.label" class="text-capitalize"></label>
       </dt>

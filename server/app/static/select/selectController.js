@@ -6,9 +6,11 @@
     .module("app.select")
     .controller("Select", Select);
   
-  Select.$inject = ["$scope", "projectListService", "selectStateService"];
+  Select.$inject = ["$state", "projectListService", "selectStateService", "projectDataService"];
   
-  function Select($scope, projectListService, selectStateService) {
+  function Select($state, projectListService, selectStateService, projectDataService) {
+    
+    this.state = $state;
     
     this.ls = projectListService;
     this.masterList = this.ls.getMasterList;
@@ -17,6 +19,7 @@
     this.ss = selectStateService;
     this.selectState = this.ss.masterList;
     
+    this.ds = projectDataService;
   };
   
 }());

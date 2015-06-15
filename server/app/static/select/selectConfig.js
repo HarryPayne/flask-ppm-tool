@@ -17,6 +17,19 @@
         data: {
           requiresLogin: false
         }
+      })
+      .state("select.add", {
+        name: "select",
+        url: "add",
+        data: {
+          requiresLogin: true
+        }
+      })
+      .state("select.add.project", {
+        name: "select",
+        url: "/project",
+        controller: "Select",
+        controllerAs: "select"
       });
   };
   

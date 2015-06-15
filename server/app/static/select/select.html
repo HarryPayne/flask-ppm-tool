@@ -3,16 +3,24 @@
   <body>
     <div class="container">
       <ul class="list-inline text-right clearfix">
-        <li>Add a project</li>
+        <li ng-show="currentUser.roles.indexOf('Curator') > -1 || currentUser.roles.indexOf('Manager') > -1">
+          <span ng-show="select.state.current.name == 'select'">
+            <a ui-sref="select.add.project" 
+              ng-click="select.ds.newProject()">Add a Project</a>
+          </span>
+          <span ng-show="select.state.current.name == 'select.add.project'">
+            Add a Project
+          </span>
+          </li>
         <li>Comments by user</li>
       </ul>
     </div>
   
-    <div class="container">
+    <div class="container" ng-show="select.state.current.name == 'select'">
       <h3 class="clearfix">Select a Project</h3>
     </div>
   
-    <div  class="container">
+    <div class="container" ng-show="select.state.current.name == 'select'">
       <ul>
         <li>
           <form name="myform" class="form-inline" novalidate ng-submit="select.jumpToProject(projectID)">
@@ -124,6 +132,25 @@
         </li>
         
       </ul>
+    </div>
+
+    <div class="container" ng-show="select.state.current.name == 'select.add.project'">
+      <h3 class="clearfix">Add a Project</h3>
+    </div>
+  
+    <div class="container" ng-show="select.state.current.name == 'select.add.project'">
+      <dl class="dl-horizontal"
+        ng-repeat="attr in select.ds.getProjectAttributes('description')" 
+        ng-include src="'static/project/templates/edit-field.html'">
+      </dl>
+
+      <dl class="dl-horizontal">
+        <dt></dt>
+        <dd>
+          <button type="button" ng-click="select.ds.createProject()"> Save </button>
+          <button type="button" ng-click="select.ds.cancelAddProject()"> Cancel </button>
+        </dd>
+      </dl>
     </div>
   </body>
 </html>

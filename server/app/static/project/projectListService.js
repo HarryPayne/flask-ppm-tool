@@ -37,8 +37,10 @@
     
     return service;    
 
-    function getAllProjectResults(results) {
-      var projectID = service.masterList.projectID;
+    function getAllProjectResults(results, projectID) {
+      if (typeof projectID == "undefined") {
+        var projectID = service.masterList.projectID;        
+      }
       service.masterList.allProjects = results.data;
       var projectIDList = service.getIDListFromAllProjects();
       if (typeof projectID == "undefined" || projectID < 0) {
@@ -152,9 +154,11 @@
       }
     }
       
-    function updateAllProjects() {
-      $http.get('/getBriefDescriptions')
-        .then(service.getAllProjectResults);
+    function updateAllProjects(projectID) {
+      $http.post('/getBriefDescriptions')
+        .then(function(results) {
+          service.getAllProjectResults(results, projectID);
+        });
     };
     
     function updateProjectListProjectID(projectID, selectedIds) {

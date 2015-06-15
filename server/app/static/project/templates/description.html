@@ -1,4 +1,6 @@
-  <h4 ng-show="project.currentMode() == 'view' || project.currentMode() == 'edit.description'">Description Attributes</h4>
+<h4 ng-show="project.currentMode() == 'add.description'">Add a Project</h4>
+
+<h4 ng-show="project.currentMode() == 'view' || project.currentMode() == 'edit.description'">Description Attributes</h4>
 
   <dl class="dl-horizontal" 
     ng-show="project.currentMode() == 'view'"
@@ -7,7 +9,7 @@
   </dl>
 
   <dl class="dl-horizontal"
-    ng-show="project.currentMode() == 'edit.description'"
+    ng-show="project.currentMode() == 'edit.description' || project.currentMode() == 'add.project'"
     ng-repeat="attr in project.as.getProjectAttributes('description')" 
     ng-include src="'static/project/templates/edit-field.html'">
   </dl>
@@ -17,5 +19,16 @@
     <dt></dt>
     <dd>
       <button type="button" ng-click="project.ds.saveProject('description')"> Save </button>
+    </dd>
+  </dl>
+
+  <dl class="dl-horizontal"
+    ng-show="project.currentMode() == 'add.description'">
+    <dt></dt>
+    <dd>
+      <button type="button" ng-click="project.ds.saveProject('description')"> Save </button>
+    </dd>
+    <dd>
+      <button type="button" ng-click="project.ds.cancelAddProject()"> Cancel </button>
     </dd>
   </dl>

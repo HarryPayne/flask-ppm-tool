@@ -340,7 +340,8 @@ for row in Calendaryear.query.order_by("calendaryearID").all():
 class Stakeholderlist(Base):
     __tablename__ = "stakeholderlist"
 
-    stakeholderID = Column(Integer, primary_key=True, server_default=text("'0'"))
+    stakeholderID = Column(Integer, primary_key=True, 
+                           server_default=text("'0'"))
     stakeholderDesc = Column(String(100), nullable=False, server_default=text("''"))
     stakeholderText = Column(Text, nullable=False)
 
@@ -360,7 +361,7 @@ class Driverlist(Base):
 t_driver = Table(
     "driver", metadata,
     Column("projectID", Integer, ForeignKey("description.projectID"), nullable=False, index=True, server_default=text("'0'")),
-    Column("driverID", Integer, ForeignKey("driverlist.driverID"),nullable=False, index=True, server_default=text("'0'"))
+    Column("driverID", Integer, ForeignKey("driverlist.driverID"), nullable=False, index=True, server_default=text("'0'"))
 )
 
 t_child = Table(
@@ -372,36 +373,37 @@ t_child = Table(
 class Description(Base):
     __tablename__ = "description"
         
-    projectID = Column(SmallInteger, primary_key=True, server_default=text("'0'"))
+    projectID = Column(SmallInteger, primary_key=True, nullable=True, autoincrement=True)
     name = Column(String(100), nullable=True, index=True, server_default=text("''"))
     description = Column(Text, nullable=True, index=True)
     rationale = Column(Text, nullable=True, index=True, server_default=text("''"))
-    businesscase = Column(Text, nullable=True, index=True, server_default=text("''"))
+    businesscase = Column(Text, info={"label": "business case"},
+                          nullable=True, index=True, server_default=text("''"))
     dependencies = Column(Text, nullable=True, index=True, server_default=text("''"))
     maturityID = Column(Integer, ForeignKey(Maturitylist.maturityID), 
-                        info={"choices": MATURITY_CHOICES},
+                        info={"choices": MATURITY_CHOICES, "label": "maturity"},
                         nullable=True, index=True, server_default=text("'0'"))
     proposer = Column(String(100), nullable=True, server_default=text("''"))
     customer = Column(String(100), nullable=True, server_default=text("''"))
     sponsorID = Column(Integer, ForeignKey(Sponsorlist.sponsorID), 
-                       info={"choices": SPONSOR_CHOICES},
+                       info={"choices": SPONSOR_CHOICES, "label": "sponsor"},
                        nullable=True, index=True, server_default=text("'0'"))
     hostID = Column(Integer, ForeignKey(Hostlist.hostID), 
-                    info={"choices": HOST_CHOICES}, 
+                    info={"choices": HOST_CHOICES, "label": "host"}, 
                     nullable=True, index=True, server_default=text("'0'"))
     technologyID = Column(Integer, ForeignKey(Technologylist.technologyID), 
-                          info={"choices": TECHNOLOGY_CHOICES}, 
+                          info={"choices": TECHNOLOGY_CHOICES, "label": "technology"}, 
                           nullable=True, server_default=text("'0'"))
     typeID = Column(Integer, ForeignKey(Typelist.typeID), 
-                    info={"choices": TYPE_CHOICES}, 
+                    info={"choices": TYPE_CHOICES, "label": "type"}, 
                     nullable=True, server_default=text("'0'"))
     fundingsourceID = Column(Integer, ForeignKey(Fundingsourcelist.fundingsourceID), 
-                             info={"choices": FUNDINGSOURCE_CHOICES},
+                             info={"choices": FUNDINGSOURCE_CHOICES, "label": "funding source"},
                              nullable=True, server_default=text("'0'"))
     created = Column(Date, nullable=True, server_default=text("'0000-00-00'"))
     ended = Column(Date, nullable=True, server_default=text("'0000-00-00'"))
     finalID = Column(Integer, ForeignKey(Finallist.finalID), 
-                     info={"choices": FINAL_CHOICES}, 
+                     info={"choices": FINAL_CHOICES, "label": "final state"}, 
                      nullable=True, index=True, server_default=text("'0'"))
     lastModified = Column(DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"))
     lastModifiedBy = Column(String(100), nullable=False, server_default=text("''"))
@@ -411,7 +413,8 @@ class Description(Base):
                                primaryjoin=projectID==t_child.c.projectID,
                                secondaryjoin=projectID==t_child.c.childID,
                                order_by=projectID,
-                               backref="children")
+                               backref="desc",
+                               info={"label": "children"})
     driverID = db.relationship("Driverlist", secondary=t_driver)
     stakeholderID = db.relationship("Stakeholderlist", secondary=t_stakeholder)
         
@@ -420,10 +423,14 @@ class Comment(Base):
 
     commentID = Column(Integer, primary_key=True, nullable=True)
     projectID = Column(Integer, ForeignKey("description.projectID"), nullable=False, index=True, server_default=text("'0'"))
-    commentAuthor = Column(String(100), nullable=True, index=True, server_default=text("''"))
-    commentAuthored = Column(DateTime, nullable=True, index=True, server_default=text("'0000-00-00 00:00:00'"))
-    commentEditor = Column(String(100), nullable=True, index=True, server_default=text("''"))
-    commentEdited = Column(DateTime, nullable=True, index=True, server_default=text("'0000-00-00 00:00:00'"))
+    commentAuthor = Column(String(100), info={"label": "created by"},
+                           nullable=True, index=True, server_default=text("''"))
+    commentAuthored = Column(DateTime, info={"label": "on"},
+                             nullable=True, index=True, server_default=text("'0000-00-00 00:00:00'"))
+    commentEditor = Column(String(100), info={"label": "last edited by"},
+                           nullable=True, index=True, server_default=text("''"))
+    commentEdited = Column(DateTime, info={"label": "on"},
+                           nullable=True, index=True, server_default=text("'0000-00-00 00:00:00'"))
     comment = Column(Text, nullable=True)
 
     description = db.relationship("Description", backref="comments")
@@ -438,25 +445,25 @@ class Disposition(Base):
                            nullable=False, index=True, server_default=text("'0'"))
     explanation = Column(Text, nullable=True, index=True)
     disposedInFY = Column(SmallInteger, ForeignKey("fiscalyears.fiscalyearID"), primary_key=True,
-                          info={"choices": FY_CHOICES},
+                          info={"choices": FY_CHOICES, "label": "disposed in"},
                           nullable=False, index=True, server_default=text("'0'"))
     disposedInQ = Column(Integer, ForeignKey("quarters.quarterID"), primary_key=True,
                          info={"choices": Q_CHOICES},
                          nullable=False, index=True, server_default=text("'0'"))
     reconsiderInFY = Column(SmallInteger, ForeignKey("fiscalyears.fiscalyearID"),
-                            info={"choices": FY_CHOICES},
+                            info={"choices": FY_CHOICES, "label": "reconsider in"},
                             nullable=True, server_default=text("'0'"))
     reconsiderInQ = Column(Integer, ForeignKey("quarters.quarterID"),
                            info={"choices": Q_CHOICES},
                            nullable=True, server_default=text("'0'"))
     startInY = Column(SmallInteger, ForeignKey("calendaryears.calendaryearID"),
-                      info={"choices": Y_CHOICES},
+                      info={"choices": Y_CHOICES, "label": "start in"},
                       nullable=True, server_default=text("'0'"))
     startInM = Column(Integer, ForeignKey("months.monthID"),
                       info={"choices": M_CHOICES},
                       nullable=True, server_default=text("'0'"))
     finishInY = Column(SmallInteger, ForeignKey("calendaryears.calendaryearID"),
-                       info={"choices": Y_CHOICES},
+                       info={"choices": Y_CHOICES, "label": "finish in"},
                        nullable=True, server_default=text("'0'"))
     finishInM = Column(Integer, ForeignKey("months.monthID"),
                        info={"choices": M_CHOICES},
@@ -484,6 +491,7 @@ t_strategy = Table(
     Column("projectID", Integer, ForeignKey("portfolio.projectID"),
            nullable=False, index=True, server_default=text("'0'")),
     Column("strategyID", Integer, ForeignKey("strategylist.strategyID"),
+           info={"label": "strategies"},
            nullable=False, index=True, server_default=text("'0'"))
 )
 
@@ -493,32 +501,32 @@ class Portfolio(Base):
     projectID = Column(SmallInteger, ForeignKey("description.projectID"), primary_key=True)
     latest_disposeID = Column(SmallInteger, nullable=False, server_default=text("'0'"))
     flavorID = Column(Integer, ForeignKey("flavorlist.flavorID"),
-                      info={"choices": FLAVOR_CHOICES},
+                      info={"choices": FLAVOR_CHOICES, "label": "portfolio category"},
                       nullable=True, index=True, server_default=text("'0'"))
     initiativeID = Column(Integer, ForeignKey("initiativelist.initiativeID"),
-                          info={"choices": INITIATIVE_CHOICES},
+                          info={"choices": INITIATIVE_CHOICES, "label": "initiative"},
                           nullable=True, index=True, server_default=text("'0'"))
     scopeID = Column(Integer, ForeignKey("scopelist.scopeID"),
-                     info={"choices": SCOPE_CHOICES},
+                     info={"choices": SCOPE_CHOICES, "label": "scope"},
                      nullable=True, index=True, server_default=text("'0'"))
     visibilityID = Column(Integer, ForeignKey("visibilitylist.visibilityID"),
-                          info={"choices": VISIBILITY_CHOICES},
+                          info={"choices": VISIBILITY_CHOICES, "label": "visibility"},
                           nullable=True, index=True, server_default=text("'0'"))
     complexityID = Column(Integer, ForeignKey("complexitylist.complexityID"),
-                          info={"choices": COMPLEXITY_CHOICES},
+                          info={"choices": COMPLEXITY_CHOICES, "label": "complexity"},
                           nullable=True, index=True, server_default=text("'0'"))
     risklevelID = Column(Integer, ForeignKey("risklevellist.risklevelID"),
-                         info={"choices": RISK_CHOICES},
+                         info={"choices": RISK_CHOICES, "label": "risk level"},
                          nullable=True, index=True, server_default=text("'0'"))
     costlevelID = Column(Integer, ForeignKey("costlevellist.costlevelID"),
-                         info={"choices": COST_CHOICES},
+                         info={"choices": COST_CHOICES, "label": "cost level"},
                          nullable=True, index=True, server_default=text("'0'"))
-    rpu = Column(Float, nullable=True, server_default=text("'0'"))
+    rpu = Column(Float, nullable=True, info={"label": "effort"}, server_default=text("'0'"))
     budgetInFY = Column(SmallInteger, ForeignKey("fiscalyears.fiscalyearID"), 
-                        info={"choices": FY_CHOICES},
+                        info={"choices": FY_CHOICES, "label": "budget in"},
                         nullable=True, index=True, server_default=text("'0'"))
     budgetInQ = Column(Integer, ForeignKey("quarters.quarterID"),
-                       info={"choices": Q_CHOICES},
+                       info={"choices": Q_CHOICES, "label": ""},
                        nullable=True, index=True, server_default=text("'0'"))
     lastModified = Column(DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"))
     lastModifiedBy = Column(String(100), nullable=False, server_default=text("''"))
@@ -530,17 +538,22 @@ class Project(Base):
     __tablename__ = "project"
 
     projectID = Column(SmallInteger, ForeignKey("description.projectID"), primary_key=True, server_default=text("'0'"))
-    proj_manager = Column(String(100), nullable=True, index=True, server_default=text("''"))
-    tech_manager = Column(String(100), nullable=True, index=True, server_default=text("''"))
+    proj_manager = Column(String(100), info={"label": "project manager"},
+                          nullable=True, index=True, server_default=text("''"))
+    tech_manager = Column(String(100), info={"label": "technical manager"}, 
+                          nullable=True, index=True, server_default=text("''"))
     proj_visibilityID = Column(Integer, ForeignKey("proj_visibilitylist.proj_visibilityID"),
-                               info={"choices": PROJ_VISIBILITY_CHOICES},
+                               info={"choices": PROJ_VISIBILITY_CHOICES, "label": "project visibility"},
                                nullable=True, index=True, server_default=text("'0'"))
-    project_url = Column(String(255), nullable=True, server_default=text("''"))
+    project_url = Column(String(255), info={"label": "project url"},
+                         nullable=True, server_default=text("''"))
     progressID = Column(Integer, ForeignKey("progresslist.progressID"),
-                        info={"choices": PROJECT_CHOICES},
+                        info={"choices": PROJECT_CHOICES, "label": "progress"},
                         nullable=True, index=True, server_default=text("'0'"))
-    startedOn = Column(Date, nullable=True, index=True, server_default=text("'0000-00-00'"))
-    finishedOn = Column(Date, nullable=True, index=True, server_default=text("'0000-00-00'"))
+    startedOn = Column(Date, info={"label": "started on"},
+                       nullable=True, index=True, server_default=text("'0000-00-00'"))
+    finishedOn = Column(Date, info={"label": "finished on"},
+                        nullable=True, index=True, server_default=text("'0000-00-00'"))
     lastModified = Column(DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"))
     lastModifiedBy = Column(String(100), nullable=False, server_default=text("''"))
     

@@ -11,8 +11,8 @@
         class="form-control col-lg-4"
         ng-model="project.as.getAttribute('comment').value"
         ng-bind="project.as.getAttribute('comment').value"></textarea>
-      <button type="button" ng-click="project.ds.hideDetails('comment')"> Cancel </button>
       <button type="button" ng-click="project.ds.saveProject('comment', [project.as.getAttribute('commentID')])"> Save </button>
+      <button type="button" ng-click="project.ds.hideDetails('comment')"> Cancel </button>
     </dd>
 
   </dl>
@@ -57,9 +57,9 @@
         ng-bind="project.as.getAttribute('comment').value"></textarea>
       Entered <span ng-bind="comment['commentAuthored.printValue']"></span>
       <span ng-show="comment['commentEditor']"><br/>Last edited by <span ng-bind="comment['commentEditor']"></span> on <span ng-bind="comment['commentEdited.printValue']"></span></span><br/>
-      <button type="button" ng-click="project.ds.hideDetails('comment', 
-                    [{name: 'commentID', id: comment['commentID']}])"> Hide </button>
       <button type="button" ng-click="project.ds.saveProject('comment', [project.as.getAttribute('commentID')])"> Save </button>
+      <button type="button" ng-click="project.ds.hideDetails('comment', 
+                    [{name: 'commentID', id: comment['commentID']}])"> Cancel </button>
     </dd>
   </dl>
 
