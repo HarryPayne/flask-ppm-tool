@@ -24,7 +24,6 @@ import forms #import (Description, Portfolio, Disposition, Project, Comment, # U
 from models import User
 from widgets import ChoicesSelect
 import alchemy_models as alch
-#from alchemy_models import Attributelist, Month, Quarter, Year
 
 @jwt.authentication_handler
 def authenticate(username, password):
@@ -127,49 +126,40 @@ def getAllAttributesJSON():
 def getAllAttributes():
     if "ALL_ATTRIBUTES" in session:
         return session["ALL_ATTRIBUTES"]
-    attrs = alch.Attributelist.query.order_by("attributeID").all()
-    allAttrsFromDB = {}
-    for attr in attrs:
-        allAttrsFromDB[attr.attributeName] = attr
-    
-    allAttrsFromDB["csrf_token"] = {"name": "csrf_token",
-                                    "format": "hidden",
-                                    "label": ""}
-    
+
     attributes = {}
     attributes["csrf_token"] = {"name": "csrf_token",
                                 "format": "hidden"}
     attributesByTable = {}
 
-    p = alch.Description.query.first_or_404()
-    Description = forms.Description(ImmutableMultiDict([]), p)
-    attributesByTable["description"] = getAttributesFromForm(Description, allAttrsFromDB)
+    Description = forms.Description()
+    attributesByTable["description"] = getAttributesFromForm(Description)
     attributes.update(attributesByTable["description"])
     
-    Portfolio = forms.Portfolio(ImmutableMultiDict([]), p.portfolio)
-    attributesByTable["portfolio"] = getAttributesFromForm(Portfolio, allAttrsFromDB)
+    Portfolio = forms.Portfolio()
+    attributesByTable["portfolio"] = getAttributesFromForm(Portfolio)
     attributes.update(attributesByTable["portfolio"])
     
-    Disposition = forms.Disposition(ImmutableMultiDict([]), p.dispositions)
-    attributesByTable["disposition"] = getAttributesFromForm(Disposition, allAttrsFromDB)
+    Disposition = forms.Disposition()
+    attributesByTable["disposition"] = getAttributesFromForm(Disposition)
     attributes.update(attributesByTable["disposition"])
     
-    Project = forms.Project(ImmutableMultiDict([]), p.project)
-    attributesByTable["project"] = getAttributesFromForm(Project, allAttrsFromDB)
+    Project = forms.Project()
+    attributesByTable["project"] = getAttributesFromForm(Project)
     attributes.update(attributesByTable["project"])
     
-    Comment = forms.Comment(ImmutableMultiDict([]), p.comments)
-    attributesByTable["comment"] = getAttributesFromForm(Comment, allAttrsFromDB)
+    Comment = forms.Comment()
+    attributesByTable["comment"] = getAttributesFromForm(Comment)
     attributes.update(attributesByTable["comment"])
     
-#     Upload = forms.Project(ImmutableMultiDict([]), p.upload[0])
-#     attributesByTable["upload"] = getAttributesFromForm(Upload, allAttrsFromDB)
+#     Upload = forms.Project()
+#     attributesByTable["upload"] = getAttributesFromForm(Upload)
 #     attributes.update(attributesByTable["upload"])
     
     session["ALL_ATTRIBUTES"] = attributes
     return attributes
         
-def getAttributesFromForm(form, allAttrsFromDB):
+def getAttributesFromForm(form):
     tableName = getTableNameFromForm(form)
 
     attributes = {}
@@ -179,15 +169,11 @@ def getAttributesFromForm(form, allAttrsFromDB):
     for field in form:
         if field.name in ["csrf_token", "projectID"]:
             continue
-        if "In" in field.name:
-            dbattr = allAttrsFromDB[field.name[:field.name.index("In")]]
-        else:
-            dbattr = allAttrsFromDB[field.name]
-        attr = {"attributeID": dbattr.attributeID,
-                "choices": getChoicesFromField(field, allAttrsFromDB),
-                "computed": getReadOnlyFromField(field), # dbattr.computed, # i.e., readonly
-                "format": getFormatFromField(field, allAttrsFromDB), #dbattr.format,
-                "help": dbattr.help,
+        attr = {"attributeID": getattr(field.meta.model, field.name).info["attributeID"],
+                "choices": getChoicesFromField(field),
+                "computed": getReadOnlyFromField(field), 
+                "format": getFormatFromField(field), #dbattr.format,
+                "help": getattr(field.meta.model, field.name).info["help"],
                 "label": field.label.text,
                 "multi": getMultiFromField(field),
                 "name": field.name,
@@ -195,6 +181,10 @@ def getAttributesFromForm(form, allAttrsFromDB):
                 "table": tableName,
                 }
         attributes[field.name] = attr
+    
+    # dateRangeSelect widget takes a year value and a quarter or month value. Make the
+    # quarter/month attribute a child of the year attribute, so that they can be
+    # displayed together. Take the child attribute out of the attributes dictionary.
     
     children = [attr["name"] for attr in attributes.values() if "child_for_" in attr["format"]]
     for child in children:
@@ -223,7 +213,7 @@ def getTableNameFromForm(form):
     else:
         return ""
 
-def getFormatFromField(field, allAttrsFromDB):
+def getFormatFromField(field):
     if field.name == "childID":
         return "multipleSelect"
     elif field.type == "QuerySelectMultipleField":
@@ -247,7 +237,7 @@ def getFormatFromField(field, allAttrsFromDB):
         return "string"
     
 
-def getChoicesFromField(field, allAttrsFromDB):
+def getChoicesFromField(field):
     if field.name == "childID":     # odd self-referential relationship
         options = field.query_factory().order_by("projectID").all()
         return [{"id": getattr(item, "projectID"), "desc": str(getattr(item, "projectID"))} for item in options]
@@ -501,20 +491,19 @@ def projectView(projectID):
 @cross_origin(headers=['Content-Type', 'Authorization'])
 @jwt_required()
 def projectEdit(projectID, tableName):
-    import pydevd
-    pydevd.settrace()
     if 'Curator' not in current_user.groups:
         # Must be a Curator to edit project metadata
         abort(401)
 
     if projectID:
-        p = alch.Description.query.filter_by(projectID=projectID).first_or_404()()
+        p = alch.Description.query.filter_by(projectID=projectID).first_or_404()
 
         errors = []
         success = []
         
         if tableName == "description":
             description_errors = []
+            description_success = "Updated project description."
 
             descriptionForm = forms.Description(request.form, p)
             if descriptionForm.validate_on_submit():
@@ -535,24 +524,8 @@ def projectEdit(projectID, tableName):
 
         elif tableName == "portfolio":
             pt_errors = []
-            pt = alch.Portfolio.query.filter_by(projectID=projectID).first()
-            if pt:
-                pt_success = "Updated project portfolio entry."
-            else:
-                pt = alch.Portfolio(flavorID = request.form.get("flavorID"),
-                                    initiativeID = request.form.get("initiativeID"),
-                                    scopeID = request.form.get("scopeID"),
-                                    visibilityID = request.form.get("visiibilityID"),
-                                    complexityID = request.form.get("complexityID"),
-                                    risklevelID = request.form.get("risklevelID"),
-                                    costlevelID = request.form.get("costlevelID"),
-                                    rpu = request.form.get("rpu"),
-                                    budgetInFY = request.form.get("budgetInFY"),
-                                    budgetInQ = request.form.get("budgetInQ"),
-                                    lastModifiedBy = current_user.get_id()
-                                    )
-                pt_success = "Created new project portfolio entry."
-
+            pt_success = "Updated project portfolio entry."
+            pt = alch.Portfolio.query.filter_by(projectID=projectID).first_or_404()
             portfolioForm = forms.Portfolio(request.form, pt)
             if portfolioForm.validate_on_submit():
                 try:
@@ -573,22 +546,8 @@ def projectEdit(projectID, tableName):
 
         elif tableName == "project":
             pr_errors = []
-            pr = alch.Project.query.filter_by(projectID=projectID).first()
-            if pr:
-                pr_success = "Updated project management entry."
-            else:
-                pr = alch.Project(projectID = request.form.get("projectID"),
-                                  proj_manager = request.form.get("proj_manager"),
-                                  tech_manager = request.form.get("tech_manager"),
-                                  proj_visibilityID = request.form.get("proj_visibilityID"),
-                                  project_url = request.form.get("project_url"),
-                                  progressID = request.form.get("progressID"),
-                                  startedOn = request.form.get("startedOn"),
-                                  finishedOn = request.form.get("finishedOn"),
-                                  lastModifiedBy = current_user.get_id()
-                                  )
-                pr_success = "Created new project management entry."
-            
+            pr_success = "Updated project management entry."
+            pr = alch.Project.query.filter_by(projectID=projectID).first_or_404()
             projectForm = forms.Project(request.form, pr)
             if projectForm.validate_on_submit():
                 try:
@@ -754,14 +713,3 @@ def projectCreate():
 
     return dumps(response)
          
-@app.route("/filterView", methods=["GET", "POST"])
-def filterView():
-    attributes = []
-    for row in alch.Attributelist.query.filter_by(table="description").all():
-        attributes.append({"name": row.attributeName,
-                           "label": row.label,
-                           "format": row.format,
-                           "help": row.help})
-    return render_template("filter.html",
-                            attributes=attributes) 
-

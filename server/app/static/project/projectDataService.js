@@ -30,7 +30,6 @@
       printValue: attributesService.printValue,
       projectID: $stateParams.projectID,
       RestoreState: RestoreState,
-      saveDisposition: saveDisposition,
       saveProject: saveProject,
       SaveState: SaveState,
       setProjectData: setProjectData,
@@ -144,14 +143,9 @@
       }
     };
 
-    function saveDisposition(disposeID) {
-      var dispositions = attributesService.getProjectAttributes("disposition");
-      var disposition = _.where(dispositions, {disposeID: disposeID})[0];
-    };
-
     function saveProject(tableName, keys) {
       var formData = attributesService.getFormData(tableName, keys);
-      var projectID = $state.params.projectID ? $state.params.projectID : ""
+      var projectID = $state.params.projectID ? $state.params.projectID : "";
       var request = {
         method: "POST",
         url: "/projectEdit/" + $state.params.projectID + "/" + tableName,

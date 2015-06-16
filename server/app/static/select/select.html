@@ -23,13 +23,13 @@
     <div class="container" ng-show="select.state.current.name == 'select'">
       <ul>
         <li>
-          <form name="myform" class="form-inline" novalidate ng-submit="select.jumpToProject(projectID)">
+          <form name="myform" class="form-inline" ng-submit="select.jumpToProject(projectID)">
             <div class="form-group">
               <label for="projectID"> 
                 Jump directly to project ID:
               </label>
               <div class="input-group">
-                <input type="text"  name="projectID" id="projectID"
+                <input type="number" step="1" name="projectID" id="projectID"
                   class="form-control col-lg-3" 
                   ng-model="projectID" 
                   placeholder="project ID" autofocus>
