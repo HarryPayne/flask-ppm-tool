@@ -6,9 +6,9 @@
     .module("PPT")
     .controller("PPTCtrl", PPTCtrl);
   
-  PPTCtrl.$inject = ["$rootScope", "$location"];
+  PPTCtrl.$inject = ["$rootScope", "$scope", "$location"];
   
-  function PPTCtrl($rootScope, $location) {
+  function PPTCtrl($rootScope, $scope, $location) {
     /* */
   }
   

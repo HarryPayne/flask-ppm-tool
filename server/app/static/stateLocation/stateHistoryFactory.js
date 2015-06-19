@@ -6,7 +6,7 @@
     .module("app.stateLocation")
     .factory("stateHistoryService", StateHistoryService);
   
-  StateHistoryService.$inject = ['sessionService'];
+  StateHistoryService.$inject = ["sessionService"];
   
   function StateHistoryService(sessionService) {
     var service = {

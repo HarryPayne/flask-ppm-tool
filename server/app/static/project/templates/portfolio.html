@@ -1,4 +1,4 @@
-  <h4 ng-show="project.currentMode() == 'view' || project.currentMode() == 'edit.portfolio'">Portfolio Attributes</h4>
+  <h4 ng-show="project.currentMode() == 'view' || project.currentMode() == 'edit.portfolio'" class="col-sm-12">Portfolio Attributes</h4>
 
   <dl class="dl-horizontal"
     ng-show="project.currentMode() == 'view'"
@@ -6,16 +6,13 @@
     ng-include src="'static/project/templates/view-field.html'">
   </dl>
 
-  <dl class="dl-horizontal"
-    ng-show="project.currentMode() == 'edit.portfolio'"
+  <div ng-show="project.currentMode() == 'edit.portfolio'"
     ng-repeat="attr in project.as.getProjectAttributes('portfolio')" 
-    ng-include src="'static/project/templates/edit-field.html'">
-  </dl>
+    ng-include src="'static/project/templates/form-edit-field.html'">
+  </div>
 
-  <dl class="dl-horizontal"
+  <div class="col-sm-offset-2 col-sm-10"
     ng-show="project.currentMode() == 'edit.portfolio'">
-    <dt></dt>
-    <dd>
-      <button type="button" ng-click="project.ds.saveProject('portfolio')"> Save </button>
-    </dd>
-  </dl>
+    <button type="button" ng-click="project.ds.saveProject('portfolio')"> Save </button>
+    <span ng-show="project.ds.showEditSuccess()" ng-bind="project.ds.success" class="alert alert-success" role="alert"></span>
+  </div>

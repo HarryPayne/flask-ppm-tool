@@ -3,7 +3,8 @@
           jQuery(".datepicker").datepicker();
       })
     </script>
-  <h4 ng-show="project.currentMode() == 'view' || project.currentMode() == 'edit.projectMan'">Project Management Attributes</h4>
+  <h4 ng-show="project.currentMode() == 'view' || project.currentMode() == 'edit.project'"
+    class="col-sm-12">Project Management Attributes</h4>
 
   <dl class="dl-horizontal"
     ng-show="project.currentMode() == 'view'"
@@ -11,16 +12,13 @@
     ng-include src="'static/project/templates/view-field.html'">
   </dl>
 
-  <dl class="dl-horizontal"
-    ng-show="project.currentMode() == 'edit.projectMan'"
+  <div ng-show="project.currentMode() == 'edit.project'"
     ng-repeat="attr in project.as.getProjectAttributes('project')" 
-    ng-include src="'static/project/templates/edit-field.html'">
-  </dl>
+    ng-include src="'static/project/templates/form-edit-field.html'">
+  </div>
 
-  <dl class="dl-horizontal"
-    ng-show="project.currentMode() == 'edit.projectMan'">
-    <dt></dt>
-    <dd>
-      <button type="button" ng-click="project.ds.saveProject('project')"> Save </button>
-    </dd>
-  </dl>
+  <div class="col-sm-offset-2 col-sm-10"
+    ng-show="project.currentMode() == 'edit.project'">
+    <button type="button" ng-click="project.ds.saveProject('project')"> Save </button>
+    <span ng-show="project.ds.showEditSuccess()" ng-bind="project.ds.success" class="alert alert-success" role="alert"></span>
+  </div>

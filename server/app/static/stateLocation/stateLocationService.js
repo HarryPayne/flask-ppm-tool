@@ -7,12 +7,10 @@
     .factory("stateLocationService", stateLocationService);
   
   stateLocationService.$inject = ["$rootScope", "$location", "$state", "$stateParams", 
-                                  "stateHistoryService", "projectListService",
-                                  "projectDataService"];
+                                  "stateHistoryService", "projectListService"];
  
   function stateLocationService($rootScope, $location, $state, $stateParams, 
-                                stateHistoryService, projectListService,
-                                projectDataService){
+                                stateHistoryService, projectListService){
     var service = {
       "preventCall": [],
       "locationChange": locationChange,
@@ -67,6 +65,8 @@
       if (location.substring(0,9) == "/project/") {
         var projectID;
         var commentID;
+        var disposedInFY;
+        var disposedInQ;
         if (location.substring(9, 26) == "edit/commentDetail") {
           var details = location.substring(27);
           commentID = parseInt(_.first(_.last(details.split("/")).split("#")));
@@ -75,14 +75,21 @@
         else if (location.substring(9, 31) == "edit/dispositionDetail") {
           var details = location.substring(32).split("/");
           projectID = parseInt(details[0]);
-          var disposedInFY = parseInt(details[1]);
-          var disposedInQ = parseInt(_.first(_.last(details).split("#")));
+          disposedInFY = parseInt(details[1]);
+          disposedInQ = parseInt(_.first(_.last(details).split("#")));
         }
         else {
           projectID = parseInt(_.first(_.last(location.split("/")).split("#")));
         }
         if (projectID) {
           $stateParams.projectID = projectID;
+          if (commentID) {
+            $stateParams.commentID = commentID;
+          }
+          if (disposedInFY || disposedInQ) {
+            $stateParams.disposedInFY = disposedInFY;
+            $stateParams.disposedInQ = disposedInQ;
+          }
           return projectID;
         }
       }

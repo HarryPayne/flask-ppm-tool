@@ -127,9 +127,14 @@ class Disposition(ModelForm):
     class Meta:
         model = alch.Disposition
         include_primary_keys = True
-        only = ["dispositionID", "explanation", "disposedInFY", 
-                "disposedInQ", "reconsiderInFY", "reconsiderInQ", "startInY", 
-                "startInM", "finishInY", "finishInM"]
+        only = ["dispositionID", "explanation", "disposedInFY", "disposedInQ", 
+                "reconsiderInFY", "reconsiderInQ", "startInY", "startInM", 
+                "finishInY", "finishInM", "lastModified", "lastModifiedBy"]
+
+    def __init__(self, *args, **kwargs):
+        super(Disposition, self).__init__(*args, **kwargs)
+        read_only(self.lastModified)
+        read_only(self.lastModifiedBy)
 
 class Comment(ModelForm):
     class Meta:

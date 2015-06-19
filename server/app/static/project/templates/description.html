@@ -1,6 +1,6 @@
-<h4 ng-show="project.currentMode() == 'add.description'">Add a Project</h4>
+<h4 ng-show="project.currentMode() == 'add.description'" class="col-sm-12">Add a Project</h4>
 
-<h4 ng-show="project.currentMode() == 'view' || project.currentMode() == 'edit.description'">Description Attributes</h4>
+<h4 ng-show="project.currentMode() == 'view' || project.currentMode() == 'edit.description'" class="col-sm-12">Description Attributes</h4>
 
   <dl class="dl-horizontal" 
     ng-show="project.currentMode() == 'view'"
@@ -8,27 +8,20 @@
     ng-include src="'static/project/templates/view-field.html'">
   </dl>
 
-  <dl class="dl-horizontal"
-    ng-show="project.currentMode() == 'edit.description' || project.currentMode() == 'add.project'"
+  <div ng-show="project.currentMode() == 'edit.description' || project.currentMode() == 'add.project'"
     ng-repeat="attr in project.as.getProjectAttributes('description')" 
-    ng-include src="'static/project/templates/edit-field.html'">
-  </dl>
+    ng-include src="'static/project/templates/form-edit-field.html'">
+  </div>
 
-  <dl class="dl-horizontal"
+  <div class="col-sm-offset-2 col-sm-10"
     ng-show="project.currentMode() == 'edit.description'">
-    <dt></dt>
-    <dd>
-      <button type="button" ng-click="project.ds.saveProject('description')"> Save </button>
-    </dd>
-  </dl>
+    <button type="button" ng-click="project.ds.saveProject('description')"> Save </button>
+    <span ng-show="project.ds.showEditSuccess()" ng-bind="project.ds.success" class="alert alert-success" role="alert"></span>
+  </div>
 
-  <dl class="dl-horizontal"
+  <div class="col-sm-offset-2 col-sm-10"
     ng-show="project.currentMode() == 'add.description'">
-    <dt></dt>
-    <dd>
-      <button type="button" ng-click="project.ds.saveProject('description')"> Save </button>
-    </dd>
-    <dd>
-      <button type="button" ng-click="project.ds.cancelAddProject()"> Cancel </button>
-    </dd>
-  </dl>
+    <button type="button" ng-click="project.ds.saveProject('description')"> Save </button>
+    <button type="button" ng-click="project.ds.cancelAddProject()"> Cancel </button>
+    <span ng-show="project.ds.showEditSuccess()" ng-bind="project.ds.success" class="alert alert-success" role="alert"></span>
+  </div>

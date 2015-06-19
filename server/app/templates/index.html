@@ -1,9 +1,7 @@
 <!DOCTYPE html>
 <html ng-app="PPT" ng-controller="PPTCtrl as app">
   <head ng-controller="Title as title">
-    {% raw %}
     <title ng-bind="title.pageTitle"> PPT: Loading... </title>
-    {% endraw %}
     <meta name="viewport" content="initial-scale=1.0">
     <style>
       @-ms-viewport{
@@ -45,12 +43,11 @@
           </ul>
           {% endraw %}
             <div role="presentation">
-              {% raw %}
                 <ul class="nav nav-tabs">
                   <li role="presentation" ng-class="{active:header.isActive('select')}"><a ui-sref="select">Select</a></li>
                   <li role="presentation" ng-class="{active:header.isActive('filter')}"><a ui-sref="filter">Filter Builder</a></li>
                   <li role="presentation" ng-class="{active:header.isActive('browse')}"><a ui-sref="browse">Browse</a></li>
-                  <li role="presentation" ng-class="{active:header.isActive('project') || header.isActive('project') || header.isActive('project')}"><a ui-sref="project.detail">Project</a></li>
+                  <li role="presentation" ng-class="{active:header.isActive('project')}"><a ui-sref="project.detail">Project</a></li>
                   <li role="presentation" ng-class="{active:header.hasPrevious()}"><a href="#" onclick="return false;" ng-click="header.jumpToPreviousProject()">Previous</a></li>
                   <li role="presentation" ng-class="{active:header.hasNext()}"><a href="#" onclick="return false;" ng-click="header.jumpToNextProject()">Next</a></li>
                   <li role="presentation" ng-class="{active:header.isActive('comment')}" 
@@ -59,7 +56,6 @@
                   <li role="presentation" ng-class="{active:header.isActive('curate')}" ng-show="currentUser.roles.indexOf('Curator') > -1"><a ui-sref="curate">Curate</a></li>
                   <li role="presentation" ng-class="{active:header.isActive('manage')}" ng-show="currentUser.roles.indexOf('Manager') > -1"><a ui-sref="manage">Manage</a></li>
                 </ul>
-              {% endraw %}
             </div>
         </div>
       </header>
@@ -128,6 +124,9 @@
     <script type="text/javascript" src="static/manage/app.manage.js"></script>
     <script type="text/javascript" src="static/manage/manageConfig.js"></script>
     <script type="text/javascript" src="static/manage/manageController.js"></script>
+    
+    <script type="text/javascript" src="static/modalConfirm/app.modalConfirm.js"></script>
+    <script type="text/javascript" src="static/modalConfirm/modalConfirmService.js"></script>
 
     <script type="text/javascript" src="static/project/app.project.js"></script>
     <script type="text/javascript" src="static/project/projectConfig.js"></script>

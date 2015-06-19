@@ -10,7 +10,7 @@ from flask.ext.jwt import current_user
 from flask.ext.login import login_user, logout_user, login_required
 from flask.ext.cors import cross_origin
 from wtforms.ext.sqlalchemy.orm import model_form
-from wtforms import (BooleanField, DateField, DateTimeField, SelectField, 
+from wtforms import (BooleanField, DateField, DateTimeField, SelectField,  
                      StringField, TextAreaField)
 from wtforms.widgets import Select
 from wtforms_components.widgets import ReadOnlyWidgetProxy
@@ -18,9 +18,8 @@ from wtforms.ext.sqlalchemy.fields import QuerySelectMultipleField
 #import wtforms_json
 from werkzeug import datastructures, ImmutableMultiDict
 
-from app import app, db, lm, jwt #, cors 
-import forms #import (Description, Portfolio, Disposition, Project, Comment, # Upload, 
-             #       SelectForm, LoginForm)
+from app import app, db, lm, jwt
+import forms
 from models import User
 from widgets import ChoicesSelect
 import alchemy_models as alch
@@ -109,23 +108,19 @@ def index():
     return render_template('index.html',
                            title='Home')
 
-@app.route('/selectView')
-def selectView():
-    return render_template('select.html',
-                           title='Select')
-
 @app.route("/getAllAttributes")
 def getAllAttributesJSON():
-    if "ALL_ATTRIBUTES_JSON" in session:
-        allAttrsFromDBJSON = session["ALL_ATTRIBUTES_JSON"]
-    else:
-        allAttrsFromDBJSON = dumps(getAllAttributes())
-        session["ALL_ATTRIBUTES_JSON"] = allAttrsFromDBJSON
-    return allAttrsFromDBJSON
+#     if "ALL_ATTRIBUTES_JSON" in session:
+#         allAttrsFromDBJSON = session["ALL_ATTRIBUTES_JSON"]
+#     else:
+#         allAttrsFromDBJSON = dumps(getAllAttributes())
+#         session["ALL_ATTRIBUTES_JSON"] = allAttrsFromDBJSON
+#     return allAttrsFromDBJSON
+    return dumps(getAllAttributes())
 
 def getAllAttributes():
-    if "ALL_ATTRIBUTES" in session:
-        return session["ALL_ATTRIBUTES"]
+#     if "ALL_ATTRIBUTES" in session:
+#         return session["ALL_ATTRIBUTES"]
 
     attributes = {}
     attributes["csrf_token"] = {"name": "csrf_token",
@@ -156,7 +151,7 @@ def getAllAttributes():
 #     attributesByTable["upload"] = getAttributesFromForm(Upload)
 #     attributes.update(attributesByTable["upload"])
     
-    session["ALL_ATTRIBUTES"] = attributes
+#     session["ALL_ATTRIBUTES"] = attributes
     return attributes
         
 def getAttributesFromForm(form):
@@ -204,11 +199,11 @@ def getTableNameFromForm(form):
         return "portfolio"
     elif isinstance(form, forms.Disposition):
         return "disposition"
-    elif isinstance(form, Project):
+    elif isinstance(form, forms.Project):
         return "project"
-    elif isinstance(form, Comment):
+    elif isinstance(form, forms.Comment):
         return "comment"
-    elif isinstance(form, Upload):
+    elif isinstance(form, forms.Upload):
         return "upload"
     else:
         return ""
@@ -229,20 +224,22 @@ def getFormatFromField(field):
         return "multipleSelect"
     elif field.type == "DateField":
         return "date"
+    elif field.type == "DateTimeField":
+        return "date"
     elif field.type == "StringField":
         return "string"
     elif field.type == "TextAreaField":
         return "textArea"
     else:
-        return "string"
-    
+        return "string"    
 
 def getChoicesFromField(field):
     if field.name == "childID":     # odd self-referential relationship
         options = field.query_factory().order_by("projectID").all()
         return [{"id": getattr(item, "projectID"), "desc": str(getattr(item, "projectID"))} for item in options]
     elif field.type == "QuerySelectMultipleField":
-        options = field.query_factory().all()
+        orderBy = field.name[:field.name.index("ID")] + "Desc"
+        options = field.query_factory().order_by(orderBy).all()
         return getChoicesFromFactoryOptions(field, options)
     elif field.type == "SelectField" and field.name[-2:] == "ID":
         options = field.choices
@@ -320,16 +317,17 @@ def getProjectAttributes(projectID, tableName=None):
     """
     # If a tableName is supplied, only send attributes in that table
     
-    if "ALL_ATTRIBUTES" in session:
-        allAttrsFromDB = session["ALL_ATTRIBUTES"]
-    else:
-        allAttrsFromDB = getAllAttributes()
+#     if "ALL_ATTRIBUTES" in session:
+#         allAttrsFromDB = session["ALL_ATTRIBUTES"]
+#     else:
+#         allAttrsFromDB = getAllAttributes()
+    allAttrsFromDB = getAllAttributes()
         
     formData = []
     
     p = alch.Description.query.filter_by(projectID=projectID).first()
     if not p:
-        # send back forms with no data for creating a new project
+        # send back forms with no data (for creating a new project)
         p = alch.Description()
         p.portfolio = [alch.Portfolio()]
         p.project = [alch.Project()]
@@ -468,10 +466,6 @@ def getTableNameFromForm(form):
     
     return tableName
     
-@app.route("/projectTemplate")
-def projectTemplate():
-    return render_template("view.html")
-
 @app.route("/projectView/<projectID>", methods=["GET", "POST"])
 def projectView(projectID):
     if projectID:
@@ -503,7 +497,7 @@ def projectEdit(projectID, tableName):
         
         if tableName == "description":
             description_errors = []
-            description_success = "Updated project description."
+            description_success = "Project description was updated."
 
             descriptionForm = forms.Description(request.form, p)
             if descriptionForm.validate_on_submit():
@@ -524,7 +518,7 @@ def projectEdit(projectID, tableName):
 
         elif tableName == "portfolio":
             pt_errors = []
-            pt_success = "Updated project portfolio entry."
+            pt_success = "Project portfolio entry was updated."
             pt = alch.Portfolio.query.filter_by(projectID=projectID).first_or_404()
             portfolioForm = forms.Portfolio(request.form, pt)
             if portfolioForm.validate_on_submit():
@@ -546,7 +540,7 @@ def projectEdit(projectID, tableName):
 
         elif tableName == "project":
             pr_errors = []
-            pr_success = "Updated project management entry."
+            pr_success = "Project management entry was updated."
             pr = alch.Project.query.filter_by(projectID=projectID).first_or_404()
             projectForm = forms.Project(request.form, pr)
             if projectForm.validate_on_submit():
@@ -587,7 +581,7 @@ def projectEdit(projectID, tableName):
                                      startInM = request.form.get("startInM"),
                                      startInY = request.form.get("requestInY"),
                                      lastModifiedBy = current_user.get_id())
-                d_success = "Created new project disposition for cycle "
+                d_success = "A new project disposition was created for cycle "
             else:
                 d_success = "Updated project disposition for cycle "
             
@@ -622,7 +616,7 @@ def projectEdit(projectID, tableName):
                 c = alch.Comment.query.filter_by(projectID = projectID)\
                                       .filter_by(commentID = commentID).first_or_404()
                 commentForm = forms.Comment(request.form, c)
-                c_success = "Updated comment."
+                c_success = "The comment was updated."
 
             else:
                 c = alch.Comment(projectID=projectID)
@@ -633,7 +627,7 @@ def projectEdit(projectID, tableName):
                                                 ("commentEditor", None),
                                                 ("commentEdited", None)])
                 commentForm = forms.Comment(mock_form, c)
-                c_success = "Created new comment."
+                c_success = "A new comment was created."
             
             if commentForm.validate_on_submit():
                 try:

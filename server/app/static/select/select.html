@@ -135,23 +135,22 @@
     </div>
 
     <div class="container" ng-show="select.state.current.name == 'select.add.project'">
-      <h3 class="clearfix">Add a Project</h3>
+      <h3 class="clearfix col-sm-12">Add a Project</h3>
     </div>
   
-    <div class="container" ng-show="select.state.current.name == 'select.add.project'">
-      <dl class="dl-horizontal"
-        ng-repeat="attr in select.ds.getProjectAttributes('description')" 
-        ng-include src="'static/project/templates/edit-field.html'">
-      </dl>
+    <form name="addProject" novalidate class="form-horizontal">
+      <div class="container" ng-show="select.state.current.name == 'select.add.project'">
+        <dl class="dl-horizontal"
+          ng-repeat="attr in select.ds.getProjectAttributes('description')" 
+          ng-include src="'static/project/templates/form-edit-field.html'">
+        </dl>
 
-      <dl class="dl-horizontal">
-        <dt></dt>
-        <dd>
+        <div class="col-sm-offset-2 col-sm-10">
           <button type="button" ng-click="select.ds.createProject()"> Save </button>
           <button type="button" ng-click="select.ds.cancelAddProject()"> Cancel </button>
-        </dd>
-      </dl>
-    </div>
+        </div>
+      </div>
+    </form>
   </body>
 </html>
 

@@ -7,10 +7,12 @@
     .factory("projectDataService", projectDataService);
   
   projectDataService.$inject = ["$rootScope", "$http", "$state", "$stateParams", 
-                                "$location", "projectListService", "attributesService"];
+                                "$location", "projectListService", "attributesService",
+                                "stateLocationService"];
   
   function projectDataService($rootScope, $http, $state, $stateParams, 
-                              $location, projectListService, attributesService) {
+                              $location, projectListService, attributesService,
+                              stateLocationService) {
     var service = {
       attributes: attributesService.getAttributes,
       cancelAddProject: cancelAddProject,
@@ -34,6 +36,7 @@
       SaveState: SaveState,
       setProjectData: setProjectData,
       showDetails: showDetails,
+      showEditSuccess: showEditSuccess,
       stateParams: $stateParams,
       viewUrl: $state.current.data ? $state.current.data.viewUrl : "",
       url: $location.url
@@ -104,7 +107,7 @@
     }
     
     function getProjectDataFromLocation() {
-      var idByLocation = projectListService.getProjectIDFromLocation();
+      var idByLocation = stateLocationService.getProjectIDFromLocation();
       if (idByLocation && idByLocation != service.projectID) {
         service.projectID = idByLocation;
         service.getProjectData(idByLocation);
@@ -156,7 +159,7 @@
       };
       $http(request)
         .then(service.setProjectData);
-      $state.go("project.edit." + tableName, {projectID: $state.params.projectID});
+      //$state.go("project.edit." + tableName, {projectID: $state.params.projectID});
     };
 
     function SaveState() {
@@ -167,6 +170,7 @@
     function setProjectData(result) {
       //return;
       attributesService.updateProjectAttributes(result);
+      service.success = result.data.success;
       service.SaveState();
       attributesService.SaveState();
     }
@@ -182,6 +186,10 @@
                   {projectID: service.projectID, disposedInFY: selected.disposedInFY.id,
                    disposedInQ: selected.disposedInQ.id});
       }
+    }
+
+    function showEditSuccess() {
+      return _.contains(projectForm.classList, "ng-pristine") && service.success;
     }
 
     service.SaveState();

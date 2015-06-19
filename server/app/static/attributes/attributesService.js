@@ -170,37 +170,18 @@ Data attributes:
       try {
         return _.sortBy(service.projectAttributes[tableName], "attributeID");
       }
-      catch(e) {}
-      /*
-      else if (_.contains(["comment"], tableName)) {
-        try {
-          if (service.projectAttributes[tableName].length) {
-            return service.projectAttributes[tableName];
-          }
-          else {
-            var forms = service.rawAttributes[tableName];
-            var mergedForms = _.map(forms, function(form) {
-              updateProjectAttributesFromForm(form);
-              var projectForm = new Object;
-              _.each(service.projectAttributes[tableName], function(attr) {
-                projectForm[attr.name] = jQuery.extend(true, {}, attr);
-              });
-              return projectForm;
-            });
-            service.projectAttributes[tableName] = _.sortBy(mergedForms, tableName+"ID").reverse();
-            return service.projectAttributes[tableName];
-          }
-        }
-        catch(e) {}
+      catch(e) {
+        //
       }
-      */
     };
 
     function getRawAttributes(tableName) {
       try {
         return service.rawAttributes[tableName];
       }
-      catch (e) {}
+      catch (e) {
+        //
+      }
     }
     
     function getSelectedChoices(merged) {
@@ -331,6 +312,12 @@ Data attributes:
 
     function updateErrors(errors) {
       if (typeof errors == "undefined") return;
+      _.each(errors, function(error) {
+        _.each(Object.keys(error), function(key) {
+          var attr = service.getAttribute(key);
+          attr.errors = this[key];
+        }, error);
+      });
     };
     
     function updateProjectAttributes(result) {
@@ -338,6 +325,7 @@ Data attributes:
       service.csrf_token = result.data.csrf_token;
       service.errors = result.data.errors;
       service.clearAllErrors();
+      delete service.success;
       service.updateErrors(result.data.errors);
       if (result.statusText == "OK") {
         _.each(result.data.formData, updateProjectAttributesFromForm);

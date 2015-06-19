@@ -1,6 +1,6 @@
 (function(){
 
   angular
-    .module("app.stateLocation", ['ui.router']);
+    .module("app.stateLocation", ["ui.router"]);
 
 }());

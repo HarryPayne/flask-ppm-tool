@@ -469,7 +469,7 @@ class Description(Base):
 class Comment(Base):
     __tablename__ = "comment"
 
-    commentID = Column(Integer, primary_key=True, nullable=True,
+    commentID = Column(Integer, primary_key=True, nullable=True, autoincrement=True,
                        info={"attributeID": 335,
                              "help": ""})
     projectID = Column(Integer, ForeignKey("description.projectID"), nullable=False, index=True, server_default=text("'0'"),
@@ -556,8 +556,14 @@ class Disposition(Base):
                              "attributeID": 365,
                              "help": ""},
                        nullable=True, server_default=text("'0'"))
-    lastModified = Column(DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"))
-    lastModifiedBy = Column(String(100), nullable=False, server_default=text("''"))
+    lastModified = Column(DateTime, nullable=True, 
+                          info={"attributeID": 366,
+                                "help": "Date and time of last change."},
+                          server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"))
+    lastModifiedBy = Column(String(100), nullable=True,  
+                            info={"attributeID": 367,
+                                  "help": "User ID associated with the last change."},
+                            server_default=text("''"))
 
     description = db.relationship("Description", backref="dispositions")
 

@@ -1,7 +1,8 @@
+<!DOCTYPE html>
 <html>
   <head></head>
   <body>
-    <div  class="container">
+    <div class="container">
       <ul class="list-inline text-right clearfix">
         <li ng-show="project.ds.currentMode() == 'view' && (currentUser.roles.indexOf('Curator') > -1 || currentUser.roles.indexOf('Manager') > -1)">
           <a ui-sref="project.edit.description" ng-click="project.changeMode('project.edit.description');">Edit this project</a>
@@ -39,21 +40,25 @@
         <li role="presentation" ng-class="{active:project.currentMode() == 'edit.description'}"><a ui-sref="project.edit.description">Description</a></li>
         <li role="presentation" ng-class="{active:project.currentMode() == 'edit.portfolio'}"><a ui-sref="project.edit.portfolio">Portfolio</a></li>
         <li role="presentation" ng-class="{active:project.currentMode() == 'edit.disposition'}"><a ui-sref="project.edit.disposition">Dispositions</a></li>
-        <li role="presentation" ng-class="{active:project.currentMode() == 'edit.projectMan'}"><a ui-sref="project.edit.projectMan">Project Management</a></li>
+        <li role="presentation" ng-class="{active:project.currentMode() == 'edit.project'}"><a ui-sref="project.edit.project">Project Management</a></li>
         <li role="presentation" ng-class="{active:project.currentMode().substring(0,12) == 'edit.comment'}"><a ui-sref="project.edit.comment">Comments</a></li>
         <li role="presentation" ng-class="{active:project.currentMode() == 'edit.attach'}"><a ui-sref="project.edit.attach">Attach a File</a></li>
       </ul>
                 
       <div ng-show="project.currentMode().substring(0,4) == 'edit'">
-        <div ng-show="project.as.errors" ng-bind="project.as.errors"></div>
+        <div ng-show="project.as.errors" ng-repeat="error in project.as.errors">
+          <span ng-bind="error"></span>
+        </div>
       </div>
   
       <div class="clearfix">
-        <span ng-include src="'static/project/templates/description.html'"></span>
-        <span ng-include src="'static/project/templates/portfolio.html'"></span>
-        <span ng-include src="'static/project/templates/disposition.html'"></span>
-        <span ng-include src="'static/project/templates/projectMan.html'"></span>
-        <span ng-include src="'static/project/templates/comment.html'"></span>
+        <form name="projectForm" novalidate class="form-horizontal">
+          <span ng-include src="'static/project/templates/description.html'"></span>
+          <span ng-include src="'static/project/templates/portfolio.html'"></span>
+          <span ng-include src="'static/project/templates/disposition.html'"></span>
+          <span ng-include src="'static/project/templates/projectMan.html'"></span>
+          <span ng-include src="'static/project/templates/comment.html'"></span>
+        </form>
       </div>
     </div>
   </body>

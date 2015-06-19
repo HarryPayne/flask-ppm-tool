@@ -14,7 +14,6 @@
       getIDListFromAllProjects: getIDListFromAllProjects,
       getMasterList: getMasterList,
       getProjectID: getProjectID,
-      getProjectIDFromLocation: getProjectIDFromLocation,
       hasProjects: hasProjects,
       initModel: initModel,
       jumpToProject: jumpToProject,
@@ -60,25 +59,11 @@
 
     function getProjectID() {
       if (typeof service.projectID == "undefined") {
-        return service.getProjectIDFromLocation();
+        return $stateParams.projectID;
       }
       return service.projectID;
     }
     
-    function getProjectIDFromLocation() {
-      var url = $location.url();
-      if (url.substring(0,8) == "/project") {
-        var temp = url.substring(0, url.indexOf("#"));
-        temp  = temp.substring(_.lastIndexOf(url, "/")+1);
-        try {
-          return parseInt(temp);
-        }
-        catch(e) {
-          return false;
-        }
-      }
-    };
-
     function hasProjects() {
       return Boolean(service.getMasterList().allProjects.length > 0);
     }

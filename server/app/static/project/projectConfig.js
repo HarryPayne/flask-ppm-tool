@@ -137,8 +137,8 @@
           requiresLogin: true
         }
       })
-      .state("project.edit.projectMan", {
-        url: "/projectMan/:projectID",
+      .state("project.edit.project", {
+        url: "/project/:projectID",
         controller: function ($stateParams) {
           console.log($stateParams);
         },
@@ -146,7 +146,7 @@
         data: {
           requiresLogin: true
         }
-      })
+      });
   };
 
 }());
