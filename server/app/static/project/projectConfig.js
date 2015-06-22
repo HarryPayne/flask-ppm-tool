@@ -13,10 +13,10 @@
         url: '/project',
         controller: "Project",
         controllerAs: "project",
-        templateUrl:"static/project/project.html",
+        templateUrl:"/static/project/project.html",
         data: {
           requiresLogin: false,
-          viewUrl: "static/project/project.html"
+          viewUrl: "/static/project/project.html"
         }
       }) 
       .state("project.add",  {

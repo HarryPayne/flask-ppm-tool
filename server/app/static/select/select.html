@@ -5,10 +5,10 @@
       <ul class="list-inline text-right clearfix">
         <li ng-show="currentUser.roles.indexOf('Curator') > -1 || currentUser.roles.indexOf('Manager') > -1">
           <span ng-show="select.state.current.name == 'select'">
-            <a ui-sref="select.add.project" 
+            <a ui-sref="select.addProject" 
               ng-click="select.ds.newProject()">Add a Project</a>
           </span>
-          <span ng-show="select.state.current.name == 'select.add.project'">
+          <span ng-show="select.state.current.name == 'select.addProject'">
             Add a Project
           </span>
           </li>
@@ -134,12 +134,12 @@
       </ul>
     </div>
 
-    <div class="container" ng-show="select.state.current.name == 'select.add.project'">
+    <div class="container" ng-show="select.state.current.name == 'select.addProject'">
       <h3 class="clearfix col-sm-12">Add a Project</h3>
     </div>
   
     <form name="addProject" novalidate class="form-horizontal">
-      <div class="container" ng-show="select.state.current.name == 'select.add.project'">
+      <div class="container" ng-show="select.state.current.name == 'select.addProject'">
         <dl class="dl-horizontal"
           ng-repeat="attr in select.ds.getProjectAttributes('description')" 
           ng-include src="'static/project/templates/form-edit-field.html'">

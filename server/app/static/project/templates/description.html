@@ -8,7 +8,7 @@
     ng-include src="'static/project/templates/view-field.html'">
   </dl>
 
-  <div ng-show="project.currentMode() == 'edit.description' || project.currentMode() == 'add.project'"
+  <div ng-show="project.currentMode() == 'edit.description' || project.currentMode() == 'addProject'"
     ng-repeat="attr in project.as.getProjectAttributes('description')" 
     ng-include src="'static/project/templates/form-edit-field.html'">
   </div>

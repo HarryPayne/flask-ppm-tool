@@ -17,13 +17,13 @@
         $rootScope.$broadcast('savestate');
       };
   
-      if (toState.name =="select" || toState.name == "filter") {
+      if (toState.name.substring(0, "select".length) =="select" || toState.name == "filter") {
         // Reload the master list before selecting projects, in case a new one was added.
         projectListService.updateAllProjects();
         projectListService.setList(projectListService.getIDListFromAllProjects());
         projectListService.setDescription("none;");
       }
-      if (toState.name.substring(0,7) == "project" && !projectListService.hasProjects()) {
+      if (toState.name.substring(0,"project".length) == "project" && !projectListService.hasProjects()) {
         // Make sure project data are present if starting the app from a bookmarked project url.
         projectListService.updateAllProjects();
 

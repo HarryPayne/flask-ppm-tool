@@ -17,7 +17,6 @@
       attributes: attributesService.getAttributes,
       cancelAddProject: cancelAddProject,
       changeMode: changeMode,
-      checkForUnsavedChanges: checkForUnsavedChanges,
       createProject: createProject,
       currentMode: currentMode,
       getProjectData: getProjectData,
@@ -39,7 +38,6 @@
       showEditSuccess: showEditSuccess,
       stateParams: $stateParams,
       viewUrl: $state.current.data ? $state.current.data.viewUrl : "",
-      url: $location.url
     };
     
     service.RestoreState();
@@ -62,10 +60,6 @@
       else {
         $state.go(mode, {projectID: service.projectID});
       }
-    }
-    
-    function checkForUnsavedChanges() {
-      var state = $state.current.name;
     }
     
     function createProject() {
@@ -137,7 +131,7 @@
 
     function newProject() {
       attributesService.newProjectAttributes();
-      $state.go("select.add.project");
+      $state.go("select.addProject");
     }
     
     function RestoreState() {
@@ -159,7 +153,8 @@
       };
       $http(request)
         .then(service.setProjectData);
-      //$state.go("project.edit." + tableName, {projectID: $state.params.projectID});
+      service.noCheck = true;
+      $state.go("project.edit." + tableName, {projectID: $state.params.projectID, noCheck: true});
     };
 
     function SaveState() {
@@ -189,7 +184,7 @@
     }
 
     function showEditSuccess() {
-      return _.contains(projectForm.classList, "ng-pristine") && service.success;
+      return Boolean(_.contains(projectForm.classList, "ng-pristine") && service.success);
     }
 
     service.SaveState();

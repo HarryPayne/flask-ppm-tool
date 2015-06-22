@@ -10,7 +10,7 @@
     $stateProvider
       .state("select", {
         name: "select",
-        url: "/",
+        url: "/select",
         controller: "Select",
         controllerAs: "select",
         templateUrl: "/static/select/select.html",
@@ -18,18 +18,14 @@
           requiresLogin: false
         }
       })
-      .state("select.add", {
+      .state("select.addProject", {
         name: "select",
-        url: "add",
+        url: "/addProject",
+        controller: "Select",
+        controllerAs: "select",
         data: {
           requiresLogin: true
         }
-      })
-      .state("select.add.project", {
-        name: "select",
-        url: "/project",
-        controller: "Select",
-        controllerAs: "select"
       });
   };
   

@@ -110,18 +110,9 @@ def index():
 
 @app.route("/getAllAttributes")
 def getAllAttributesJSON():
-#     if "ALL_ATTRIBUTES_JSON" in session:
-#         allAttrsFromDBJSON = session["ALL_ATTRIBUTES_JSON"]
-#     else:
-#         allAttrsFromDBJSON = dumps(getAllAttributes())
-#         session["ALL_ATTRIBUTES_JSON"] = allAttrsFromDBJSON
-#     return allAttrsFromDBJSON
     return dumps(getAllAttributes())
 
 def getAllAttributes():
-#     if "ALL_ATTRIBUTES" in session:
-#         return session["ALL_ATTRIBUTES"]
-
     attributes = {}
     attributes["csrf_token"] = {"name": "csrf_token",
                                 "format": "hidden"}
@@ -151,7 +142,6 @@ def getAllAttributes():
 #     attributesByTable["upload"] = getAttributesFromForm(Upload)
 #     attributes.update(attributesByTable["upload"])
     
-#     session["ALL_ATTRIBUTES"] = attributes
     return attributes
         
 def getAttributesFromForm(form):
@@ -317,10 +307,6 @@ def getProjectAttributes(projectID, tableName=None):
     """
     # If a tableName is supplied, only send attributes in that table
     
-#     if "ALL_ATTRIBUTES" in session:
-#         allAttrsFromDB = session["ALL_ATTRIBUTES"]
-#     else:
-#         allAttrsFromDB = getAllAttributes()
     allAttrsFromDB = getAllAttributes()
         
     formData = []
@@ -705,5 +691,7 @@ def projectCreate():
     else:
         response["success"] = "Created new project"            
 
+    # clear cached results
+    
     return dumps(response)
          

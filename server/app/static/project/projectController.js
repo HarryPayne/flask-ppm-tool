@@ -27,6 +27,12 @@
 
     $scope.$on(["$stateChangeStart"], function(event, toState, toParams, fromState, fromParams) {
       projectDataService.success = "";
+      if (typeof projectDataService.noCheck != "undefined") {
+        $scope.projectForm.$setPristine(true);
+        delete projectDataService.noCheck;
+        //projectDataService.getProjectData(projectDataService.projectID); // forced discard
+        //$state.go(toState, toParams);
+      }
       if ($scope.projectForm.$dirty) {
         event.preventDefault();
 
@@ -39,8 +45,9 @@
         };
 
         modalConfirmService.showModal({}, modalOptions).then(function (result) {
-          $scope.projectForm.$setPristine();
-          projectDataService.getProjectData(projectDataService.projectID); // forced discard
+          $scope.projectForm.$setPristine(true);
+          var target = toParams.projectID ? toParams.projectID : fromParams.projectID;
+          projectDataService.getProjectData(target); // forced discard
           $state.go(toState, toParams);
         });
       }

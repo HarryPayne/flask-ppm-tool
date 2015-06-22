@@ -43,7 +43,7 @@
       service.masterList.allProjects = results.data;
       var projectIDList = service.getIDListFromAllProjects();
       if (typeof projectID == "undefined" || projectID < 0) {
-        projectID = projectIDList[0];
+        projectID =  projectIDList[0];
       }
       updateProjectListProjectID(projectID, projectIDList);
     };

@@ -27,7 +27,7 @@
   
     return service;
     
-    function locationChange() {
+    function locationChange(event) {
       if (service.preventCall.pop('locationChange') != null) {
         return;
       }
@@ -119,10 +119,7 @@
       var projectID = params.projectID;
       var hash = "#" + service.guid().substr(0, 8);
       
-      if ($state.current.name.substring(0,6) == "select") {
-        return "/" + _.rest($state.current.name.split(".")).join("/") + hash;
-      }
-      else if ($state.current.name == "project.detail") {
+      if ($state.current.name == "project.detail") {
         return "/project/" + projectID + hash;
       }
       else if ($state.current.name.substring(0,8) == "project.") {

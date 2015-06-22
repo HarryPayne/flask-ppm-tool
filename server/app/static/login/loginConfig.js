@@ -6,10 +6,16 @@
     .module("app.login")
     .config(loginConfig);
   
-  loginConfig.$inject = ["$httpProvider"];
+  loginConfig.$inject = ["jwtInterceptorProvider", "$httpProvider"];
   
-  function loginConfig($httpProvider) {
+  function loginConfig(jwtInterceptorProvider, $httpProvider) {
   
+    jwtInterceptorProvider.tokenGetter = function(store) {
+      return store.get('jwt');
+    };
+
+    $httpProvider.interceptors.push('jwtInterceptor');
+
     $httpProvider.interceptors.push(function ($timeout, $q, $injector) {
       var loginService, $http, $state;
   
@@ -29,13 +35,15 @@
           var deferred = $q.defer();
   
           loginService()
-            .then(function () {
-              deferred.resolve( $http(rejection.config) );
-            })
-            .catch(function () {
-              $state.go('select');
-              deferred.reject(rejection);
-            });
+            .then(
+              function () {
+                deferred.resolve( $http(rejection.config) );
+              },
+              function () {
+                $state.go('select');
+                deferred.reject(rejection);
+              }
+            );
   
           return deferred.promise;
         }

@@ -23,7 +23,7 @@
     
     this.ds = projectDataService;
 
-    $scope.$on(["$stateChangeStart"], function(event, toState, toParams, fromState, fromParams) {
+    $scope.$on("$stateChangeStart", function(event, toState, toParams, fromState, fromParams) {
       projectDataService.success = "";
       if ($scope.addProject.$dirty) {
         event.preventDefault();

@@ -315,7 +315,7 @@ Data attributes:
       _.each(errors, function(error) {
         _.each(Object.keys(error), function(key) {
           var attr = service.getAttribute(key);
-          attr.errors = this[key];
+          attr.server_errors = this[key];
         }, error);
       });
     };
