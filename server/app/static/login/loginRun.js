@@ -6,7 +6,7 @@
     .module("app.login")
     .run(loginRun);
   
-  loginRun.$inject = ["$rootScope", "$state", "store", "jwtHelper",  "loginService"];
+  loginRun.$inject = ["$rootScope", "$state", "store", "jwtHelper", "loginService"];
   
   function loginRun($rootScope, $state, store, jwtHelper, loginService) {
     $state.transitionTo("select");

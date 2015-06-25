@@ -12,13 +12,15 @@
   function stateLocationService($rootScope, $location, $state, $stateParams, 
                                 stateHistoryService, projectListService){
     var service = {
-      "preventCall": [],
-      "locationChange": locationChange,
-      "getProjectIDFromLocation": getProjectIDFromLocation,
-      "saveState": saveState,
-      "stateChange": stateChange,
-      "guid": guid,
-      "s4": s4
+      preventCall: [],
+      locationChange: locationChange,
+      getCurrentState: getCurrentState,
+      getProjectIDFromLocation: getProjectIDFromLocation,
+      saveState: saveState,
+      stateChange: stateChange,
+      saveCurrentState: saveCurrentState,
+      guid: guid,
+      s4: s4
     };
     
     window.onbeforeunload = function (event) {
@@ -26,6 +28,10 @@
     };
   
     return service;
+    
+    function getCurrentState() {
+      return angular.fromJson(sessionStorage.currentState);
+    }
     
     function locationChange(event) {
       if (service.preventCall.pop('locationChange') != null) {
@@ -136,6 +142,16 @@
       }
       else {
         return "/" + $state.current.name.replace(/\./g, "/");
+      }
+    }
+    
+    function saveCurrentState() {
+      if ($state.current.name) {
+        var entry = {
+          "name": $state.current.name,
+          "params": $state.params
+        };
+        sessionStorage.currentState = angular.toJson(entry);
       }
     }
     

@@ -10,10 +10,14 @@
       } 
     </style>
 
+    {% if minified %}
+    <link href="/static/min/flask-ppm-tool.min.css" rel="stylesheet" media="screen">
+    {% else %}
     <link href="/static/vendor/jquery-ui/jquery-ui.min.css" rel="stylesheet" media="screen">
     <link href="/static/vendor/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" media="screen">
     <link href="/static/vendor/angular-readmore-master/css/style.css" rel="stylesheet" media="screen">
     <link href="/static/login/login.css" rel="stylesheet" media="screen">
+    {% endif %}
     <style>     
       button.link {
         display:inline-block;
@@ -80,10 +84,15 @@
     <script type="text/javascript" src="/static/vendor/angular-ui-router/release/angular-ui-router.min.js"></script>
     <script type="text/javascript" src="/static/vendor/a0-angular-storage/dist/angular-storage.min.js"></script>
     <script type="text/javascript" src="/static/vendor/angular-jwt/dist/angular-jwt.min.js"></script>
-    <script type="text/javascript" src="/static/vendor/angular-readmore-master/js/angular-readmore.js"></script>
-    <script type="text/javascript" src="/static/vendor/datejs/build/date-en-US.js"></script>
     <script type="text/javascript" src="/static/vendor/ng-focus-on/ng-focus-on.min.js"></script>
     <script type="text/javascript" src="/static/vendor/underscore/underscore-min.js"></script>
+    <script type="text/javascript" src="/static/vendor/angular-readmore-master/js/angular-readmore.js"></script>
+    <script type="text/javascript" src="/static/vendor/datejs/build/date-en-US.js"></script>
+
+    {% if minified %}
+    <script type="text/javascript" src="/static/min/flask-ppm-tool.min.js"></script>
+    <script type="text/javascript" src="/static/login/loginConfig.js"></script>
+    {% else %}
 
     <script type="text/javascript" src="/static/app.js"></script>
     <script type="text/javascript" src="/static/app.config.js"></script>
@@ -121,6 +130,9 @@
     <script type="text/javascript" src="/static/login/loginService.js"></script>
     <script type="text/javascript" src="/static/login/loginStateService.js"></script>
 
+    <script type="text/javascript" src="/static/loginInjector/app.loginInjectorProvider.js"></script>
+    <script type="text/javascript" src="/static/loginInjector/loginInjector.js"></script>
+
     <script type="text/javascript" src="/static/manage/app.manage.js"></script>
     <script type="text/javascript" src="/static/manage/manageConfig.js"></script>
     <script type="text/javascript" src="/static/manage/manageController.js"></script>
@@ -148,6 +160,7 @@
 
     <script type="text/javascript" src="/static/title/app.title.js"></script>
     <script type="text/javascript" src="/static/title/titleController.js"></script>
+    {% endif %}
 
   </body>
 </html>

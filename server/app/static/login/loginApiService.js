@@ -15,8 +15,8 @@
   
     function login(username, password) {
       return $http({
-        url: '/auth',
-        method: 'POST',
+        url: "/auth",
+        method: "POST",
         data: {"username": username, 
                "password": password}
       });

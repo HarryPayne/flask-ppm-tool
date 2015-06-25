@@ -6,6 +6,8 @@
     .module("app.select")
     .config(selectConfig);
   
+  selectConfig.$inject = ["$stateProvider"];
+  
   function selectConfig($stateProvider) {
     $stateProvider
       .state("select", {

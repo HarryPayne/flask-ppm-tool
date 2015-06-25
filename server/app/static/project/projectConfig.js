@@ -6,6 +6,8 @@
     .module("app.project")
     .config(projectConfig);
   
+  projectConfig.$inject = ["$stateProvider"];
+
   function projectConfig($stateProvider) {
     $stateProvider
       .state('project', {

@@ -6,9 +6,9 @@
     .module("PPT")
     .config(PPTConfig);
   
-  PPTConfig.$inject = ["$urlRouterProvider", "jwtInterceptorProvider", "$httpProvider"];
+  PPTConfig.$inject = ["$urlRouterProvider"];
   
-  function PPTConfig($urlRouterProvider, jwtInterceptorProvider, $httpProvider) {
+  function PPTConfig($urlRouterProvider) {
     $urlRouterProvider.otherwise('/select');
   };
   

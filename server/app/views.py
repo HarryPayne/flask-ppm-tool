@@ -106,7 +106,8 @@ def internal_error(error):
 @app.route('/index', methods=['GET', 'POST'])
 def index():
     return render_template('index.html',
-                           title='Home')
+                           title='Home',
+                           minified=app.config["MINIFIED"])
 
 @app.route("/getAllAttributes")
 def getAllAttributesJSON():
