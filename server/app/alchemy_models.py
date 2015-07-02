@@ -1,7 +1,7 @@
 # coding: utf-8
 import sqlalchemy as sa
-from sqlalchemy import (BLOB, Column, Date, DateTime, Enum, ForeignKey, Float, Integer, 
-                        orm, SmallInteger, String, Table, Text, text)
+from sqlalchemy import (BLOB, Column, Date, DateTime, desc, Enum, ForeignKey, 
+                        Float, Integer, orm, SmallInteger, String, Table, Text, text)
 from sqlalchemy_utils import ChoiceType
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.dialects.mysql.base import MEDIUMBLOB
@@ -292,7 +292,7 @@ FUNDINGSOURCE_CHOICES = []
 for row in Fundingsourcelist.query.order_by("fundingsourceID").all():
     FUNDINGSOURCE_CHOICES.append((row.fundingsourceID, row.fundingsourceDesc))
 FY_CHOICES = []
-for row in Fiscalyear.query.order_by("fiscalyearID").all():
+for row in Fiscalyear.query.order_by(desc("fiscalyearID")).all():
     FY_CHOICES.append((row.fiscalyearID, row.fiscalyearDesc))
 HOST_CHOICES = []
 for row in Hostlist.query.order_by("hostDesc").all():
@@ -325,7 +325,7 @@ SPONSOR_CHOICES = []
 for row in Sponsorlist.query.order_by("sponsorDesc").all():
     SPONSOR_CHOICES.append((row.sponsorID, row.sponsorDesc))
 TECHNOLOGY_CHOICES = []
-for row in Technologylist.query.order_by("technologyDesc").all():
+for row in Technologylist.query.order_by("technologyID").all():
     TECHNOLOGY_CHOICES.append((row.technologyID, row.technologyDesc))
 TYPE_CHOICES = []
 for row in Typelist.query.order_by("typeDesc").all():
@@ -334,7 +334,7 @@ VISIBILITY_CHOICES = []
 for row in Visibilitylist.query.order_by("visibilityID").all():
     VISIBILITY_CHOICES.append((row.visibilityID, row.visibilityDesc))
 Y_CHOICES = []
-for row in Calendaryear.query.order_by("calendaryearID").all():
+for row in Calendaryear.query.order_by(desc("calendaryearID")).all():
     Y_CHOICES.append((row.calendaryearID, row.calendaryearDesc))
 
 class Stakeholderlist(Base):
@@ -427,10 +427,11 @@ class Description(Base):
                                           "help": "Which organizations, besides the sponsor stand to be affected (positively or negatively) by this project?"})
     technologyID = Column(Integer, ForeignKey(Technologylist.technologyID), 
                           info={"choices": TECHNOLOGY_CHOICES, 
+                                "coerce": int,
                                 "label": "technology",
                                 "attributeID": 140,
                                 "help": "Identify the primary technology involved with/affected by this project.  Use the categorization of the Technology Report. Note: The Implementation Plan is sorted by technology, and projects with no technology will not show up!"}, 
-                          nullable=True, server_default=text("'0'"))
+                          nullable=True, server_default=None)
     typeID = Column(Integer, ForeignKey(Typelist.typeID), 
                     info={"choices": TYPE_CHOICES, 
                           "label": "type",
@@ -528,7 +529,7 @@ class Disposition(Base):
                                   "label": "reconsider in",
                                   "attributeID": 340,
                                   "help": "For a deferred project, when will it be considered again?"},
-                            nullable=True, server_default=text("'0'"))
+                            nullable=True, server_default=None)
     reconsiderInQ = Column(Integer, ForeignKey("quarters.quarterID"),
                            info={"choices": Q_CHOICES,
                                  "attributeID": 345,
@@ -646,10 +647,11 @@ class Portfolio(Base):
                  server_default=text("'0'"))
     budgetInFY = Column(SmallInteger, ForeignKey("fiscalyears.fiscalyearID"), 
                         info={"choices": FY_CHOICES, 
+                              "coerce": int,
                               "label": "budget in",
                               "attributeID": 300,
                               "help": "For projects whose budget needs to be planned (e.g., ED-05), when will that happen?"},
-                        nullable=True, index=True, server_default=text("'0'"))
+                        nullable=True, index=True, server_default=None)
     budgetInQ = Column(Integer, ForeignKey("quarters.quarterID"),
                        info={"choices": Q_CHOICES, 
                              "label": "",

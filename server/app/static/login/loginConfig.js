@@ -4,7 +4,7 @@
   
   angular
     .module("app.login")
-    .config(loginConfig) 
+    .config(loginConfig);
   
   loginConfig.$inject = ["jwtInterceptorProvider", "$httpProvider"];
   

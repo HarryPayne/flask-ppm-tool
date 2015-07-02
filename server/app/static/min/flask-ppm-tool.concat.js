@@ -86,7 +86,7 @@
         var oldProjectID = masterList.projectID;
 
         if (!toParams.projectID) {
-          projectID = stateLocationService.getProjectIDFromLocation();
+          projectID = stateLocationService.getStateFromLocation().stateParams.projectID;
           if (!projectID) {
             if (projectListService.hasProjects()) {
               projectID = masterList.index > -1 ? selectedIds[masterList.index] : selectedIds[0];
@@ -257,7 +257,7 @@ Data attributes:
     function clearAllErrors() {
       _.each(service.allAttributes, function(attr) {
         delete attr.errors;
-      })
+      });
       return;
       if (service.projectAttributes["disposition"].length) {
         _.each(service.projectAttributes["disposition"], function(disposition) {
@@ -457,7 +457,7 @@ Data attributes:
       });
     };
     
-    function updateProjectAttributes(result) {
+    function updateProjectAttributes(result, params) {
       service.projectID = result.data.projectID;
       service.csrf_token = result.data.csrf_token;
       service.errors = result.data.errors;
@@ -828,7 +828,7 @@ Data attributes:
   
   angular
     .module("app.login")
-    .config(loginConfig) 
+    .config(loginConfig);
   
   loginConfig.$inject = ["jwtInterceptorProvider", "$httpProvider"];
   
@@ -1013,8 +1013,8 @@ Data attributes:
     var loginService, $http, $state;
 
     /* Avoid `Uncaught Error: [$injector:cdep] Circular dependency found` */
-    /* http://brewhouse.io/blog/2014/12/09/authentication-made-simple-in-single-page-angularjs-applications.html
-    $timeout(function () {
+    /* http://brewhouse.io/blog/2014/12/09/authentication-made-simple-in-single-page-angularjs-applications.html 
+    $timeout(function () { 
       loginService = $injector.get("loginService");
       $http = $injector.get("$http");
       $state = $injector.get("$state");
@@ -1378,7 +1378,7 @@ Data attributes:
         modalConfirmService.showModal({}, modalOptions).then(function (result) {
           $scope.projectForm.$setPristine(true);
           var target = toParams.projectID ? toParams.projectID : fromParams.projectID;
-          projectDataService.getProjectData(target); // forced discard
+          projectDataService.getProjectData(target, toParams); // forced discard
           $state.go(toState, toParams);
         });
       }
@@ -1482,18 +1482,23 @@ Data attributes:
       return service.attributes;
     }
     
-    function getProjectData(projectID) {
-      if (parseInt(projectID) > -1) {
-        $http.get("getProjectAttributes/" + projectID)
-          .then(service.setProjectData);
+    function getProjectData(params) {
+      if (parseInt(params.projectID) > -1) {
+        $http.get("getProjectAttributes/" + params.projectID)
+          .then(function(result) {
+            service.setProjectData(result, params);
+        });
       }
     }
     
     function getProjectDataFromLocation() {
-      var idByLocation = stateLocationService.getProjectIDFromLocation();
-      if (idByLocation && idByLocation != service.projectID) {
-        service.projectID = idByLocation;
-        service.getProjectData(idByLocation);
+      var state = stateLocationService.getStateFromLocation();
+      if ("projectID" in state.stateParams && state.stateParams.projectID != service.projectID) {
+        service.projectID = state.stateParams.projectID;
+        service.getProjectData(state.stateParams);
+        if ("commentID" in state.stateParams) {
+          //
+        }
       }
     }
 
@@ -1551,9 +1556,9 @@ Data attributes:
       sessionStorage.projectDataServiceAttributes = angular.toJson(service.projectID);
     };
       
-    function setProjectData(result) {
+    function setProjectData(result, params) {
       //return;
-      attributesService.updateProjectAttributes(result);
+      attributesService.updateProjectAttributes(result, params);
       service.success = result.data.success;
       service.SaveState();
       attributesService.SaveState();
@@ -2091,7 +2096,7 @@ Data attributes:
       preventCall: [],
       locationChange: locationChange,
       getCurrentState: getCurrentState,
-      getProjectIDFromLocation: getProjectIDFromLocation,
+      getStateFromLocation: getStateFromLocation,
       saveState: saveState,
       stateChange: stateChange,
       saveCurrentState: saveCurrentState,
@@ -2142,40 +2147,36 @@ Data attributes:
       $state.go(entry.name, entry.params, {location: false});
     };
     
-    function getProjectIDFromLocation() {
+    function getStateFromLocation() {
+      var state = new Object;
+      state.stateParams = new Object;
       var location = $location.url();
-      if (location.substring(0,9) == "/project/") {
+      if (location == '/') {
+        state.name = 'select';
+      }
+      else if (location.substring(0,9) == "/project/") {
         var projectID;
         var commentID;
         var disposedInFY;
         var disposedInQ;
         if (location.substring(9, 26) == "edit/commentDetail") {
           var details = location.substring(27);
-          commentID = parseInt(_.first(_.last(details.split("/")).split("#")));
-          projectID = parseInt(_first(details.split("/")));
+          state.name = "project.edit.commentDetail";
+          state.stateParams.commentID = parseInt(_.first(_.last(details.split("/")).split("#")));
+          state.stateParams.projectID = parseInt(_first(details.split("/")));
         }
         else if (location.substring(9, 31) == "edit/dispositionDetail") {
           var details = location.substring(32).split("/");
-          projectID = parseInt(details[0]);
-          disposedInFY = parseInt(details[1]);
-          disposedInQ = parseInt(_.first(_.last(details).split("#")));
+          state.name = "project.edit.dispositionDetail";
+          state.stateParams.projectID = parseInt(details[0]);
+          state.stateParams.disposedInFY = parseInt(details[1]);
+          state.stateParams.disposedInQ = parseInt(_.first(_.last(details).split("#")));
         }
         else {
-          projectID = parseInt(_.first(_.last(location.split("/")).split("#")));
-        }
-        if (projectID) {
-          $stateParams.projectID = projectID;
-          if (commentID) {
-            $stateParams.commentID = commentID;
-          }
-          if (disposedInFY || disposedInQ) {
-            $stateParams.disposedInFY = disposedInFY;
-            $stateParams.disposedInQ = disposedInQ;
-          }
-          return projectID;
+          state.stateParams.projectID = parseInt(_.first(_.last(location.split("/")).split("#")));
         }
       }
-      return null;
+      return state;
     }
     
     function stateChange(projectID) {

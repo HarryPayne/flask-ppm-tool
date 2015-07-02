@@ -14,7 +14,7 @@
                               $location, projectListService, attributesService,
                               stateLocationService) {
     var service = {
-      attributes: attributesService.getAttributes,
+      attributes: attributesService.getAllAttributes,
       cancelAddProject: cancelAddProject,
       changeMode: changeMode,
       createProject: createProject,
@@ -41,8 +41,8 @@
     };
     
     service.RestoreState();
-    if (typeof service.attributes == "undefined") {
-      service.getProjectData(service.projectID);
+    if (typeof service.attributes() == "undefined" && service.restoredParams) {
+      service.getProjectData(service.restoredParams);
     }
     
     $rootScope.$on("savestate", service.SaveState);
@@ -93,18 +93,23 @@
       return service.attributes;
     }
     
-    function getProjectData(projectID) {
-      if (parseInt(projectID) > -1) {
-        $http.get("getProjectAttributes/" + projectID)
-          .then(service.setProjectData);
+    function getProjectData(params) {
+      if (parseInt(params.projectID) > -1) {
+        $http.get("getProjectAttributes/" + params.projectID)
+          .then(function(result) {
+            service.setProjectData(result, params);
+        });
       }
     }
     
     function getProjectDataFromLocation() {
-      var idByLocation = stateLocationService.getProjectIDFromLocation();
-      if (idByLocation && idByLocation != service.projectID) {
-        service.projectID = idByLocation;
-        service.getProjectData(idByLocation);
+      var state = stateLocationService.getStateFromLocation();
+      if ("projectID" in state.stateParams && state.stateParams.projectID != service.projectID) {
+        service.projectID = state.stateParams.projectID;
+        service.getProjectData(state.stateParams);
+        if ("commentID" in state.stateParams) {
+          //
+        }
       }
     }
 
@@ -136,7 +141,7 @@
     
     function RestoreState() {
       if (sessionStorage.projectDataServiceAttributes != "undefined") {
-        service.projectID = angular.fromJson(sessionStorage.projectDataServiceAttributes);
+        service.restoredParams = angular.fromJson(sessionStorage.projectDataServiceAttributes);
       }
     };
 
@@ -158,13 +163,12 @@
     };
 
     function SaveState() {
-      var data = new Object;
-      sessionStorage.projectDataServiceAttributes = angular.toJson(service.projectID);
+      sessionStorage.projectDataServiceAttributes = angular.toJson($stateParams);
     };
       
-    function setProjectData(result) {
+    function setProjectData(result, params) {
       //return;
-      attributesService.updateProjectAttributes(result);
+      attributesService.updateProjectAttributes(result, params);
       service.success = result.data.success;
       service.SaveState();
       attributesService.SaveState();

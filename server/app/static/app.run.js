@@ -33,7 +33,7 @@
         var oldProjectID = masterList.projectID;
 
         if (!toParams.projectID) {
-          projectID = stateLocationService.getProjectIDFromLocation();
+          projectID = stateLocationService.getStateFromLocation().stateParams.projectID;
           if (!projectID) {
             if (projectListService.hasProjects()) {
               projectID = masterList.index > -1 ? selectedIds[masterList.index] : selectedIds[0];
@@ -50,7 +50,7 @@
 
         if (!projectDataService.projectID || projectDataService.projectID != projectID) {
           projectDataService.projectID = projectID;
-          projectDataService.getProjectData(projectID);
+          projectDataService.getProjectData(toParams);
         }
       }
     }   

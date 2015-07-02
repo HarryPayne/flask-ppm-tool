@@ -155,15 +155,16 @@ def getAttributesFromForm(form):
     for field in form:
         if field.name in ["csrf_token", "projectID"]:
             continue
+        required = getRequiredFromField(field)
         attr = {"attributeID": getattr(field.meta.model, field.name).info["attributeID"],
-                "choices": getChoicesFromField(field),
+                "choices": getChoicesFromField(field, required),
                 "computed": getReadOnlyFromField(field), 
                 "format": getFormatFromField(field), #dbattr.format,
                 "help": getattr(field.meta.model, field.name).info["help"],
                 "label": field.label.text,
                 "multi": getMultiFromField(field),
                 "name": field.name,
-                "required": getRequiredFromField(field),
+                "required": required,
                 "table": tableName,
                 }
         attributes[field.name] = attr
@@ -224,7 +225,7 @@ def getFormatFromField(field):
     else:
         return "string"    
 
-def getChoicesFromField(field):
+def getChoicesFromField(field, required):
     if field.name == "childID":     # odd self-referential relationship
         options = field.query_factory().order_by("projectID").all()
         return [{"id": getattr(item, "projectID"), "desc": str(getattr(item, "projectID"))} for item in options]
@@ -234,19 +235,30 @@ def getChoicesFromField(field):
         return getChoicesFromFactoryOptions(field, options)
     elif field.type == "SelectField" and field.name[-2:] == "ID":
         options = field.choices
-        return getChoicesFromOptions(field, options)
-    elif field.type == "SelectField" and field.name[-4:] == "InFY":
+        choices = getChoicesFromOptions(field, options)
+        if not required:
+            zeroChoice = [choice for choice in choices if str(choice["id"]) == "0"]
+            if zeroChoice:
+                # make sure it comes first
+                zeroIndex = choices.index(zeroChoice[0])
+                if not zeroIndex == 0:
+                    del choices[zeroIndex]
+                    choices.insert(0, {"id": "0", "desc": "none"})
+        return choices
+    elif field.type == "SelectField" and field.name[-4:] == "InFY" \
+      or field.type == "SelectField" and field.name[-3:] == "InY" \
+      or field.type == "SelectField" and field.name[-3:] == "InQ" \
+      or field.type == "SelectField" and field.name[-3:] == "InM":
         options = field.choices
-        return getChoicesFromOptions(field, options)
-    elif field.type == "SelectField" and field.name[-3:] == "InY":
-        options = field.choices
-        return getChoicesFromOptions(field, options)
-    elif field.type == "SelectField" and field.name[-3:] == "InQ":
-        options = field.choices
-        return getChoicesFromOptions(field, options)
-    elif field.type == "SelectField" and field.name[-3:] == "InM":
-        options = field.choices
-        return getChoicesFromOptions(field, options)
+        choices = getChoicesFromOptions(field, options)
+        if required:
+            zeroChoice = [choice for choice in choices if str(choice["id"]) == "0"]
+            if zeroChoice:
+                # delete this choice if field is required
+                zeroIndex = choices.index(zeroChoice[0])
+                if required:
+                    del choices[zeroIndex]
+        return choices
     else:
         return []
             
@@ -367,7 +379,6 @@ def getAttributeValuesFromForm(form, allAttrsFromDB):
     attributes = []
 
     tableName = getTableNameFromForm(form)
-    
     for field in form:
         if field.name in ["projectID","csrf_token"]:
             continue

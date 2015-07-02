@@ -12,12 +12,12 @@
     var loginService, $http, $state;
 
     /* Avoid `Uncaught Error: [$injector:cdep] Circular dependency found` */
-    /* http://brewhouse.io/blog/2014/12/09/authentication-made-simple-in-single-page-angularjs-applications.html */
+    /* http://brewhouse.io/blog/2014/12/09/authentication-made-simple-in-single-page-angularjs-applications.html 
     $timeout(function () { 
       loginService = $injector.get("loginService");
       $http = $injector.get("$http");
       $state = $injector.get("$state");
-    });
+    }); */
 
     var service = {
       responseError: responseError

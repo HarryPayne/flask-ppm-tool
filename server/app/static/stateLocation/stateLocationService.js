@@ -15,7 +15,7 @@
       preventCall: [],
       locationChange: locationChange,
       getCurrentState: getCurrentState,
-      getProjectIDFromLocation: getProjectIDFromLocation,
+      getStateFromLocation: getStateFromLocation,
       saveState: saveState,
       stateChange: stateChange,
       saveCurrentState: saveCurrentState,
@@ -43,7 +43,7 @@
         if (location.substring(9, 27) == "edit/commentDetail") {
           var details = location.substring(28).split("/");
           projectID = parseInt(details[0]);
-          var commentID = parseInt(_.first(_.last(details)));
+          var commentID = parseInt(_.first(_.last(details).split("#")));
         }
         else if (location.substring(9, 31) == "edit/dispositionDetail") {
           var details = location.substring(32).split("/");
@@ -66,40 +66,36 @@
       $state.go(entry.name, entry.params, {location: false});
     };
     
-    function getProjectIDFromLocation() {
+    function getStateFromLocation() {
+      var state = new Object;
+      state.stateParams = new Object;
       var location = $location.url();
-      if (location.substring(0,9) == "/project/") {
+      if (location == '/') {
+        state.name = 'select';
+      }
+      else if (location.substring(0,9) == "/project/") {
         var projectID;
         var commentID;
         var disposedInFY;
         var disposedInQ;
-        if (location.substring(9, 26) == "edit/commentDetail") {
-          var details = location.substring(27);
-          commentID = parseInt(_.first(_.last(details.split("/")).split("#")));
-          projectID = parseInt(_first(details.split("/")));
+        if (location.substring(9, 27) == "edit/commentDetail") {
+          var details = location.substring(28);
+          state.name = "project.edit.commentDetail";
+          state.stateParams.commentID = parseInt(_.first(_.last(details.split("/")).split("#")));
+          state.stateParams.projectID = parseInt(_.first(details.split("/")));
         }
         else if (location.substring(9, 31) == "edit/dispositionDetail") {
           var details = location.substring(32).split("/");
-          projectID = parseInt(details[0]);
-          disposedInFY = parseInt(details[1]);
-          disposedInQ = parseInt(_.first(_.last(details).split("#")));
+          state.name = "project.edit.dispositionDetail";
+          state.stateParams.projectID = parseInt(details[0]);
+          state.stateParams.disposedInFY = parseInt(details[1]);
+          state.stateParams.disposedInQ = parseInt(_.first(_.last(details).split("#")));
         }
         else {
-          projectID = parseInt(_.first(_.last(location.split("/")).split("#")));
-        }
-        if (projectID) {
-          $stateParams.projectID = projectID;
-          if (commentID) {
-            $stateParams.commentID = commentID;
-          }
-          if (disposedInFY || disposedInQ) {
-            $stateParams.disposedInFY = disposedInFY;
-            $stateParams.disposedInQ = disposedInQ;
-          }
-          return projectID;
+          state.stateParams.projectID = parseInt(_.first(_.last(location.split("/")).split("#")));
         }
       }
-      return null;
+      return state;
     }
     
     function stateChange(projectID) {

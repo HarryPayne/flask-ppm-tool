@@ -47,7 +47,7 @@
         modalConfirmService.showModal({}, modalOptions).then(function (result) {
           $scope.projectForm.$setPristine(true);
           var target = toParams.projectID ? toParams.projectID : fromParams.projectID;
-          projectDataService.getProjectData(target); // forced discard
+          projectDataService.getProjectData(target, toParams); // forced discard
           $state.go(toState, toParams);
         });
       }
