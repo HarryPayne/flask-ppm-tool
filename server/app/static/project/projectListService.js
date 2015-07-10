@@ -14,6 +14,8 @@
       getIDListFromAllProjects: getIDListFromAllProjects,
       getMasterList: getMasterList,
       getProjectID: getProjectID,
+      getSelectedIds: getSelectedIds,
+      getSql, getSql,
       hasProjects: hasProjects,
       initModel: initModel,
       jumpToProject: jumpToProject,
@@ -22,6 +24,7 @@
       SaveState: SaveState,
       setDescription: setDescription,
       setList: setList,
+      setSql: setSql,
       updateAllProjects: updateAllProjects,
       updateProjectListProjectID: updateProjectListProjectID
     };
@@ -64,6 +67,14 @@
       return service.projectID;
     }
     
+    function getSelectedIds() {
+      return service.masterList.selectedIds;
+    }
+
+    function getSql() {
+      return service.masterList.sql;
+    }
+    
     function hasProjects() {
       return Boolean(service.getMasterList().allProjects.length > 0);
     }
@@ -72,6 +83,7 @@
       service.masterList = {
         allProjects: [],
         description: "",
+        sql: {},
         index: -1,
         next: -1,
         previous: -1,
@@ -137,6 +149,10 @@
         var projectID = selectedIds[0];
         service.updateProjectListProjectID(projectID, selectedIds);
       }
+    }
+
+    function setSql(sqlObj) {
+      service.masterList.sql = sqlObj;
     }
       
     function updateAllProjects(projectID) {

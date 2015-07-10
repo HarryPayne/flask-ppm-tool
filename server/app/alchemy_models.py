@@ -38,6 +38,7 @@ metadata = db.metadata
 
 class Complexitylist(Base):
     __tablename__ = "complexitylist"
+    info = {"label": "complexity"}
 
     complexityID = Column(Integer, 
                           primary_key=True, server_default=text("'0'"))
@@ -47,21 +48,16 @@ class Complexitylist(Base):
 
 class Costlevellist(Base):
     __tablename__ = "costlevellist"
+    info = {"label": "cost level"}
 
     costlevelID = Column(Integer, primary_key=True, server_default=text("'0'"))
     costlevelDesc = Column(String(100), nullable=False, server_default=text("''"))
     costlevelText = Column(Text, nullable=False)
 
 
-class Criticallist(Base):
-    __tablename__ = "criticallist"
-
-    criticalID = Column(Integer, primary_key=True, server_default=text("'0'"))
-    criticalDesc = Column(String(100), nullable=False, server_default=text("''"))
-
-
 class Dispositionlist(Base):
     __tablename__ = "dispositionlist"
+    info = {"label": "disposition"}
 
     dispositionID = Column(Integer, 
                            primary_key=True, server_default=text("'0'"))
@@ -69,11 +65,31 @@ class Dispositionlist(Base):
     dispositionText = Column(Text, nullable=False)
 
 
-t_distributionlist = Table(
-    "distributionlist", metadata,
-    Column("address", String(32), nullable=False, index=True, server_default=text("''"))
+# t_distributionlist = Table(
+#     "distributionlist", metadata,
+#     Column("address", String(32), nullable=False, index=True, server_default=text("''"))
+# )
+
+
+class Driverlist(Base):
+    __tablename__ = "driverlist"
+    info = {"label": "driver"}
+
+    driverID = Column(Integer, primary_key=True, server_default=text("'0'"))
+    driverDesc = Column(String(100), nullable=False, server_default=text("''"))
+    driverText = Column(Text, nullable=False)
+
+t_driver = Table(
+    "driver", metadata,
+    Column("projectID", Integer, ForeignKey("description.projectID"), nullable=False, index=True, server_default=text("'0'")),
+    Column("driverID", Integer, ForeignKey("driverlist.driverID"), nullable=False, index=True, server_default=text("'0'"))
 )
 
+# class Driver(Base):
+#     __tablename__ = "driver"
+# 
+#     projectID = Column(Integer, ForeignKey("description.projectID"), primary_key=True)
+#     driverID = Column(Integer, ForeignKey("driverlist.driverID"), primary_key=True)
 
 t_edit_log = Table(
     "edit_log", metadata,
@@ -86,6 +102,7 @@ t_edit_log = Table(
 
 class Finallist(Base):
     __tablename__ = "finallist"
+    info = {"label": "final state"}
 
     finalID = Column(Integer, primary_key=True, server_default=text("'0'"))
     finalDesc = Column(String(100), nullable=False, server_default=text("''"))
@@ -94,6 +111,7 @@ class Finallist(Base):
 
 class Flavorlist(Base):
     __tablename__ = "flavorlist"
+    info = {"label": "portfolio category"}
 
     flavorID = Column(Integer, primary_key=True, server_default=text("'0'"))
     flavorDesc = Column(String(100), nullable=False, server_default=text("''"))
@@ -102,6 +120,7 @@ class Flavorlist(Base):
 
 class Fundingsourcelist(Base):
     __tablename__ = "fundingsourcelist"
+    info = {"label": "funding source"}
 
     fundingsourceID = Column(Integer, primary_key=True, server_default=text("'0'"))
     fundingsourceDesc = Column(String(100, u"latin1_bin"), nullable=False, server_default=text("''"))
@@ -110,6 +129,7 @@ class Fundingsourcelist(Base):
 
 class Hostlist(Base):
     __tablename__ = "hostlist"
+    info = {"label": "host"}
 
     hostID = Column(Integer, primary_key=True, server_default=text("'0'"))
     hostDesc = Column(String(100), nullable=False, server_default=text("''"))
@@ -118,6 +138,7 @@ class Hostlist(Base):
 
 class Initiativelist(Base):
     __tablename__ = "initiativelist"
+    info = {"label": "initiative"}
 
     initiativeID = Column(Integer, primary_key=True, server_default=text("'0'"))
     initiativeDesc = Column(String(100), nullable=False, server_default=text("''"))
@@ -126,15 +147,16 @@ class Initiativelist(Base):
 
 class Maturitylist(Base):
     __tablename__ = "maturitylist"
+    info = {"label": "maturity"}
 
     maturityID = Column(Integer, primary_key=True, server_default=text("'0'"))
     maturityDesc = Column(String(100), nullable=False, server_default=text("''"))
     maturityText = Column(Text, nullable=False)
-    
 
 
 class Progresslist(Base):
     __tablename__ = "progresslist"
+    info = {"label": "progress"}
 
     progressID = Column(Integer, primary_key=True, server_default=text("'0'"))
     progressDesc = Column(String(100), nullable=False, server_default=text("''"))
@@ -143,6 +165,7 @@ class Progresslist(Base):
 
 class Proj_visibilitylist(Base):
     __tablename__ = "proj_visibilitylist"
+    info = {"label": "project visibility"}
 
     proj_visibilityID = Column(Integer, primary_key=True, server_default=text("'0'"))
     proj_visibilityDesc = Column(String(100), nullable=False, server_default=text("''"))
@@ -151,6 +174,7 @@ class Proj_visibilitylist(Base):
 
 class Risklevellist(Base):
     __tablename__ = "risklevellist"
+    info = {"label": "risk level"}
 
     risklevelID = Column(Integer, primary_key=True, server_default=text("'0'"))
     risklevelDesc = Column(String(100), nullable=False, server_default=text("''"))
@@ -159,6 +183,7 @@ class Risklevellist(Base):
 
 class Scopelist(Base):
     __tablename__ = "scopelist"
+    info = {"label": "scope"}
 
     scopeID = Column(Integer, primary_key=True, server_default=text("'0'"))
     scopeDesc = Column(String(100), nullable=False, server_default=text("''"))
@@ -167,21 +192,39 @@ class Scopelist(Base):
 
 class Sponsorlist(Base):
     __tablename__ = "sponsorlist"
+    info = {"label": "sponsor"}
 
     sponsorID = Column(Integer, primary_key=True, server_default=text("'0'"))
     sponsorDesc = Column(String(100), nullable=False, server_default=text("''"))
     sponsorText = Column(Text, nullable=False)
 
 
-class Statuslist(Base):
-    __tablename__ = "statuslist"
+class Stakeholderlist(Base):
+    __tablename__ = "stakeholderlist"
+    info = {"label": "stakeholder"}
 
-    statusID = Column(Integer, primary_key=True, server_default=text("'0'"))
-    statusDesc = Column(String(100), nullable=False, server_default=text("''"))
+    stakeholderID = Column(Integer, primary_key=True, 
+                           server_default=text("'0'"))
+    stakeholderDesc = Column(String(100), nullable=False, server_default=text("''"))
+    stakeholderText = Column(Text, nullable=False)
+
+t_stakeholder = Table(
+    "stakeholder", metadata,
+    Column("projectID", SmallInteger, ForeignKey("description.projectID"),nullable=False, index=True, server_default=text("'0'")),
+    Column("stakeholderID", Integer, ForeignKey("stakeholderlist.stakeholderID"),nullable=False, index=True, server_default=text("'0'"))
+)
+
+# class Statuslist(Base):
+#     __tablename__ = "statuslist"
+#     info = {"label": "status"}
+# 
+#     statusID = Column(Integer, primary_key=True, server_default=text("'0'"))
+#     statusDesc = Column(String(100), nullable=False, server_default=text("''"))
 
 
 class Strategylist(Base):
     __tablename__ = "strategylist"
+    info = {"label": "strategy"}
 
     strategyID = Column(Integer, primary_key=True, server_default=text("'0'"))
     strategyDesc = Column(String(100), nullable=False, server_default=text("''"))
@@ -190,6 +233,7 @@ class Strategylist(Base):
 
 class Technologylist(Base):
     __tablename__ = "technologylist"
+    info = {"label": "technology"}
 
     technologyID = Column(Integer, primary_key=True, server_default=text("'0'"))
     technologyDesc = Column(String(100), nullable=False, server_default=text("''"))
@@ -199,6 +243,7 @@ class Technologylist(Base):
 
 class Typelist(Base):
     __tablename__ = "typelist"
+    info = {"label": "type"}
 
     typeID = Column(Integer, primary_key=True, server_default=text("'0'"))
     typeDesc = Column(String(100), nullable=False, server_default=text("''"))
@@ -235,6 +280,7 @@ t_upload = Table(
 
 class Visibilitylist(Base):
     __tablename__ = "visibilitylist"
+    info = {"label": "visibility"}
 
     visibilityID = Column(Integer, primary_key=True, server_default=text("'0'"))
     visibilityDesc = Column(String(100), nullable=False, server_default=text("''"))
@@ -276,12 +322,12 @@ for row in Complexitylist.query.order_by("complexityID").all():
 COST_CHOICES = []
 for row in Costlevellist.query.order_by("costlevelID").all():
     COST_CHOICES.append((row.costlevelID, row.costlevelDesc))
-CRITICAL_CHOICES = []
-for row in Criticallist.query.order_by("criticalDesc").all():
-    CRITICAL_CHOICES.append((row.criticalID, row.criticalDesc))
 DISPOSITION_CHOICES = []
 for row in Dispositionlist.query.order_by("dispositionID").all():
     DISPOSITION_CHOICES.append((row.dispositionID, row.dispositionDesc))
+DRIVER_CHOICES = []
+for row in Driverlist.query.order_by("driverDesc").all():
+    DRIVER_CHOICES.append((row.driverID, row.driverDesc))
 FINAL_CHOICES = []
 for row in Finallist.query.order_by("finalID").all():
     FINAL_CHOICES.append((row.finalID, row.finalDesc))
@@ -324,6 +370,9 @@ for row in Scopelist.query.order_by("scopeID").all():
 SPONSOR_CHOICES = []
 for row in Sponsorlist.query.order_by("sponsorDesc").all():
     SPONSOR_CHOICES.append((row.sponsorID, row.sponsorDesc))
+STAKEHOLDER_CHOICES = []
+for row in Stakeholderlist.query.order_by("stakeholderDesc").all():
+    STAKEHOLDER_CHOICES.append((row.stakeholderID, row.stakeholderDesc))
 TECHNOLOGY_CHOICES = []
 for row in Technologylist.query.order_by("technologyID").all():
     TECHNOLOGY_CHOICES.append((row.technologyID, row.technologyDesc))
@@ -336,33 +385,6 @@ for row in Visibilitylist.query.order_by("visibilityID").all():
 Y_CHOICES = []
 for row in Calendaryear.query.order_by(desc("calendaryearID")).all():
     Y_CHOICES.append((row.calendaryearID, row.calendaryearDesc))
-
-class Stakeholderlist(Base):
-    __tablename__ = "stakeholderlist"
-
-    stakeholderID = Column(Integer, primary_key=True, 
-                           server_default=text("'0'"))
-    stakeholderDesc = Column(String(100), nullable=False, server_default=text("''"))
-    stakeholderText = Column(Text, nullable=False)
-
-t_stakeholder = Table(
-    "stakeholder", metadata,
-    Column("projectID", SmallInteger, ForeignKey("description.projectID"),nullable=False, index=True, server_default=text("'0'")),
-    Column("stakeholderID", Integer, ForeignKey("stakeholderlist.stakeholderID"),nullable=False, index=True, server_default=text("'0'"))
-)
-
-class Driverlist(Base):
-    __tablename__ = "driverlist"
-
-    driverID = Column(Integer, primary_key=True, server_default=text("'0'"))
-    driverDesc = Column(String(100), nullable=False, server_default=text("''"))
-    driverText = Column(Text, nullable=False)
-
-t_driver = Table(
-    "driver", metadata,
-    Column("projectID", Integer, ForeignKey("description.projectID"), nullable=False, index=True, server_default=text("'0'")),
-    Column("driverID", Integer, ForeignKey("driverlist.driverID"), nullable=False, index=True, server_default=text("'0'"))
-)
 
 t_child = Table(
     "child", metadata,
@@ -397,6 +419,7 @@ class Description(Base):
                               "attributeID": 70,
                               "help": "Maturity shows where an idea is on the path to full-fledged, planning-ready project."},
                         nullable=True, index=True, server_default=text("'0'"))
+    maturity = db.relationship("Maturitylist", backref="description")
     proposer = Column(String(100), nullable=True, server_default=text("''"),
                       info={"attributeID": 80,
                             "help": "Name of the organization and/or person that proposed the original idea."})
@@ -409,18 +432,21 @@ class Description(Base):
                              "attributeID": 100,
                              "help": "Name of the sponsoring organization for the project, which is the one that pays for doing the work.  Together with Funding Source, this uniquely identifies how we will pay for doing the work or making the required capital investments."},
                        nullable=True, index=True, server_default=text("'0'"))
+    sponsor = db.relationship("Sponsorlist", backref="description")
     fundingsourceID = Column(Integer, ForeignKey(Fundingsourcelist.fundingsourceID), 
                              info={"choices": FUNDINGSOURCE_CHOICES, 
                                    "label": "funding source",
                                    "attributeID": 110,
                                    "help": "Identify the funding source for this project. Here, 'Other' will be used for grants and other contracts besides HST and JWST. Together with Sponsor this uniquely identifies how we will pay for doing the work or making the required capital investments."},
                              nullable=True, server_default=text("'0'"))
+    fundingsource = db.relationship("Fundingsourcelist", backref="description")
     hostID = Column(Integer, ForeignKey(Hostlist.hostID), 
                     info={"choices": HOST_CHOICES, 
                           "label": "host",
                           "attributeID": 120,
                           "help": "Name of the host organization for the project, which is the one that manages doing the work."}, 
                     nullable=True, index=True, server_default=text("'0'"))
+    host = db.relationship("Hostlist", backref="description")
     stakeholderID = db.relationship("Stakeholderlist", 
                                     secondary=t_stakeholder,
                                     info={"attributeID": 130,
@@ -432,12 +458,14 @@ class Description(Base):
                                 "attributeID": 140,
                                 "help": "Identify the primary technology involved with/affected by this project.  Use the categorization of the Technology Report. Note: The Implementation Plan is sorted by technology, and projects with no technology will not show up!"}, 
                           nullable=True, server_default=None)
+    technology = db.relationship("Technologylist", backref="description")
     typeID = Column(Integer, ForeignKey(Typelist.typeID), 
                     info={"choices": TYPE_CHOICES, 
                           "label": "type",
                           "attributeID": 150,
                           "help": "Categorize the project type."}, 
                     nullable=True, server_default=text("'0'"))
+    type = db.relationship("Typelist", backref="description")
     driverID = db.relationship("Driverlist", 
                                secondary=t_driver,
                                info={"attributeID": 160,
@@ -454,6 +482,7 @@ class Description(Base):
                            "attributeID": 190,
                            "help": "If this project has come to an end, one way or the other, what is that final state?"}, 
                      nullable=True, index=True, server_default=text("'0'"))
+    final = db.relationship("Finallist", backref="description")
     childID = db.relationship("Description", 
                                secondary=t_child,
                                primaryjoin=projectID==t_child.c.projectID,
@@ -518,6 +547,7 @@ class Disposition(Base):
                          nullable=False, index=True, server_default=text("'0'"))
     dispositionID = Column(Integer, ForeignKey(Dispositionlist.dispositionID),
                            info={"choices": DISPOSITION_CHOICES,
+                                 "label": "disposition",
                                  "attributeID": 320,
                                  "help": "What decision was made during the planning cycle with respect to this project?"},
                            nullable=False, index=True, server_default=text("'0'"))
@@ -600,6 +630,7 @@ class Portfolio(Base):
                             "attributeID": 210,
                             "help": "Project portfolio management is not all about strategy and resources.  Maintaining a balance between the projects that have to be done to keep us going, that allow us to get better at what we do, and that allow us to really change what we do has its own strategic value.  This attribute categorizes this project in that dimension."},
                       nullable=True, index=True, server_default=text("'0'"))
+    flavor = db.relationship("Flavorlist", backref="portfolio")
     strategyID = db.relationship("Strategylist", 
                                  secondary=t_strategy,
                                  info={"attributeID": 220,
@@ -610,36 +641,42 @@ class Portfolio(Base):
                                 "attributeID": 230,
                                 "help": "Which Office of Technology initiative does this project belong in, if any?"},
                           nullable=True, index=True, server_default=text("'0'"))
+    initiative = db.relationship("Initiativelist", backref="portfolio")
     scopeID = Column(Integer, ForeignKey("scopelist.scopeID"),
                      info={"choices": SCOPE_CHOICES, 
                            "label": "scope",
                            "attributeID": 240,
                            "help": "These next five attributes are criteria that, taken together, determine the level of attention that this project deserves. This may be reflected in the level of reporting to stakeholders and management, in the level of project management during project execution, etc. We don't have enough experience at the moment to say where the dividing lines are, so for now you will have to make your own best guess. Characterize the scope level of this project."},
                      nullable=True, index=True, server_default=text("'0'"))
+    scope = db.relationship("Scopelist", backref="portfolio")
     complexityID = Column(Integer, ForeignKey("complexitylist.complexityID"),
                           info={"choices": COMPLEXITY_CHOICES, 
                                 "label": "complexity",
                                 "attributeID": 250,
                                 "help": "Characterize the complexity level of this project."},
                           nullable=True, index=True, server_default=text("'0'"))
+    complexity = db.relationship("Complexitylist", backref="portfolio")
     visibilityID = Column(Integer, ForeignKey("visibilitylist.visibilityID"),
                           info={"choices": VISIBILITY_CHOICES, 
                                 "label": "visibility",
                                 "attributeID": 260,
                                 "help": "Characterize the level of visibility of this project.  Does it reach the project at GSFC, NASA HQ, the astronomical community, the public?"},
                           nullable=True, index=True, server_default=text("'0'"))
+    visibility = db.relationship("Visibilitylist", backref="portfolio")
     risklevelID = Column(Integer, ForeignKey("risklevellist.risklevelID"),
                          info={"choices": RISK_CHOICES, 
                                "label": "risk level",
                                "attributeID": 270,
                                "help": "Characterize the level of risk associated with not doing this project."},
                          nullable=True, index=True, server_default=text("'0'"))
+    risklevel = db.relationship("Risklevellist", backref="portfolio")
     costlevelID = Column(Integer, ForeignKey("costlevellist.costlevelID"),
                          info={"choices": COST_CHOICES, 
                                "label": "cost level",
                                "attributeID": 280,
                                "help": "Characterize the cost level of this project."},
                          nullable=True, index=True, server_default=text("'0'"))
+    costlevel = db.relationship("Costlevellist", backref="portfolio")
     rpu = Column(Float, nullable=True, 
                  info={"label": "effort",
                        "attributeID": 290,
@@ -678,6 +715,7 @@ class Project(Base):
                               "attributeID": 380,
                               "help": "Where is this project in the Project Management Framework?"},
                         nullable=True, index=True, server_default=text("'0'"))
+    progress = db.relationship("Progresslist", backref="project")
     proj_manager = Column(String(100), 
                           info={"label": "project manager",
                                 "attributeID": 390,
@@ -694,6 +732,7 @@ class Project(Base):
                                      "attributeID": 410,
                                      "help": "Categorize visibility for running this project. Will it be run as an integrated schedule project, a regular project, or as some other (lower visibility) type?"},
                                nullable=True, index=True, server_default=text("'0'"))
+    proj_visibility = db.relationship("Proj_visibilitylist", backref="project")
     startedOn = Column(Date, 
                        info={"label": "started on",
                              "attributeID": 420,

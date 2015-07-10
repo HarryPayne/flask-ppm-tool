@@ -14,6 +14,9 @@
       
       Filter: {{ browse.masterList().description }}<br/>
       {{browse.masterList().selectedIds.length}} projects selected
+
+      <table datatable="" dt-options="browse.ts.master.dtOptions" dt-columns="browse.ts.master.dtColumns"
+         class="table table-striped table-bordered"></table>
     </div>
   </body>
 </html>

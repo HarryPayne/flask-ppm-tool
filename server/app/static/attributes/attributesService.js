@@ -396,14 +396,16 @@ Data attributes:
         }
         service.rawAttributes[tableData.tableName] = [];
         _.each(form.attributes, function(subform) {
-          var formObj = new Object;
-          _.each(subform.attributes, function(attr) {
-            formObj[attr.name] = attr.value;
-            if (typeof attr.printValue != "undefined") {
-              formObj[attr.name+".printValue"] = attr.printValue;
-            }
-          });
-          service.rawAttributes[tableData.tableName].push(formObj);
+          if (subform.attributes.length) {
+            var formObj = new Object;
+            _.each(subform.attributes, function(attr) {
+              formObj[attr.name] = attr.value;
+              if (typeof attr.printValue != "undefined") {
+                formObj[attr.name+".printValue"] = attr.printValue;
+              }
+            });
+            service.rawAttributes[tableData.tableName].push(formObj);
+          }
         });
       }
       else {

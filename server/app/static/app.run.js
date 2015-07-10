@@ -45,6 +45,9 @@
           selectedIds = [projectID];
           projectListService.setList(selectedIds);
           projectListService.setDescription("projectID = " + projectID + ";");
+          projectListService.setSql({col_name: "projectID",
+                                     val: projectID,
+                                     op: "equals" });
         }
         projectListService.updateProjectListProjectID(projectID, selectedIds);
 

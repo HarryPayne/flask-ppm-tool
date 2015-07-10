@@ -140,7 +140,7 @@
     }
     
     function RestoreState() {
-      if (sessionStorage.projectDataServiceAttributes != "undefined") {
+      if (typeof sessionStorage.projectDataServiceAttributes != "undefined") {
         service.restoredParams = angular.fromJson(sessionStorage.projectDataServiceAttributes);
       }
     };

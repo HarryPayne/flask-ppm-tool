@@ -28,6 +28,7 @@ module.exports = function(grunt){
 		        src: ["static/vendor/jquery-ui/jquery-ui.min.css",
 		              "static/vendor/bootstrap/dist/css/bootstrap.min.css",
 		              "static/vendor/angular-readmore-master/css/style.css",
+		              "static/vendor/angular-datatables/dist/plugins/bootstrap/angular-datatables.bootstrap.min.css",
 		              "server/app/static/*.css",
 		              "server/app/static/attributes/*.css",
 		              "server/app/static/browse/*.css",

@@ -84,7 +84,7 @@ def driver_choices():
     return alch.Driverlist.query
 
 def stakeholder_choices():
-    return alch.Stakeholderlist.query
+    return alch.Stakeholderlist.query.order_by("stakeholderDesc")
 
 def strategy_choices():
     return alch.Strategylist.query

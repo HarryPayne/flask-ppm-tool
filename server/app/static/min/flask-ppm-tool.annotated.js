@@ -102,7 +102,7 @@
 
         if (!projectDataService.projectID || projectDataService.projectID != projectID) {
           projectDataService.projectID = projectID;
-          projectDataService.getProjectData(projectID);
+          projectDataService.getProjectData(toParams);
         }
       }
     }   
@@ -199,7 +199,7 @@ Data attributes:
 
 
     service.RestoreState();
-    if (typeof service.attributes == "undefined") {
+    if (typeof service.allAttributes == "undefined") {
       service.updateAllAttributes();
     }
     
@@ -349,10 +349,22 @@ Data attributes:
     }
     
     function makeProjectLink(projectID) {
-      return "project linke here";
+      return "project link here";
     };
 
+    /**
+     *  Take the project attribute that comes back from the server, which 
+     *  consists of only a name and a value, and merge the value with the
+     *  attribute in allAttributes, which already has all of the metadata
+     *  associated with this field: format, required, computed, ... Take
+     *  the merged attribute and push a reference to it onto the
+     *  projectAttributes list, which is what the view will iterate over
+     *  when rendering the data.
+     */
     function mergeAttributeWithValue(attr) {
+      if (attr.name == "$$hashKey") {
+        return;
+      }
       var merged = service.allAttributes[attr.name];
       merged.value = attr.value;
       if (attr.printValue) merged.printValue = attr.printValue;
@@ -376,14 +388,14 @@ Data attributes:
       var data = angular.fromJson(sessionStorage.attributesService);
       if (data) {
         service.allAttributes = data.allAttributes;
-        service.projectID = data.projectID;
+        service.currentState = data.currentState;
       }
     };
 
     function SaveState() {
       var data = new Object;
       data.allAttributes = service.allAttributes;
-      data.projectID = service.projectID;
+      data.currentState = service.currentState;
       sessionStorage.attributesService = angular.toJson(data);
     };
     
@@ -398,30 +410,52 @@ Data attributes:
       });
     };
 
+    /**   
+     *  Data for items with multiple instances per project (dispositions and
+     *  comments) are stored as raw items, separate from project attributes.
+     *  By passing in primary key attributes (with values) that identify the
+     *  selected instance, we can find the selected item and set the project
+     *  attribute values from that instance. We save the primary keys as a
+     *  signature of the selected state, if there is one.
+     */
     function updateProjAttrsFromRawItem(tableName, keys) {
+      service.currentState.keys = [];
       var raw_items = getRawAttributes(tableName);
       var filtered_items = raw_items;
       if (typeof filtered_items == "undefined") filtered_items = [];
       var selected;
       _.each(keys, function(key) {
         filtered_items = _.filter(filtered_items, function(item) {
-          if (typeof item[key.name].id == "undefined" && item[key.name] == key.id) {
-            return true;
-          }
-          else if (item[key.name].id == key.id) {
+          if ((typeof item[key.name].id == "undefined" && item[key.name] == key.id)
+              || (item[key.name].id == key.id)) {
+            service.currentState.keys.push(key);
             return true;
           }
         });
       });
       if (filtered_items.length) {
+        /*  Got one. Extract a list of attributes from the raw item and merge
+         *  with allAttributes. Set up parent/child attributes. */
         selected = filtered_items[0];
-        service.projectAttributes[tableName] = [];
+        var attributes = [];
         _.each(Object.keys(selected), function(key) {
-          try {
-            service.allAttributes[key].value = selected[key];
-            service.projectAttributes[tableName].push(service.allAttributes[key]);
+          if (_.last(key.split(".")) == "printValue") {
+            return;
           }
-          catch(e) {}
+          attributes.push({name: key, value: selected[key]});
+        });
+
+        service.projectAttributes[tableName] = [];
+        _.each(attributes, mergeAttributeWithValue, tableName);
+ 
+        var parents = _.filter(service.projectAttributes[tableName], function(attr) {
+          if ("child" in attr) {
+            return true;
+          }
+        });
+        _.each(parents, function(parent) {
+          var childName = parent.child.name;
+          parent.child = service.allAttributes[childName];
         });
         return  selected;
       }
@@ -457,7 +491,9 @@ Data attributes:
     };
     
     function updateProjectAttributes(result, params) {
-      service.projectID = result.data.projectID;
+      service.currentState = new Object;
+      service.currentState.keys = [];
+      service.currentState.projectID = result.data.projectID;
       service.csrf_token = result.data.csrf_token;
       service.errors = result.data.errors;
       service.clearAllErrors();
@@ -465,6 +501,15 @@ Data attributes:
       service.updateErrors(result.data.errors);
       if (result.statusText == "OK") {
         _.each(result.data.formData, updateProjectAttributesFromForm);
+      }
+      if ("disposedInFY" in params || "disposedInQ" in params) {
+        updateProjAttrsFromRawItem("disposition", 
+                                   [{name: 'disposedInFY', id: service.allAttributes['disposedInFY'].value['id']}, 
+                                    {name: 'disposedInQ', id: service.allAttributes['disposedInQ'].value['id']}]);
+      }
+      else if ("commentID" in params) {
+        updateProjAttrsFromRawItem("comment", 
+                                   [{name: 'commentID', id: service.allAttributes["commentID"].value}]);
       }
       return;
     };
@@ -487,14 +532,16 @@ Data attributes:
         }
         service.rawAttributes[tableData.tableName] = [];
         _.each(form.attributes, function(subform) {
-          var formObj = new Object;
-          _.each(subform.attributes, function(attr) {
-            formObj[attr.name] = attr.value;
-            if (typeof attr.printValue != "undefined") {
-              formObj[attr.name+".printValue"] = attr.printValue;
-            }
-          });
-          service.rawAttributes[tableData.tableName].push(formObj);
+          if (subform.attributes.length) {
+            var formObj = new Object;
+            _.each(subform.attributes, function(attr) {
+              formObj[attr.name] = attr.value;
+              if (typeof attr.printValue != "undefined") {
+                formObj[attr.name+".printValue"] = attr.printValue;
+              }
+            });
+            service.rawAttributes[tableData.tableName].push(formObj);
+          }
         });
       }
       else {
@@ -1397,7 +1444,7 @@ Data attributes:
                               $location, projectListService, attributesService,
                               stateLocationService) {
     var service = {
-      attributes: attributesService.getAttributes,
+      attributes: attributesService.getAllAttributes,
       cancelAddProject: cancelAddProject,
       changeMode: changeMode,
       createProject: createProject,
@@ -1424,8 +1471,8 @@ Data attributes:
     };
     
     service.RestoreState();
-    if (typeof service.attributes == "undefined") {
-      service.getProjectData(service.projectID);
+    if (typeof service.attributes() == "undefined" && service.restoredParams) {
+      service.getProjectData(service.restoredParams);
     }
     
     $rootScope.$on("savestate", service.SaveState);
@@ -1524,7 +1571,7 @@ Data attributes:
     
     function RestoreState() {
       if (sessionStorage.projectDataServiceAttributes != "undefined") {
-        service.projectID = angular.fromJson(sessionStorage.projectDataServiceAttributes);
+        service.restoredParams = angular.fromJson(sessionStorage.projectDataServiceAttributes);
       }
     };
 
@@ -1546,8 +1593,7 @@ Data attributes:
     };
 
     function SaveState() {
-      var data = new Object;
-      sessionStorage.projectDataServiceAttributes = angular.toJson(service.projectID);
+      sessionStorage.projectDataServiceAttributes = angular.toJson($stateParams);
     };
       
     function setProjectData(result, params) {
@@ -1922,36 +1968,97 @@ Data attributes:
     .module("app.select")
     .factory("selectStateService", selectStateService);
   
-  selectStateService.$inject = ['$rootScope'];
+  selectStateService.$inject = ['$rootScope', '$http', '$state', 'projectListService'];
   
-  function selectStateService($rootScope) {
+  function selectStateService($rootScope, $http, $state, projectListService) {
     var service = {
       masterList: {
         searchText: "",
         nameLogic: "or",
         finalID: "0",
-        clearSearchText: clearSearchText,
-        SaveState: SaveState,
-        RestoreState: RestoreState
-      }
+        breakdownAttr: ""
+      },
+      clearBreakdown: clearBreakdown,
+      clearSearchText: clearSearchText,
+      getBreakdownByAttribute: getBreakdownByAttribute,
+      getBreakdownChoices: getBreakdownChoices,
+      getBreakdownTotal: getBreakdownTotal,
+      jumpToBreakdownTable: jumpToBreakdownTable,
+      setBreakdownChoices: setBreakdownChoices,
+      updateBreakdownByAttribute: updateBreakdownByAttribute,
+      updateBreakdownChoices: updateBreakdownChoices,
+      SaveState: SaveState,
+      RestoreState: RestoreState
     };
-  
+
+    RestoreState();
+    if (typeof service.breakdownChoicesList == "undefined") {
+      service.updateBreakdownChoices();
+    }
+    
     $rootScope.$on("savestate, service.SaveState");
     $rootScope.$on("restorestate, service.RestoreState");
-    
-    return service;    
       
+    function clearBreakdown() {
+      service.masterList.breakdownAttr = "";
+    }
+
     function clearSearchText() {
       service.masterList.searchText = "";
     }
 
+    function getBreakdownByAttribute() {
+      return service.breakdownByAttribute;
+    }
+
+    function getBreakdownChoices() {
+      return service.breakdownChoicesList;
+    }
+    
+    function getBreakdownTotal() {
+      var total = 0;
+      _.each(service.breakdownByAttribute, function(row) {
+        total += row.projectList.length;
+      });
+      return total;
+    }
+
+    function jumpToBreakdownTable(breakdown_row) {
+      projectListService.setList(breakdown_row.projectList);
+      projectListService.setDescription(breakdown_row.query_desc);
+      $state.go("browse");
+    }
+
+    function setBreakdownByAttribute(result) {
+      service.breakdownByAttribute = result.data;
+    }
+
+    function setBreakdownChoices(result) {
+      service.breakdownChoicesList = result.data;
+    }
+    
+    function updateBreakdownByAttribute() {
+      $http.get("getBreakdownByAttribute/" + service.masterList.breakdownAttr.id)
+        .then(setBreakdownByAttribute);
+    }
+
+    function updateBreakdownChoices() {
+      $http.get("getBreakdownChoices")
+        .then(setBreakdownChoices);
+    }
+    
     function SaveState() {
       sessionStorage.selectStateService = angular.toJson(service.masterList);
     }
     
     function RestoreState() {
-      service.masterList = angular.fromJson(sessionStorage.selectStateService);
+      if (sessionStorage.selectStateService != "undefined") {
+        service.masterList = angular.fromJson(sessionStorage.selectStateService);
+      }
     }
+    
+    SaveState();
+    return service;    
   };
   
 }());
@@ -2116,7 +2223,7 @@ Data attributes:
         if (location.substring(9, 27) == "edit/commentDetail") {
           var details = location.substring(28).split("/");
           projectID = parseInt(details[0]);
-          var commentID = parseInt(_.first(_.last(details)));
+          var commentID = parseInt(_.first(_.last(details).split("#")));
         }
         else if (location.substring(9, 31) == "edit/dispositionDetail") {
           var details = location.substring(32).split("/");
@@ -2151,11 +2258,11 @@ Data attributes:
         var commentID;
         var disposedInFY;
         var disposedInQ;
-        if (location.substring(9, 26) == "edit/commentDetail") {
-          var details = location.substring(27);
+        if (location.substring(9, 27) == "edit/commentDetail") {
+          var details = location.substring(28);
           state.name = "project.edit.commentDetail";
           state.stateParams.commentID = parseInt(_.first(_.last(details.split("/")).split("#")));
-          state.stateParams.projectID = parseInt(_first(details.split("/")));
+          state.stateParams.projectID = parseInt(_.first(details.split("/")));
         }
         else if (location.substring(9, 31) == "edit/dispositionDetail") {
           var details = location.substring(32).split("/");

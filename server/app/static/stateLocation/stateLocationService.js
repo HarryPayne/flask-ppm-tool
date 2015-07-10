@@ -136,6 +136,9 @@
         }
         return "/" + $state.current.name.replace(/\./g, "/") + "/" + projectID + hash;
       }
+      else if ($state.current.name == "browse") {
+        return "/browse" + hash;
+      }
       else {
         return "/" + $state.current.name.replace(/\./g, "/");
       }
