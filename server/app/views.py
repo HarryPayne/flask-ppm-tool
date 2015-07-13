@@ -373,29 +373,24 @@ def getBreakdownByAttribute(attributeName):
         if desc == "":
             desc = "none"
         
-        # Send a string describing the selection criterion. query_sql below is 
-        # sent to remember how to repeat the query/set the widgets under the 
-        # Filter Builder tab.
+        # Send a string with the selection criterion description and one with
+        # the selection criterion value(s).
         
         query_desc = "{}={};".format(attributeName, 
                                      "'{}'".format(desc) if " " in desc else desc)
+        query_string = "{}={}".format(attributeName, val)
         
         try:
             p = table.query.filter(getattr(table, col_name) == val).order_by("projectID").all()
-            query_sql = {"col_name": col_name,
-                         "val": val,
-                         "op": "equals" }
+
         except:
             # when column value is a list, e.g., "driver", "stakeholder"
             p = table.query.filter(getattr(table, col_name).contains(choice)).order_by("projectID").all()
-            query_sql = {"col_name": col_name,
-                         "val": {"id": val, "desc": desc},
-                         "op": "contains" }
 
         break_item = {"desc": desc,
                       "projectList": [item.projectID for item in p],
                       "query_desc": query_desc,
-                      "query_sql": query_sql
+                      "query_string": query_string
                       }
         breakdown.append(break_item)
     
