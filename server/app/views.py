@@ -1,7 +1,10 @@
 from copy import deepcopy
 from datetime import datetime
+import hashlib
 from json import dumps
 import sys
+from urllib2 import unquote
+from urlparse import parse_qs
 
 from flask import (render_template, flash, redirect, session, url_for, request, 
                    g, jsonify, abort)
@@ -275,7 +278,7 @@ def getChoicesFromField(field, required):
                 zeroIndex = choices.index(zeroChoice[0])
                 if not zeroIndex == 0:
                     del choices[zeroIndex]
-                    choices.insert(0, {"id": "0", "desc": "none"})
+                    choices.insert(0, {"id": 0, "desc": "none"})
         return choices
     elif field.type == "SelectField" and field.name[-4:] == "InFY" \
       or field.type == "SelectField" and field.name[-3:] == "InY" \
@@ -376,9 +379,9 @@ def getBreakdownByAttribute(attributeName):
         # Send a string with the selection criterion description and one with
         # the selection criterion value(s).
         
-        query_desc = "{}={};".format(attributeName, 
+        query_desc = "{}={}".format(attributeName, 
                                      "'{}'".format(desc) if " " in desc else desc)
-        query_string = "{}={}".format(attributeName, val)
+        query_string = "{}={}".format(col_name, val)
         
         try:
             p = table.query.filter(getattr(table, col_name) == val).order_by("projectID").all()
@@ -403,6 +406,186 @@ def getBreakdownByAttribute(attributeName):
         breakdown.sort(key = lambda item: item["desc"])
     return dumps(breakdown)
 
+def truncate_gracefully(text_string, max_length):
+    """ 
+    Truncate a string at the last space character within the first max_length
+    characters, if the string is longer than max_length. If so, add ellipsis.
+    """
+    
+    added_ellipsis = ""
+    if len(text_string) > max_length:
+        added_ellipsis = "..."
+        return text_string[0:text_string[0:max_length].rfind(" ")] + added_ellipsis
+    else:
+        return text_string
+            
+@app.route("/getReportTableJSON", methods=["POST"])
+def getReportTableJSON():
+    """
+    Generate JSON for the DataTables data on the Report tab.
+    
+    POST parameters:
+        projectID       a list of projectIDs of projects to be displayed
+        tableColumns    a list of table columns. Only data for these columns
+                        are returned (in order, not that it matters).
+    """
+    projectIDList = request.json.get("projectID", [])
+    tableColumns = request.json.get("tableColumns", [])
+    
+    # Find out everything about the specified table columns
+    allAttrsFromDB = getAllAttributes()
+    columns = []
+    for col_name in tableColumns:
+        columns.append(allAttrsFromDB[col_name])
+    
+    # Query for all projects in specified list
+    p = alch.Description.query.filter(alch.Description.projectID.in_(projectIDList)).all()
+    
+    response = getReportRowsFromQuery(p, columns)
+    return dumps(response)
+
+@app.route("/getReportResults", methods=["POST"])
+def getReportResults():
+    """ Get report data matching query_string """
+    
+    # Parse with strict parsing. An error will raise an exception
+    query_string = request.json.get("query_string", "")
+    tableColumns = request.json.get("tableColumns", [])
+
+    query = parse_qs(unquote(query_string), True, True)
+        
+    # Find out everything about the specified table columns
+    allAttrsFromDB = getAllAttributes()
+    columns = []
+    for col_name in tableColumns:
+        columns.append(allAttrsFromDB[col_name])
+    
+    attr_names = allAttrsFromDB.keys()
+    
+    # Base for query
+    p = alch.Description.query
+    
+    desc = []
+    query_descs = []
+    filters = []
+    
+    for key in query.keys():
+        if key not in attr_names:
+            continue
+        attr = allAttrsFromDB[key]
+        if attr["format"] != "multipleSelect":
+            continue
+        raw_values = query[key]
+        int_values = [int(item) for item in raw_values]
+        accepted_choices = [choice for choice in attr["choices"] if choice["id"] in int_values]
+        accepted_descs = [item["desc"] for item in accepted_choices]
+        accepted_values = [item["id"] for item in accepted_choices]
+        
+        if len(accepted_descs) > 1:
+            accepted_descs.sort()
+            desc = "{} in [{}]".format(attr["label"], ", ".join(accepted_descs))
+        elif len(accepted_descs) == 1:
+            desc = "{}={}".format(attr["label"], accepted_descs[0])
+        query_descs.append(desc)
+        
+        if len(accepted_values) > 1:
+            accepted_values.sort()
+            filter = "{} in {}".format(key, ", ".join(accepted_values))
+        elif len(accepted_values) == 1:
+            filter = "{}={}".format(key, accepted_values[0])
+        filters.append(filter)
+        
+        if len(accepted_values):    
+            p = p.filter(getattr(alch.Description, key).in_(accepted_values))
+    
+    p = p.all()
+    response = getReportRowsFromQuery(p, columns)
+    response["projectList"] = [item.projectID for item in p]
+    response["query_desc"] = ", ".join(query_descs)
+    response["query_string"] = "&".join(filters)
+    
+    return dumps(response)
+    
+def getReportRowsFromQuery(p, columns):
+    """ Given query result object and columns list, produce rows 
+                    
+    Send back 
+        data            a list of rows of database query results, with just
+                        projectID and the specified columns.
+        columns         send back the column names and labels
+        options         default datatables options
+    """
+    
+    rows = []
+    response = {}
+    for item in p:
+        row = {"projectID": getattr(item, "projectID")}
+        for col in columns:
+            col_name = col["name"]
+            col_table = col["table"]
+            if col_table == "description":
+                value = getattr(item, col_name)
+                table_relationship = None
+            else:
+                # i.e., column is not in the description table, but buried 
+                # in item in a backref relationship whose name matches the
+                # table of interest.
+                table_relationship = getattr(item, col_table)[0]
+                value = getattr(table_relationship, col_name)
+            
+            if col["format"] == "textArea":
+                value = truncate_gracefully(value, 100)                
+            elif col_name[-2:] == "ID":
+                # Look in the relationship with the controlled vocabulary table
+                # for a description instead what you have at this point, which
+                # is just a numerical value.
+                relationship_name = col_name[0:-2]
+                if table_relationship and hasattr(table_relationship, relationship_name):
+                    model = getattr(table_relationship, relationship_name)
+                    value = getattr(model, relationship_name+"Desc")
+                elif hasattr(item, relationship_name):
+                    model = getattr(item, relationship_name)
+                    value = getattr(model, relationship_name+"Desc")
+                elif type(value) == type(InstrumentedList()):
+                    # Multiple select fields have a relationship with a name 
+                    # that has "ID" on the end, so we already have the right
+                    # value, but the value is a list. Dig into the list to get
+                    # the descriptions, and then join them with commas.
+                    value = ", ".join([getattr(val, relationship_name+"Desc") for val in value])
+            row[col_name] = value
+        rows.append(row)
+        response = {"data": rows}
+        
+        # Datatable column definitions for specified columns. 
+        # The projectID column requires a render function, which can't be 
+        # serialized. That needs to be added in the client.
+        aoColumns = []
+        for column in columns:
+            dt_col = {"data": column["name"],
+                      "title": column["label"].capitalize()}
+            aoColumns.append(dt_col)
+        response["columns"] = aoColumns
+        
+        # Datatables options
+        #    Hide pagination if there is only one page of results
+        #    Don't show the option to change the number of results
+        #    Action is client-side, not server side
+        #    No searching
+        pageLength = 25
+        response["options"] = {
+            "destroy": True,
+            "lengthChange": False,
+            "pageLength": pageLength,
+            "paging": len(rows) > pageLength,
+            "pagingType": "full_numbers",
+            "saveState": True,
+            "searching": False,
+            "serverSide": False
+        }
+    
+    return response
+
+    
 # Methods for generating the JSON response to a request for all of the data for
 # a given project. We generate forms on the backend, extract the data into a 
 # dictionary of dictionaries and lists of dictionaries, and send them out.
@@ -842,115 +1025,5 @@ def projectCreate():
 
     return dumps(response)
          
-def truncate_gracefully(text_string, max_length):
-    """ 
-    Truncate a string at the last space character within the first max_length
-    characters, if the string is longer than max_length. Add ellipsis if so.
-    """
-    
-    added_ellipsis = ""
-    if len(text_string) > max_length:
-        added_ellipsis = "..."
-        return text_string[0:text_string[0:max_length].rfind(" ")] + added_ellipsis
-    else:
-        return text_string
-            
-
-@app.route("/getBrowseTableJSON", methods=["POST"])
-def getBrowseTableJSON():
-    """
-    Generate JSON for the DataTables data on the Browse tab.
-    
-    POST parameters:
-        projectID       a list of projectIDs of projects to be displayed
-        tableColumns    a list of table columns. Only data for these columns
-                        are returned (in order, not that it matters).
-                    
-    Send back 
-        data            a list of rows of database query results, with just
-                        projectID and the specified columns.
-        columns         send back the column names and labels
-        options         default datatables options
-    """
-    projectIDList = request.json.get("projectID", [])
-    tableColumns = request.json.get("tableColumns", [])
-    
-    # Find out everything about the specified table columns
-    allAttrsFromDB = getAllAttributes()
-    columns = []
-    for col_name in tableColumns:
-        columns.append(allAttrsFromDB[col_name])
-    
-    # Query for all projects in specified list
-    p = alch.Description.query.filter(alch.Description.projectID.in_(projectIDList)).all()
-    
-    # Generate data for datatable
-    rows = []
-    for item in p:
-        row = {"projectID": getattr(item, "projectID")}
-        for col in columns:
-            col_name = col["name"]
-            col_table = col["table"]
-            if col_table == "description":
-                value = getattr(item, col_name)
-                table_relationship = None
-            else:
-                # i.e., column is not in the description table, but buried 
-                # in item in a backref relationship whose name matches the
-                # table of interest.
-                table_relationship = getattr(item, col_table)[0]
-                value = getattr(table_relationship, col_name)
-            
-            if col["format"] == "textArea":
-                value = truncate_gracefully(value, 100)                
-            elif col_name[-2:] == "ID":
-                # Look in the relationship with the controlled vocabulary table
-                # for a description instead what you have at this point, which
-                # is just a numerical value.
-                relationship_name = col_name[0:-2]
-                if table_relationship and hasattr(table_relationship, relationship_name):
-                    model = getattr(table_relationship, relationship_name)
-                    value = getattr(model, relationship_name+"Desc")
-                elif hasattr(item, relationship_name):
-                    model = getattr(item, relationship_name)
-                    value = getattr(model, relationship_name+"Desc")
-                elif type(value) == type(InstrumentedList()):
-                    # Multiple select fields have a relationship with a name 
-                    # that has "ID" on the end, so we already have the right
-                    # value, but the value is a list. Dig into the list to get
-                    # the descriptions, and then join them with commas.
-                    value = ", ".join([getattr(val, relationship_name+"Desc") for val in value])
-            row[col_name] = value
-        rows.append(row)
-        response = {"data": rows}
-        
-        # Datatable column definitions for specified columns. 
-        # The projectID column requires a render function, which can't be 
-        # serialized. That needs to be added in the client.
-        aoColumns = []
-        for column in columns:
-            dt_col = {"data": column["name"],
-                      "title": column["label"].capitalize()}
-            aoColumns.append(dt_col)
-        response["columns"] = aoColumns
-        
-        # Datatables options
-        #    Hide pagination if there is only one page of results
-        #    Don't show the option to change the number of results
-        #    Action is client-side, not server side
-        #    No searching
-        pageLength = 25
-        response["options"] = {
-            "lengthChange": False,
-            "pageLength": pageLength,
-            "paging": len(rows) > pageLength,
-            "pagingType": "full_numbers",
-            "saveState": True,
-            "searching": False,
-            "serverSide": False
-        }
-    
-    return dumps(response)
-
     
     

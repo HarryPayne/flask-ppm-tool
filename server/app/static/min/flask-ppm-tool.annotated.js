@@ -3,7 +3,6 @@
   angular
     .module("PPT", [
       "app.attributes",
-      "app.browse",
       "app.comment",
       "app.curate",
       "app.filter", 
@@ -13,6 +12,7 @@
       "app.manage",
       "app.modalConfirm",
       "app.project", 
+      "app.report",
       "app.select", 
       "app.stateLocation",
       "app.title"
@@ -68,16 +68,19 @@
       window.onbeforeunload = function (event) {
         $rootScope.$broadcast('savestate');
       };
-  
-      if (toState.name.substring(0, "select".length) =="select" || toState.name == "filter") {
+      
+      var tab = _.first(toState.name.split("."));
+      if (tab =="select" || tab == "filter") {
         // Reload the master list before selecting projects, in case a new one was added.
         projectListService.updateAllProjects();
         projectListService.setList(projectListService.getIDListFromAllProjects());
         projectListService.setDescription("none;");
       }
-      if (toState.name.substring(0,"project".length) == "project" && !projectListService.hasProjects()) {
+      else if (tab == "project" && (!projectListService.hasProjects() || toParams.projectID == "")) {
         // Make sure project data are present if starting the app from a bookmarked project url.
-        projectListService.updateAllProjects();
+        if (!projectListService.hasProjects()) {
+          projectListService.updateAllProjects();
+        }
 
         var projectID;
         var masterList = projectListService.getMasterList();
@@ -85,23 +88,27 @@
         var oldProjectID = masterList.projectID;
 
         if (!toParams.projectID) {
-          projectID = stateLocationService.getStateFromLocation().stateParams.projectID;
+          projectID = stateLocationService.getStateFromLocation().params.projectID;
           if (!projectID) {
             if (projectListService.hasProjects()) {
-              projectID = masterList.index > -1 ? selectedIds[masterList.index] : selectedIds[0];
+              projectID = projectListService.getProjectID();
             }
           }
         }
         else {
           projectID = parseInt(toParams.projectID);
-          selectedIds = [projectID];
+          //selectedIds = [projectID];
           projectListService.setList(selectedIds);
           projectListService.setDescription("projectID = " + projectID + ";");
+          projectListService.setSql({col_name: "projectID",
+                                     val: projectID,
+                                     op: "equals" });
         }
-        projectListService.updateProjectListProjectID(projectID, selectedIds);
+        //projectListService.updateProjectListProjectID(projectID, selectedIds);
+
+        toParams.projectID = projectID;
 
         if (!projectDataService.projectID || projectDataService.projectID != projectID) {
-          projectDataService.projectID = projectID;
           projectDataService.getProjectData(toParams);
         }
       }
@@ -457,7 +464,8 @@ Data attributes:
           var childName = parent.child.name;
           parent.child = service.allAttributes[childName];
         });
-        return  selected;
+        SaveState();
+        return selected;
       }
       else {
         var tableAttrs = _.where(service.allAttributes, {table: tableName});
@@ -473,6 +481,7 @@ Data attributes:
           service.projectAttributes[tableName].push(attr);
         });
       }
+      SaveState();
     }
     
     function updateAllAttributes() {
@@ -502,12 +511,12 @@ Data attributes:
       if (result.statusText == "OK") {
         _.each(result.data.formData, updateProjectAttributesFromForm);
       }
-      if ("disposedInFY" in params || "disposedInQ" in params) {
+      if (typeof params != "undefined" && ("disposedInFY" in params || "disposedInQ" in params)) {
         updateProjAttrsFromRawItem("disposition", 
                                    [{name: 'disposedInFY', id: service.allAttributes['disposedInFY'].value['id']}, 
                                     {name: 'disposedInQ', id: service.allAttributes['disposedInQ'].value['id']}]);
       }
-      else if ("commentID" in params) {
+      else if (typeof params != "undefined" && "commentID" in params) {
         updateProjAttrsFromRawItem("comment", 
                                    [{name: 'commentID', id: service.allAttributes["commentID"].value}]);
       }
@@ -553,58 +562,6 @@ Data attributes:
           tableData.tableName);
       }
     }
-  }
-  
-}());
-
-(function() {
-  
-  angular
-    .module("app.browse", ["ui.router"]);
-  
-}());
-
-(function() {
-  
-  "use strict";
-  
-  angular
-    .module("app.browse")
-    .config(browseConfig);
-   
-  browseConfig.$inject = ['$stateProvider'];
-  
-  function browseConfig($stateProvider) {
-    $stateProvider
-      .state("browse", {
-        name: "browse",
-        url: "/browse",
-        templateUrl: "/static/browse/browse.html",
-        controller: "Browse",
-        controllerAs: "browse",
-        data: {
-          requiresLogin: false
-        }
-      });
-  }
-  
-}());
-
-(function() {
-  
-  "use strict";
-  
-  angular
-    .module("app.browse")
-    .controller("Browse", Browse);
-  
-  Browse.$inject = ['$scope', 'projectListService'];
-  
-  function Browse($scope, projectListService) {
-    
-    this.ls = projectListService;
-    this.masterList = this.ls.getMasterList;
-
   }
   
 }());
@@ -789,6 +746,7 @@ Data attributes:
     
     this.currentUser = $rootScope.currentUser;
     this.masterList = projectListService.getMasterList;
+    this.getSql = projectListService.getSql;
 
     this.loggedIn = loginStateService.loggedIn;
     this.login = loginStateService.login;
@@ -1002,6 +960,10 @@ Data attributes:
   
   function loginStateService($rootScope, $http, store, jwtHelper, loginService) {
     var service = {
+      can_edit_roles: ["Curator", "Manager"],
+      canAddComments: canAddComments,
+      canEditProjects: canEditProjects,
+      hasRole: hasRole,
       loggedIn: loggedIn,
       login: login,
       logout: logout,
@@ -1011,6 +973,30 @@ Data attributes:
     
     return service;    
     
+    function canAddComments() {
+      if (service.loggedIn()) {
+        return true;
+      }
+      return false;
+    }
+    function canEditProjects() {
+      if (service.loggedIn()) {
+        if (_.intersection($rootScope.currentUser.roles, service.can_edit_roles)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function hasRole(role) {
+      if (service.loggedIn()) {
+        if (_.contains($rootScope.currentUser.roles, role)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
     function loggedIn() {
       return Boolean(store.get('jwt'));
     }
@@ -1231,7 +1217,6 @@ Data attributes:
   function projectConfig($stateProvider) {
     $stateProvider
       .state('project', {
-        name: 'project',
         url: '/project',
         controller: "Project",
         controllerAs: "project",
@@ -1242,47 +1227,75 @@ Data attributes:
         }
       }) 
       .state("project.add",  {
-        name: "project",
         url: "/add",
+        templateUrl: "/static/project/templates/description.html",
         data: {
           requiresLogin: true
         }
       })
-      .state("project.add.comment", {
-        name: "project",
-        url: "/comment/:projectID",
+      .state('project.comment', {
+        url: '/comment',
+        templateUrl: "/static/project/templates/comment.html",
+        data: {
+          requiresLogin: true
+        },
+        resolve: {
+          projectID: ['$stateParams', function($stateParams) {
+            return $stateParams.projectID;
+          }]
+        }
+      })
+      .state("project.comment.add", {
+        url: "/add/:projectID",
+        controller: ['$stateParams', function ($stateParams) {
+          console.log($stateParams, projectID);
+        }]
+      })
+      .state("project.comment.edit", {
+        url: "/edit/:projectID",
+        resolve: {
+          projectID: ['$stateParams', function($stateParams) {
+            return $stateParams.projectID;
+          }]
+        },
+        controller: ['$stateParams', function ($stateParams) {
+          console.log($stateParams);
+        }]
+      })
+      .state("project.comment.edit.detail", {
+        url: "/detail/:commentID",
+        controller: ['$stateParams', 'projectID', function ($stateParams, projectID) {
+          $stateParams.projectID = projectID;
+          console.log($stateParams, projectID);
+        }]
+      })
+      .state("project.description", {
+        url: "/description",
+        templateUrl: "/static/project/templates/description.html",
+        data: {
+          requiresLogin: true
+        }
+      })
+      .state("project.description.edit", {
+        url: "/edit/:projectID",
         controller: ['$stateParams', function ($stateParams) {
           console.log($stateParams);
         }],
-        controllerAs: "project",
-        data: {
-          requiresLogin: true
-        }
-      })
-      .state("project.add.disposition", {
-        name: "project",
-        url: "/disposition/:projectID",
-        controller: ['$stateParams', function($stateParams) {
-          console.log($stateParams);
-        }],
-        controllerAs: "project",
         data: {
           requiresLogin: true
         }
       })
       .state('project.detail', {
-        name: 'project',
         url: '/:projectID',
         controller: ['$stateParams', function ($stateParams) {
           console.log($stateParams);
         }],
-        controllerAs: "project",
+        templateUrl: "/static/project/templates/detail.html",
         data: {
           requiresLogin: false
         }
       })
       .state('project.edit', {
-        name: 'project',
         url: '/edit',
         data: {
           requiresLogin: true
@@ -1298,76 +1311,61 @@ Data attributes:
           requiresLogin: true
         }
       })
-      .state("project.edit.comment", {
-          url: "/comment/:projectID",
-          controller: ['$stateParams', function ($stateParams) {
-            console.log($stateParams);
-          }],
-          controllerAs: "project",
-          data: {
-            requiresLogin: true
-          }
-      })
-      .state("project.edit.commentDetail", {
-        url: "/commentDetail/:projectID/:commentID",
-        controller: ['$stateParams', function ($stateParams) {
-          console.log($stateParams);
-        }],
-        controllerAs: "project",
+      .state("project.disposition", {
+        url: "/disposition",
+        templateUrl: "/static/project/templates/disposition.html",
         data: {
           requiresLogin: true
         }
       })
-      .state("project.edit.description", {
-        name: 'project',
-        url: "/description/:projectID",
+      .state("project.disposition.add", {
+        url: "/add/:projectID",
+        controller: ['$stateParams', function($stateParams) {
+          console.log($stateParams);
+        }]
+      })
+      .state("project.disposition.edit", {
+        url: "/edit/:projectID",
+        resolve: {
+          projectID: ['$stateParams', function($stateParams) {
+            return $stateParams.projectID;
+          }]
+        },
         controller: ['$stateParams', function ($stateParams) {
           console.log($stateParams);
-        }],
-        controllerAs: "project",
+        }]
+      })
+      .state("project.disposition.edit.detail", {
+        url: "/detail/:disposedInFY/:disposedInQ",
+        controller: ['$stateParams', 'projectID', function ($stateParams, projectID) {
+          console.log($stateParams);
+        }]
+      })
+      .state("project.portfolio", {
+        url: "/portfolio",
+        templateUrl: "/static/project/templates/portfolio.html",
         data: {
           requiresLogin: true
         }
       })
-      .state("project.edit.disposition", {
-        url: "/disposition/:projectID",
+      .state("project.portfolio.edit", {
+        url: "/edit/:projectID",
         controller: ['$stateParams', function ($stateParams) {
           console.log($stateParams);
-        }],
-        controllerAs: "project",
+        }]
+      })
+      .state("project.projectMan", {
+        url: "/projectMan",
+        templateUrl: "/static/project/templates/projectMan.html",
         data: {
           requiresLogin: true
         }
       })
-      .state("project.edit.dispositionDetail", {
-        url: "/dispositionDetail/:projectID/:disposedInFY/:disposedInQ",
+      .state("project.projectMan.edit", {
+        url: "/edit/:projectID",
         controller: ['$stateParams', function ($stateParams) {
           console.log($stateParams);
-        }],
-        controllerAs: "project",
-        data: {
-          requiresLogin: true
-        }
-      })
-      .state("project.edit.portfolio", {
-        url: "/portfolio/:projectID",
-        controller: ['$stateParams', function ($stateParams) {
-          console.log($stateParams);
-        }],
-        controllerAs: "project",
-        data: {
-          requiresLogin: true
-        }
-      })
-      .state("project.edit.project", {
-        url: "/project/:projectID",
-        controller: ['$stateParams', function ($stateParams) {
-          console.log($stateParams);
-        }],
-        controllerAs: "project",
-        data: {
-          requiresLogin: true
-        }
+        }]
       });
   };
 
@@ -1381,14 +1379,15 @@ Data attributes:
     .module("app.project")
     .controller("Project", Project);
   
-  Project.$inject = ['$scope', '$state', 'projectDataService', 'projectListService', 'attributesService', 'modalConfirmService'];
+  Project.$inject = ['$scope', '$state', 'projectDataService', 'projectListService', 'attributesService', 'modalConfirmService', 'loginStateService'];
   
   function Project($scope, $state, projectDataService, projectListService, 
-                   attributesService, modalConfirmService){
+                   attributesService, modalConfirmService, loginStateService){
     
     this.as = attributesService;
     this.ds = projectDataService;
     this.ls = projectListService;
+    this.log_s = loginStateService;
     
     this.attributes = attributesService.getAttributes;
     this.changeMode = projectDataService.changeMode;
@@ -1438,17 +1437,18 @@ Data attributes:
     .module("app.project")
     .factory("projectDataService", projectDataService);
   
-  projectDataService.$inject = ['$rootScope', '$http', '$state', '$stateParams', '$location', 'projectListService', 'attributesService', 'stateLocationService'];
+  projectDataService.$inject = ['$rootScope', '$http', '$state', '$stateParams', '$location', 'attributesService', 'loginStateService', 'projectListService', 'stateLocationService'];
   
   function projectDataService($rootScope, $http, $state, $stateParams, 
-                              $location, projectListService, attributesService,
-                              stateLocationService) {
+                              $location, attributesService, loginStateService,
+                              projectListService, stateLocationService) {
     var service = {
       attributes: attributesService.getAllAttributes,
       cancelAddProject: cancelAddProject,
       changeMode: changeMode,
       createProject: createProject,
       currentMode: currentMode,
+      editMode: editMode,
       getProjectData: getProjectData,
       getAttributes: getAttributes,
       getProjectAttributes: attributesService.getProjectAttributes,
@@ -1459,7 +1459,6 @@ Data attributes:
       jumpToNewProject: jumpToNewProject,
       newProject: newProject,
       printValue: attributesService.printValue,
-      projectID: $stateParams.projectID,
       RestoreState: RestoreState,
       saveProject: saveProject,
       SaveState: SaveState,
@@ -1471,7 +1470,7 @@ Data attributes:
     };
     
     service.RestoreState();
-    if (typeof service.attributes() == "undefined" && service.restoredParams) {
+    if (typeof service.getProjectAttributes() == "undefined" && service.restoredParams) {
       service.getProjectData(service.restoredParams);
     }
     
@@ -1519,6 +1518,13 @@ Data attributes:
       return $state.current.name.substring(8);
     }
     
+    function editMode() {
+      if ($state.current.name.indexOf("edit") > -1) {
+        return true;
+      }
+      return false;
+    }
+    
     function getAttributes() {
       return service.attributes;
     }
@@ -1534,10 +1540,11 @@ Data attributes:
     
     function getProjectDataFromLocation() {
       var state = stateLocationService.getStateFromLocation();
-      if ("projectID" in state.stateParams && state.stateParams.projectID != service.projectID) {
-        service.projectID = state.stateParams.projectID;
-        service.getProjectData(state.stateParams);
-        if ("commentID" in state.stateParams) {
+      if ("projectID" in state.params && state.params.projectID != service.projectID) {
+        service.projectID = state.params.projectID;
+        service.getProjectData(state.params);
+        projectListService.updateProjectListProjectID(service.projectID);
+        if ("commentID" in state.params) {
           //
         }
       }
@@ -1545,8 +1552,12 @@ Data attributes:
 
     function hideDetails(tableName, keys) {
       var selected = attributesService.updateProjAttrsFromRawItem(tableName, keys);
-      $state.go("project.edit." + tableName, 
-                {projectID: $state.params.projectID});
+      if (loginStateService.canEditProjects()) {
+        $state.go("project." + tableName + ".edit", {projectID: $state.params.projectID});
+      }
+      else {
+        $state.go("project.detail", {projectID: $state.params.projectID});
+      }
     }
 
     function jumpToAtachFile() {
@@ -1555,13 +1566,16 @@ Data attributes:
     
     function jumpToAddForm(tableName, keys) {
       attributesService.updateProjAttrsFromRawItem(tableName, keys);
+      if (_.contains(["comment"], tableName)) {
+        $state.go("project." + tableName + ".edit", {projectID: $state.params.projectID});
+      }
       $state.go("project.add." + tableName, {projectID: $state.params.projectID});
     };
 
     function jumpToNewProject(result) {
       service.setProjectData(result);
       projectListService.updateAllProjects(result.data.projectID);
-      $state.go("project.edit.description", {projectID: result.data.projectID});
+      $state.go("project.description.edit", {projectID: result.data.projectID});
     }
 
     function newProject() {
@@ -1570,7 +1584,7 @@ Data attributes:
     }
     
     function RestoreState() {
-      if (sessionStorage.projectDataServiceAttributes != "undefined") {
+      if (typeof sessionStorage.projectDataServiceAttributes != "undefined") {
         service.restoredParams = angular.fromJson(sessionStorage.projectDataServiceAttributes);
       }
     };
@@ -1589,7 +1603,7 @@ Data attributes:
       $http(request)
         .then(service.setProjectData);
       service.noCheck = true;
-      $state.go("project.edit." + tableName, {projectID: $state.params.projectID, noCheck: true});
+      $state.go("project." + tableName + ".edit", {projectID: $state.params.projectID, noCheck: true});
     };
 
     function SaveState() {
@@ -1599,6 +1613,7 @@ Data attributes:
     function setProjectData(result, params) {
       //return;
       attributesService.updateProjectAttributes(result, params);
+      service.projectID = result.data.projectID;
       service.success = result.data.success;
       service.SaveState();
       attributesService.SaveState();
@@ -1607,11 +1622,11 @@ Data attributes:
     function showDetails(tableName, keys) {
       var selected = attributesService.updateProjAttrsFromRawItem(tableName, keys);
       if (tableName == 'comment') {
-        $state.go("project.edit.commentDetail", 
+        $state.go("project.comment.edit.detail", 
                   {projectID: service.projectID, commentID: selected.commentID});
       }
       if (tableName == 'disposition') {
-        $state.go("project.edit.dispositionDetail", 
+        $state.go("project.disposition.edit.detail", 
                   {projectID: service.projectID, disposedInFY: selected.disposedInFY.id,
                    disposedInQ: selected.disposedInQ.id});
       }
@@ -1643,6 +1658,8 @@ Data attributes:
       getIDListFromAllProjects: getIDListFromAllProjects,
       getMasterList: getMasterList,
       getProjectID: getProjectID,
+      getSelectedIds: getSelectedIds,
+      getSql: getSql,
       hasProjects: hasProjects,
       initModel: initModel,
       jumpToProject: jumpToProject,
@@ -1651,6 +1668,7 @@ Data attributes:
       SaveState: SaveState,
       setDescription: setDescription,
       setList: setList,
+      setSql: setSql,
       updateAllProjects: updateAllProjects,
       updateProjectListProjectID: updateProjectListProjectID
     };
@@ -1687,10 +1705,15 @@ Data attributes:
     };
 
     function getProjectID() {
-      if (typeof service.projectID == "undefined") {
-        return $stateParams.projectID;
-      }
-      return service.projectID;
+      return service.masterList.projectID;
+    }
+    
+    function getSelectedIds() {
+      return service.masterList.selectedIds;
+    }
+
+    function getSql() {
+      return service.masterList.sql;
     }
     
     function hasProjects() {
@@ -1701,6 +1724,7 @@ Data attributes:
       service.masterList = {
         allProjects: [],
         description: "",
+        sql: "",
         index: -1,
         next: -1,
         previous: -1,
@@ -1767,6 +1791,10 @@ Data attributes:
         service.updateProjectListProjectID(projectID, selectedIds);
       }
     }
+
+    function setSql(sqlObj) {
+      service.masterList.sql = sqlObj;
+    }
       
     function updateAllProjects(projectID) {
       $http.post('/getBriefDescriptions')
@@ -1812,6 +1840,195 @@ Data attributes:
     
 }());
 
+(function() {
+  
+  angular
+    .module("app.report", ["ui.router", "datatables", "datatables.bootstrap"]);
+  
+}());
+
+(function() {
+  
+  "use strict";
+  
+  angular
+    .module("app.report")
+    .config(reportConfig);
+   
+  reportConfig.$inject = ['$stateProvider'];
+  
+  function reportConfig($stateProvider) {
+    $stateProvider
+      .state("report", {
+        name: "report",
+        url: "/report",
+        controller: "Report",
+        controllerAs: "report",
+        templateUrl: "/static/report/report.html",
+        data: {
+          requiresLogin: false
+        }
+      })
+      .state("report.columns", {
+        name: "report",
+        url: "/columns/:query_string",
+        templateUrl: "/static/report/templates/columns.html",
+        controller: ['$stateParams', function ($stateParams) {
+          console.log($stateParams);
+        }]
+      })
+      .state("report.table", {
+        name: "report",
+        url: "/:query_string",
+        templateUrl: "/static/report/templates/table.html",
+        controller: ['$stateParams', function ($stateParams) {
+          console.log($stateParams);
+        }]
+      });
+  }
+  
+}());
+
+(function() {
+  
+  "use strict";
+  
+  angular
+    .module("app.report")
+    .controller("Report", Report);
+  
+  Report.$inject = ['$state', 'projectListService', 'reportTableService'];
+  
+  function Report($state, projectListService, reportTableService) {
+    
+    this.ls = projectListService;
+    this.masterList = this.ls.getMasterList;
+    this.jumpToProject = this.ls.jumpToProject;
+
+    this.ts = reportTableService;
+    this.state = $state;
+
+  }
+  
+}());
+
+(function() {
+
+  "use strict";
+  
+  angular
+    .module('app.report')
+    .factory('reportTableService', ReportTableService);
+    
+  ReportTableService.$inject = ['$rootScope', '$http', '$stateParams', '$compile', 'DTOptionsBuilder', 'DTColumnBuilder', 'projectListService'];
+  
+  function ReportTableService($rootScope, $http, $stateParams, $compile, 
+                              DTOptionsBuilder, DTColumnBuilder, 
+                              projectListService) {
+    var service = {
+      master: {
+        dtColumns: [{mData: "name", sTitle: "Name"},
+                    {mData: "description", sTitle: "Description"},
+                    {mData: "maturityID", sTitle: "Maturity"},
+                    {mData: "driverID", sTitle: "Driver"}],
+        tableColumns: ["name", "description", "maturityID", "driverID"]
+      },
+      checkForQueryChange: checkForQueryChange,
+      createdRow: createdRow,
+      deleteOptions: deleteOptions,
+      getReportResults: getReportResults,
+      getReportTableData: getReportTableData,
+      RestoreState: RestoreState,
+      SaveState: SaveState,
+      scope: $rootScope.$new(), // http://stackoverflow.com/questions/17600905/compile-directives-via-service-in-angularjs#comment41413717_17601350
+      setReportResults: setReportResults,
+      setReportTableData: setReportTableData
+    };
+    
+    service.RestoreState();
+    $rootScope.$on("$locationChangeSuccess", service.checkForQueryChange());
+    
+    function checkForQueryChange() {
+      var state_query = $stateParams.query_string;
+      if (state_query && state_query != projectListService.getSql()) {
+        service.getReportResults(state_query);
+      }
+    }
+
+    function createdRow(row, data, dataIndex) {
+      $compile(angular.element(row).contents())(service.scope);
+    }
+
+    function deleteOptions() {
+      delete service.master.dtOptions;
+    }
+    
+    function getReportResults(query_string) {
+      var request = {
+        method: "POST",
+        url: "/getReportResults",
+        data: {query_string: encodeURIComponent(query_string),
+               tableColumns: service.master.tableColumns}
+      }
+      $http(request)
+        .then(service.setReportResults);
+    }
+
+    function getReportTableData() {
+      var request = {
+        method: "POST",
+        url: "/getReportTableJSON",
+        data: {projectID: projectListService.getSelectedIds(),
+               tableColumns: service.master.tableColumns}
+      };
+      $http(request)
+        .then(service.setReportTableData);
+    }
+    
+    function RestoreState() {
+      if (typeof sessionStorage.reportTableService != "undefined") {
+        service.master = angular.fromJson(sessionStorage.reportTableService);
+      }
+    }
+    
+    function SaveState() {
+      sessionStorage.reportTableService = angular.toJson(service.master);
+    }
+
+    function setReportResults(response) {
+      setReportTableData(response);
+      projectListService.setList(response.data.projectList);
+      projectListService.setDescription(response.data.query_desc);
+      projectListService.setSql(response.data.query_string);
+      projectListService.SaveState();
+    }
+
+    function setReportTableData(response) {
+      service.master.dtOptions = DTOptionsBuilder.newOptions().withBootstrap();
+      _.each(Object.keys(response.data.options), function(key) {
+         service.master.dtOptions.withOption(key, response.data.options[key]);
+      });
+      service.master.dtOptions.withOption("createdRow", createdRow);
+      service.master.dtOptions.data = response.data.data;
+      service.master.dtColumns = response.data.columns;
+      service.master.dtColumns.unshift({
+        data: "projectID",
+        title: "ID",
+        render: jumpToProjectLink,
+        defaultContent: ""
+      });
+      service.SaveState();
+    }
+    
+    function jumpToProjectLink( data, type, full, meta ) {
+      return '<a ui-sref="project.detail({projectID: ' + data + '})">' + data + '</a>';
+    }
+    
+    service.SaveState();
+    return service;
+  }
+      
+}());
 (function() {
   
   angular
@@ -1968,15 +2185,16 @@ Data attributes:
     .module("app.select")
     .factory("selectStateService", selectStateService);
   
-  selectStateService.$inject = ['$rootScope', '$http', '$state', 'projectListService'];
+  selectStateService.$inject = ['$rootScope', '$http', '$state', 'projectListService', 'reportTableService'];
   
-  function selectStateService($rootScope, $http, $state, projectListService) {
+  function selectStateService($rootScope, $http, $state, projectListService, 
+                              reportTableService) {
     var service = {
       masterList: {
         searchText: "",
         nameLogic: "or",
         finalID: "0",
-        breakdownAttr: ""
+        breakdownAttr: null
       },
       clearBreakdown: clearBreakdown,
       clearSearchText: clearSearchText,
@@ -2024,17 +2242,37 @@ Data attributes:
     }
 
     function jumpToBreakdownTable(breakdown_row) {
+      /*
+      if (breakdown_row.query_sql != projectListService.getSql()) {
+        reportTableService.deleteOptions();
+        reportTableService.SaveState();
+      }
+      */
       projectListService.setList(breakdown_row.projectList);
       projectListService.setDescription(breakdown_row.query_desc);
-      $state.go("browse");
+      projectListService.setSql(breakdown_row.query_string);
+      projectListService.SaveState();
+      reportTableService.getReportTableData();
+      $state.go("report.table", {query_string: breakdown_row.query_string});
     }
 
+    function RestoreState() {
+      if (sessionStorage.selectStateService != "undefined") {
+        service.masterList = angular.fromJson(sessionStorage.selectStateService);
+      }
+    }
+    
+    function SaveState() {
+      sessionStorage.selectStateService = angular.toJson(service.masterList);
+    }
+    
     function setBreakdownByAttribute(result) {
       service.breakdownByAttribute = result.data;
     }
 
     function setBreakdownChoices(result) {
       service.breakdownChoicesList = result.data;
+      service.SaveState();
     }
     
     function updateBreakdownByAttribute() {
@@ -2047,17 +2285,6 @@ Data attributes:
         .then(setBreakdownChoices);
     }
     
-    function SaveState() {
-      sessionStorage.selectStateService = angular.toJson(service.masterList);
-    }
-    
-    function RestoreState() {
-      if (sessionStorage.selectStateService != "undefined") {
-        service.masterList = angular.fromJson(sessionStorage.selectStateService);
-      }
-    }
-    
-    SaveState();
     return service;    
   };
   
@@ -2187,10 +2414,10 @@ Data attributes:
     .module("app.stateLocation")
     .factory("stateLocationService", stateLocationService);
   
-  stateLocationService.$inject = ['$rootScope', '$location', '$state', '$stateParams', 'stateHistoryService', 'projectListService'];
+  stateLocationService.$inject = ['$rootScope', '$location', '$state', '$stateParams', '$urlMatcherFactory', 'stateHistoryService', 'projectListService'];
  
   function stateLocationService($rootScope, $location, $state, $stateParams, 
-                                stateHistoryService, projectListService){
+                                $urlMatcherFactory, stateHistoryService, projectListService){
     var service = {
       preventCall: [],
       locationChange: locationChange,
@@ -2213,34 +2440,17 @@ Data attributes:
       return angular.fromJson(sessionStorage.currentState);
     }
     
-    function locationChange(event) {
+    function locationChange() {
       if (service.preventCall.pop('locationChange') != null) {
         return;
       }
       var location = $location.url();
-      if (location.substring(0, 9) == "/project/") {
-        var projectID;
-        if (location.substring(9, 27) == "edit/commentDetail") {
-          var details = location.substring(28).split("/");
-          projectID = parseInt(details[0]);
-          var commentID = parseInt(_.first(_.last(details).split("#")));
-        }
-        else if (location.substring(9, 31) == "edit/dispositionDetail") {
-          var details = location.substring(32).split("/");
-          projectID = parseInt(details[0]);
-          var disposedInFY = parseInt(details[1]);
-          var disposedInQ = parseInt(_.first(_.last(details).split("#")));
-        }
-        else {
-          projectID = parseInt(_.first(_.last(location.split("/")).split("#")));
-        }
-        if (projectID) {
-          projectListService.updateProjectListProjectID(projectID);
-        }
-      }
       var entry = stateHistoryService.get(location);
       if (entry == null) {
-        return;
+        entry = service.getStateFromLocation();
+      }
+      if ("projectID" in entry.params) {
+        projectListService.updateProjectListProjectID(entry.params.projectID);
       }
       service.preventCall.push("stateChange");
       $state.go(entry.name, entry.params, {location: false});
@@ -2248,76 +2458,87 @@ Data attributes:
     
     function getStateFromLocation() {
       var state = new Object;
-      state.stateParams = new Object;
-      var location = $location.url();
-      if (location == '/') {
-        state.name = 'select';
-      }
-      else if (location.substring(0,9) == "/project/") {
+      state.params = new Object;
+      var path = $location.path().split("/").reverse();
+      path.pop();
+      var base = path.pop();
+      if (base == "project") {
         var projectID;
         var commentID;
         var disposedInFY;
         var disposedInQ;
-        if (location.substring(9, 27) == "edit/commentDetail") {
-          var details = location.substring(28);
-          state.name = "project.edit.commentDetail";
-          state.stateParams.commentID = parseInt(_.first(_.last(details.split("/")).split("#")));
-          state.stateParams.projectID = parseInt(_.first(details.split("/")));
+        if (_.last(path) == "comment" && path[1] == "detail") {
+          state.name = "project.comment.edit.detail";
+          state.params.commentID = parseInt(path[0]);
+          state.params.projectID = parseInt(path[2]);
         }
-        else if (location.substring(9, 31) == "edit/dispositionDetail") {
-          var details = location.substring(32).split("/");
-          state.name = "project.edit.dispositionDetail";
-          state.stateParams.projectID = parseInt(details[0]);
-          state.stateParams.disposedInFY = parseInt(details[1]);
-          state.stateParams.disposedInQ = parseInt(_.first(_.last(details).split("#")));
+        else if (_.last(path) == "disposition" && path[2] == "detail") {
+          state.name = "project.disposition.edit.detail";
+          state.params.projectID = parseInt(path[3]);
+          state.params.disposedInFY = parseInt(path(1));
+          state.params.disposedInQ = parseInt(path(0));
+        }
+        else if (path.length == 1) {
+          state.name = "project.detail";
+          state.params.projectID = parseInt(path[0]);
         }
         else {
-          state.stateParams.projectID = parseInt(_.first(_.last(location.split("/")).split("#")));
+          state.name = ["project", path[2], path[1]].join(".");
+          state.params.projectID = parseInt(path[0]);
         }
+      }
+      else if (base == "report") {
+        if (path[1] == "columns") {
+          state.name = "report.columns";
+          state.params.query_string = path[0]
+        }
+        else {
+          state.name = "report.table";
+          state.params.query_string = path[0];
+        }
+      }
+      else {
+        state.name = [base].concat(path).join(".");
       }
       return state;
     }
     
-    function stateChange(projectID) {
+    function stateChange() {
       if (service.preventCall.pop("stateChange") != null){
         return;
       }
       if (!$state.current.name) {
         return;
       }
-      projectID = projectListService.getMasterList().projectID;
-      var params = $state.params.projectID == "" ? {projectID: projectID} : $state.params;
+      var url = getUrlFromState();
       var entry = {
         "name": $state.current.name,
-        "params": params
+        "params": $stateParams
       };
-      var url = getUrlFromState(params);
       stateHistoryService.set(url, entry);
       service.preventCall.push('locationChange');
       $location.url(url);
     }
     
-    function getUrlFromState(params) {
-      var projectID = params.projectID;
-      var hash = "#" + service.guid().substr(0, 8);
+    function getUrlFromState() {
+      var url = $state.href($state.current, $state.params);
+      if (url[0] == "#") {
+        url = url.substring(1);
+      }
+      var hash = service.guid().substr(0, 8);
       
-      if ($state.current.name == "project.detail") {
-        return "/project/" + projectID + hash;
+      var tab = _.first($state.current.name.split("."));
+      if (tab == 'project') {
+        url = $location.hash(hash);
       }
-      else if ($state.current.name.substring(0,8) == "project.") {
-        if (projectListService.getMasterList().allProjects.length == 0) {
-          return "/project/" + projectID + hash;
-        }
-        if ($state.current.name == "project.edit.commentDetail") {
-          return "/" + $state.current.name.replace(/\./g, "/") + "/" + projectID + "/" + params.commentID + hash;
-        }
-        else if ($state.current.name == "project.edit.dispositionDetail") {
-          return "/" + $state.current.name.replace(/\./g, "/") + "/" + projectID + "/" + params.disposedInFY + "/" + params.disposedInQ + hash;
-        }
-        return "/" + $state.current.name.replace(/\./g, "/") + "/" + projectID + hash;
+      else if (tab == "report") {
+        url = $location.hash(hash);
       }
-      else {
-        return "/" + $state.current.name.replace(/\./g, "/");
+      if (typeof url == "object") {
+        return url.url();
+      }
+      else if (typeof url == "string") {
+        return url;
       }
     }
     
@@ -2383,8 +2604,8 @@ Data attributes:
       else if (toState.name.split(".")[0] == "filter") {
         vm.pageTitle = "PPT: Filter Builder";
       }
-      else if (toState.name.split(".")[0] == "browse") {
-        vm.pageTitle = "PPT: Browse";
+      else if (toState.name.split(".")[0] == "report") {
+        vm.pageTitle = "PPT: Report";
       }
       else if (toState.name.split(".")[0] == "project") {
         vm.pageTitle = vm.masterList().projectID + ". " + vm.masterList().projectName;

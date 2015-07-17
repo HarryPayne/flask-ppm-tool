@@ -16,16 +16,19 @@
       window.onbeforeunload = function (event) {
         $rootScope.$broadcast('savestate');
       };
-  
-      if (toState.name.substring(0, "select".length) =="select" || toState.name == "filter") {
+      
+      var tab = _.first(toState.name.split("."));
+      if (tab =="select" || tab == "filter") {
         // Reload the master list before selecting projects, in case a new one was added.
         projectListService.updateAllProjects();
         projectListService.setList(projectListService.getIDListFromAllProjects());
         projectListService.setDescription("none;");
       }
-      if (toState.name.substring(0,"project".length) == "project" && !projectListService.hasProjects()) {
+      else if (tab == "project" && (!projectListService.hasProjects() || toParams.projectID == "")) {
         // Make sure project data are present if starting the app from a bookmarked project url.
-        projectListService.updateAllProjects();
+        if (!projectListService.hasProjects()) {
+          projectListService.updateAllProjects();
+        }
 
         var projectID;
         var masterList = projectListService.getMasterList();
@@ -33,28 +36,32 @@
         var oldProjectID = masterList.projectID;
 
         if (!toParams.projectID) {
-          projectID = stateLocationService.getStateFromLocation().stateParams.projectID;
+          projectID = stateLocationService.getStateFromLocation().params.projectID;
           if (!projectID) {
             if (projectListService.hasProjects()) {
-              projectID = masterList.index > -1 ? selectedIds[masterList.index] : selectedIds[0];
+              projectID = projectListService.getProjectID();
             }
           }
         }
         else {
           projectID = parseInt(toParams.projectID);
-          selectedIds = [projectID];
+          //selectedIds = [projectID];
           projectListService.setList(selectedIds);
           projectListService.setDescription("projectID = " + projectID + ";");
           projectListService.setSql({col_name: "projectID",
                                      val: projectID,
                                      op: "equals" });
         }
-        projectListService.updateProjectListProjectID(projectID, selectedIds);
+        //projectListService.updateProjectListProjectID(projectID, selectedIds);
+
+        toParams.projectID = projectID;
 
         if (!projectDataService.projectID || projectDataService.projectID != projectID) {
-          projectDataService.projectID = projectID;
           projectDataService.getProjectData(toParams);
         }
+      }
+      else if (tab == "report" && !projectListService.hasProjects()) {
+        projectListService.updateAllProjects();
       }
     }   
   }

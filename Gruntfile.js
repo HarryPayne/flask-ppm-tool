@@ -8,7 +8,6 @@ module.exports = function(grunt){
 		              "server/app/static/app.controller.js",
 		              "server/app/static/app.run.js",
 		              "server/app/static/attributes/*.js",
-		              "server/app/static/browse/*.js",
 		              "server/app/static/comment/*.js",
 		              "server/app/static/curate/*.js",
 		              "server/app/static/filter/*.js",
@@ -18,6 +17,7 @@ module.exports = function(grunt){
 		              "server/app/static/manage/*.js",
 		              "server/app/static/modalConfirm/*.js",
 		              "server/app/static/project/*.js",
+                  "server/app/static/report/*.js",
 		              "server/app/static/select/*.js",
 		              "server/app/static/stateLocation/*.js",
 		              "server/app/static/title/*.js"
@@ -31,7 +31,6 @@ module.exports = function(grunt){
 		              "static/vendor/angular-datatables/dist/plugins/bootstrap/angular-datatables.bootstrap.min.css",
 		              "server/app/static/*.css",
 		              "server/app/static/attributes/*.css",
-		              "server/app/static/browse/*.css",
 		              "server/app/static/comment/*.css",
 		              "server/app/static/curate/*.css",
 		              "server/app/static/filter/*.css",
@@ -40,6 +39,7 @@ module.exports = function(grunt){
 		              "server/app/static/manage/*.css",
 		              "server/app/static/modalConfirm/*.css",
 		              "server/app/static/project/*.css",
+                  "server/app/static/report/*.css",
 		              "server/app/static/select/*.css",
 		              "server/app/static/stateLocation/*.css",
 		              "server/app/static/title/*.css"
@@ -85,7 +85,6 @@ module.exports = function(grunt){
                         "server/app/static/vendor/angular-readmore-master/css/style.css",
                         "server/app/static/*.css",
                         "server/app/static/attributes/*.css",
-                        "server/app/static/browse/*.css",
                         "server/app/static/comment/*.css",
                         "server/app/static/curate/*.css",
                         "server/app/static/filter/*.css",
@@ -94,6 +93,7 @@ module.exports = function(grunt){
                         "server/app/static/manage/*.css",
                         "server/app/static/modalConfirm/*.css",
                         "server/app/static/project/*.css",
+                        "server/app/static/report/*.css",
                         "server/app/static/select/*.css",
                         "server/app/static/stateLocation/*.css",
                         "server/app/static/title/*.css"

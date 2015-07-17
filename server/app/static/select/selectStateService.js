@@ -7,16 +7,16 @@
     .factory("selectStateService", selectStateService);
   
   selectStateService.$inject = ["$rootScope", "$http", "$state", 
-                                "projectListService", "browseTableService"];
+                                "projectListService", "reportTableService"];
   
   function selectStateService($rootScope, $http, $state, projectListService, 
-                              browseTableService) {
+                              reportTableService) {
     var service = {
       masterList: {
         searchText: "",
         nameLogic: "or",
         finalID: "0",
-        breakdownAttr: ""
+        breakdownAttr: null
       },
       clearBreakdown: clearBreakdown,
       clearSearchText: clearSearchText,
@@ -66,16 +66,16 @@
     function jumpToBreakdownTable(breakdown_row) {
       /*
       if (breakdown_row.query_sql != projectListService.getSql()) {
-        browseTableService.deleteOptions();
-        browseTableService.SaveState();
+        reportTableService.deleteOptions();
+        reportTableService.SaveState();
       }
       */
       projectListService.setList(breakdown_row.projectList);
       projectListService.setDescription(breakdown_row.query_desc);
-      projectListService.setSql(breakdown_row.query_sql);
+      projectListService.setSql(breakdown_row.query_string);
       projectListService.SaveState();
-      browseTableService.getBrowseTableData();
-      $state.go("browse");
+      reportTableService.getReportTableData();
+      $state.go("report.table", {query_string: breakdown_row.query_string});
     }
 
     function RestoreState() {

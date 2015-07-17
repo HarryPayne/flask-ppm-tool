@@ -7,10 +7,10 @@
     .factory("stateLocationService", stateLocationService);
   
   stateLocationService.$inject = ["$rootScope", "$location", "$state", "$stateParams", 
-                                  "stateHistoryService", "projectListService"];
+                                  "$urlMatcherFactory", "stateHistoryService", "projectListService"];
  
   function stateLocationService($rootScope, $location, $state, $stateParams, 
-                                stateHistoryService, projectListService){
+                                $urlMatcherFactory, stateHistoryService, projectListService){
     var service = {
       preventCall: [],
       locationChange: locationChange,
@@ -33,34 +33,17 @@
       return angular.fromJson(sessionStorage.currentState);
     }
     
-    function locationChange(event) {
+    function locationChange() {
       if (service.preventCall.pop('locationChange') != null) {
         return;
       }
       var location = $location.url();
-      if (location.substring(0, 9) == "/project/") {
-        var projectID;
-        if (location.substring(9, 27) == "edit/commentDetail") {
-          var details = location.substring(28).split("/");
-          projectID = parseInt(details[0]);
-          var commentID = parseInt(_.first(_.last(details).split("#")));
-        }
-        else if (location.substring(9, 31) == "edit/dispositionDetail") {
-          var details = location.substring(32).split("/");
-          projectID = parseInt(details[0]);
-          var disposedInFY = parseInt(details[1]);
-          var disposedInQ = parseInt(_.first(_.last(details).split("#")));
-        }
-        else {
-          projectID = parseInt(_.first(_.last(location.split("/")).split("#")));
-        }
-        if (projectID) {
-          projectListService.updateProjectListProjectID(projectID);
-        }
-      }
       var entry = stateHistoryService.get(location);
       if (entry == null) {
-        return;
+        return; //entry = service.getStateFromLocation();
+      }
+      if ("projectID" in entry.params) {
+        projectListService.updateProjectListProjectID(entry.params.projectID);
       }
       service.preventCall.push("stateChange");
       $state.go(entry.name, entry.params, {location: false});
@@ -68,79 +51,87 @@
     
     function getStateFromLocation() {
       var state = new Object;
-      state.stateParams = new Object;
-      var location = $location.url();
-      if (location == '/') {
-        state.name = 'select';
-      }
-      else if (location.substring(0,9) == "/project/") {
+      state.params = new Object;
+      var path = $location.path().split("/").reverse();
+      path.pop();
+      var base = path.pop();
+      if (base == "project") {
         var projectID;
         var commentID;
         var disposedInFY;
         var disposedInQ;
-        if (location.substring(9, 27) == "edit/commentDetail") {
-          var details = location.substring(28);
-          state.name = "project.edit.commentDetail";
-          state.stateParams.commentID = parseInt(_.first(_.last(details.split("/")).split("#")));
-          state.stateParams.projectID = parseInt(_.first(details.split("/")));
+        if (_.last(path) == "comment" && path[1] == "detail") {
+          state.name = "project.comment.edit.detail";
+          state.params.commentID = parseInt(path[0]);
+          state.params.projectID = parseInt(path[2]);
         }
-        else if (location.substring(9, 31) == "edit/dispositionDetail") {
-          var details = location.substring(32).split("/");
-          state.name = "project.edit.dispositionDetail";
-          state.stateParams.projectID = parseInt(details[0]);
-          state.stateParams.disposedInFY = parseInt(details[1]);
-          state.stateParams.disposedInQ = parseInt(_.first(_.last(details).split("#")));
+        else if (_.last(path) == "disposition" && path[2] == "detail") {
+          state.name = "project.disposition.edit.detail";
+          state.params.projectID = parseInt(path[3]);
+          state.params.disposedInFY = parseInt(path(1));
+          state.params.disposedInQ = parseInt(path(0));
+        }
+        else if (path.length == 1) {
+          state.name = "project.detail";
+          state.params.projectID = parseInt(path[0]);
         }
         else {
-          state.stateParams.projectID = parseInt(_.first(_.last(location.split("/")).split("#")));
+          state.name = ["project", path[2], path[1]].join(".");
+          state.params.projectID = parseInt(path[0]);
         }
+      }
+      else if (base == "report") {
+        if (path[1] == "columns") {
+          state.name = "report.columns";
+          state.params.query_string = path[0]
+        }
+        else {
+          state.name = "report.table";
+          state.params.query_string = path[0];
+        }
+      }
+      else {
+        state.name = [base].concat(path).join(".");
       }
       return state;
     }
     
-    function stateChange(projectID) {
+    function stateChange() {
       if (service.preventCall.pop("stateChange") != null){
         return;
       }
       if (!$state.current.name) {
         return;
       }
-      projectID = projectListService.getMasterList().projectID;
-      var params = $state.params.projectID == "" ? {projectID: projectID} : $state.params;
+      var url = getUrlFromState();
       var entry = {
         "name": $state.current.name,
-        "params": params
+        "params": $stateParams
       };
-      var url = getUrlFromState(params);
       stateHistoryService.set(url, entry);
       service.preventCall.push('locationChange');
       $location.url(url);
     }
     
-    function getUrlFromState(params) {
-      var projectID = params.projectID;
-      var hash = "#" + service.guid().substr(0, 8);
+    function getUrlFromState() {
+      var url = $state.href($state.current, $state.params);
+      if (url[0] == "#") {
+        url = url.substring(1);
+      }
+      var hash = service.guid().substr(0, 8);
       
-      if ($state.current.name == "project.detail") {
-        return "/project/" + projectID + hash;
+      var tab = _.first($state.current.name.split("."));
+      if (tab == 'project') {
+        url = $location.hash(hash);
       }
-      else if ($state.current.name.substring(0,8) == "project.") {
-        if (projectListService.getMasterList().allProjects.length == 0) {
-          return "/project/" + projectID + hash;
-        }
-        if ($state.current.name == "project.edit.commentDetail") {
-          return "/" + $state.current.name.replace(/\./g, "/") + "/" + projectID + "/" + params.commentID + hash;
-        }
-        else if ($state.current.name == "project.edit.dispositionDetail") {
-          return "/" + $state.current.name.replace(/\./g, "/") + "/" + projectID + "/" + params.disposedInFY + "/" + params.disposedInQ + hash;
-        }
-        return "/" + $state.current.name.replace(/\./g, "/") + "/" + projectID + hash;
+      else if (tab == "report") {
+        url = $location.hash(hash);
       }
-      else if ($state.current.name == "browse") {
-        return "/browse" + hash;
+      if (typeof url == "object") {
+        return url.url();
       }
-      else {
-        return "/" + $state.current.name.replace(/\./g, "/");
+      else if (typeof url == "string") {
+        return url;
       }
     }
     

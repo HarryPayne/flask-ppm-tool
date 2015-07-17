@@ -3,7 +3,6 @@
   angular
     .module("PPT", [
       "app.attributes",
-      "app.browse",
       "app.comment",
       "app.curate",
       "app.filter", 
@@ -13,6 +12,7 @@
       "app.manage",
       "app.modalConfirm",
       "app.project", 
+      "app.report",
       "app.select", 
       "app.stateLocation",
       "app.title"

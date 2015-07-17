@@ -21,8 +21,8 @@
       else if (toState.name.split(".")[0] == "filter") {
         vm.pageTitle = "PPT: Filter Builder";
       }
-      else if (toState.name.split(".")[0] == "browse") {
-        vm.pageTitle = "PPT: Browse";
+      else if (toState.name.split(".")[0] == "report") {
+        vm.pageTitle = "PPT: Report";
       }
       else if (toState.name.split(".")[0] == "project") {
         vm.pageTitle = vm.masterList().projectID + ". " + vm.masterList().projectName;

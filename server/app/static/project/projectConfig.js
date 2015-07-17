@@ -11,7 +11,6 @@
   function projectConfig($stateProvider) {
     $stateProvider
       .state('project', {
-        name: 'project',
         url: '/project',
         controller: "Project",
         controllerAs: "project",
@@ -22,47 +21,75 @@
         }
       }) 
       .state("project.add",  {
-        name: "project",
         url: "/add",
+        templateUrl: "/static/project/templates/description.html",
         data: {
           requiresLogin: true
         }
       })
-      .state("project.add.comment", {
-        name: "project",
-        url: "/comment/:projectID",
+      .state('project.comment', {
+        url: '/comment',
+        templateUrl: "/static/project/templates/comment.html",
+        data: {
+          requiresLogin: true
+        },
+        resolve: {
+          projectID: ["$stateParams", function($stateParams) {
+            return $stateParams.projectID;
+          }]
+        }
+      })
+      .state("project.comment.add", {
+        url: "/add/:projectID",
+        controller: function ($stateParams) {
+          console.log($stateParams, projectID);
+        }
+      })
+      .state("project.comment.edit", {
+        url: "/edit/:projectID",
+        resolve: {
+          projectID: ["$stateParams", function($stateParams) {
+            return $stateParams.projectID;
+          }]
+        },
+        controller: function ($stateParams) {
+          console.log($stateParams);
+        }
+      })
+      .state("project.comment.edit.detail", {
+        url: "/detail/:commentID",
+        controller: function ($stateParams, projectID) {
+          $stateParams.projectID = projectID;
+          console.log($stateParams, projectID);
+        }
+      })
+      .state("project.description", {
+        url: "/description",
+        templateUrl: "/static/project/templates/description.html",
+        data: {
+          requiresLogin: true
+        }
+      })
+      .state("project.description.edit", {
+        url: "/edit/:projectID",
         controller: function ($stateParams) {
           console.log($stateParams);
         },
-        controllerAs: "project",
-        data: {
-          requiresLogin: true
-        }
-      })
-      .state("project.add.disposition", {
-        name: "project",
-        url: "/disposition/:projectID",
-        controller: function($stateParams) {
-          console.log($stateParams);
-        },
-        controllerAs: "project",
         data: {
           requiresLogin: true
         }
       })
       .state('project.detail', {
-        name: 'project',
         url: '/:projectID',
         controller: function ($stateParams) {
           console.log($stateParams);
         },
-        controllerAs: "project",
+        templateUrl: "/static/project/templates/detail.html",
         data: {
           requiresLogin: false
         }
       })
       .state('project.edit', {
-        name: 'project',
         url: '/edit',
         data: {
           requiresLogin: true
@@ -78,75 +105,60 @@
           requiresLogin: true
         }
       })
-      .state("project.edit.comment", {
-          url: "/comment/:projectID",
-          controller: function ($stateParams) {
-            console.log($stateParams);
-          },
-          controllerAs: "project",
-          data: {
-            requiresLogin: true
-          }
-      })
-      .state("project.edit.commentDetail", {
-        url: "/commentDetail/:projectID/:commentID",
-        controller: function ($stateParams) {
-          console.log($stateParams);
-        },
-        controllerAs: "project",
+      .state("project.disposition", {
+        url: "/disposition",
+        templateUrl: "/static/project/templates/disposition.html",
         data: {
           requiresLogin: true
         }
       })
-      .state("project.edit.description", {
-        name: 'project',
-        url: "/description/:projectID",
+      .state("project.disposition.add", {
+        url: "/add/:projectID",
+        controller: function($stateParams) {
+          console.log($stateParams);
+        }
+      })
+      .state("project.disposition.edit", {
+        url: "/edit/:projectID",
+        resolve: {
+          projectID: ["$stateParams", function($stateParams) {
+            return $stateParams.projectID;
+          }]
+        },
         controller: function ($stateParams) {
           console.log($stateParams);
-        },
-        controllerAs: "project",
+        }
+      })
+      .state("project.disposition.edit.detail", {
+        url: "/detail/:disposedInFY/:disposedInQ",
+        controller: function ($stateParams, projectID) {
+          console.log($stateParams);
+        }
+      })
+      .state("project.portfolio", {
+        url: "/portfolio",
+        templateUrl: "/static/project/templates/portfolio.html",
         data: {
           requiresLogin: true
         }
       })
-      .state("project.edit.disposition", {
-        url: "/disposition/:projectID",
+      .state("project.portfolio.edit", {
+        url: "/edit/:projectID",
         controller: function ($stateParams) {
           console.log($stateParams);
-        },
-        controllerAs: "project",
+        }
+      })
+      .state("project.projectMan", {
+        url: "/projectMan",
+        templateUrl: "/static/project/templates/projectMan.html",
         data: {
           requiresLogin: true
         }
       })
-      .state("project.edit.dispositionDetail", {
-        url: "/dispositionDetail/:projectID/:disposedInFY/:disposedInQ",
+      .state("project.projectMan.edit", {
+        url: "/edit/:projectID",
         controller: function ($stateParams) {
           console.log($stateParams);
-        },
-        controllerAs: "project",
-        data: {
-          requiresLogin: true
-        }
-      })
-      .state("project.edit.portfolio", {
-        url: "/portfolio/:projectID",
-        controller: function ($stateParams) {
-          console.log($stateParams);
-        },
-        controllerAs: "project",
-        data: {
-          requiresLogin: true
-        }
-      })
-      .state("project.edit.project", {
-        url: "/project/:projectID",
-        controller: function ($stateParams) {
-          console.log($stateParams);
-        },
-        controllerAs: "project",
-        data: {
-          requiresLogin: true
         }
       });
   };

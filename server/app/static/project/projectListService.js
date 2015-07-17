@@ -15,7 +15,7 @@
       getMasterList: getMasterList,
       getProjectID: getProjectID,
       getSelectedIds: getSelectedIds,
-      getSql, getSql,
+      getSql: getSql,
       hasProjects: hasProjects,
       initModel: initModel,
       jumpToProject: jumpToProject,
@@ -61,10 +61,7 @@
     };
 
     function getProjectID() {
-      if (typeof service.projectID == "undefined") {
-        return $stateParams.projectID;
-      }
-      return service.projectID;
+      return service.masterList.projectID;
     }
     
     function getSelectedIds() {
@@ -83,7 +80,7 @@
       service.masterList = {
         allProjects: [],
         description: "",
-        sql: {},
+        sql: "",
         index: -1,
         next: -1,
         previous: -1,

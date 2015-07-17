@@ -1,7 +1,9 @@
-<h4 ng-show="project.currentMode() == 'add.comment'" class="col-sm-12">Add a Comment</h4>
+<span ng-bind="project.currentMode()"></span>
+
+<h4 ng-show="project.currentMode() == 'comment.add'" class="col-sm-12">Add a Comment</h4>
 
 <div
-  ng-show="project.currentMode() == 'add.comment'">
+  ng-show="project.currentMode() == 'comment.add'">
 
   <div class="form-group">
     <label for="comment" class="control-label col-sm-2"
@@ -25,14 +27,14 @@
   </div>
 </div>
 
-<h4 ng-show="project.currentMode() == 'add.comment'"
+<h4 ng-show="project.currentMode() == 'comment.add'"
   class="col-sm-12">Previous Comments</h4>
 
-<h4 ng-show="project.currentMode() == 'view' || project.currentMode().substring(0,'edit.comment'.length) == 'edit.comment'"
+<h4 ng-show="project.currentMode() == 'view' || project.currentMode().substring(0,'comment.edit'.length) == 'comment.edit'"
   class="col-sm-12">Comments</h4>
-  
+
 <dl class="dl-horizontal"
-  ng-show="project.currentMode() == 'view' || project.currentMode() == 'add.comment' || project.currentMode() == 'edit.comment'"
+  ng-show="project.currentMode() == 'view' || project.currentMode() == 'comment.add' || project.currentMode() == 'comment.edit'"
   ng-repeat="comment in project.as.getRawAttributes('comment')">
   <dt>
     <label ng-bind="comment['commentAuthor']"></label><br/>
@@ -42,15 +44,14 @@
     Entered <span ng-bind="comment['commentAuthored.printValue']"></span>
     <span ng-show="comment['commentEditor']"><br/>Last edited by <span ng-bind="comment['commentEditor']"></span> on <span ng-bind="comment['commentEdited.printValue']"></span></span>
     <button type="button" 
-      ng-show="project.currentMode() == 'edit.comment'"
+      ng-show="project.currentMode() == 'comment.edit'"
       ng-click="project.ds.showDetails('comment', 
                   [{name: 'commentID', id: comment['commentID']}])"> Edit </button>
   </dd>
 </dl>
 
-<div ng-show="project.currentMode() == 'edit.commentDetail'"
+<div ng-show="project.currentMode() == 'comment.edit.detail'"
   ng-repeat="comment in project.as.getRawAttributes('comment')">
-  
   <div class="form-group"
     ng-hide="comment['commentID'] == project.ds.stateParams.commentID">
     <label for="comment" class="control-label col-sm-2"

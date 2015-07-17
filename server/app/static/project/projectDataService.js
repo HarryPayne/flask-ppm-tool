@@ -7,18 +7,19 @@
     .factory("projectDataService", projectDataService);
   
   projectDataService.$inject = ["$rootScope", "$http", "$state", "$stateParams", 
-                                "$location", "projectListService", "attributesService",
-                                "stateLocationService"];
+                                "$location", "attributesService", "loginStateService", 
+                                "projectListService", "stateLocationService"];
   
   function projectDataService($rootScope, $http, $state, $stateParams, 
-                              $location, projectListService, attributesService,
-                              stateLocationService) {
+                              $location, attributesService, loginStateService,
+                              projectListService, stateLocationService) {
     var service = {
       attributes: attributesService.getAllAttributes,
       cancelAddProject: cancelAddProject,
       changeMode: changeMode,
       createProject: createProject,
       currentMode: currentMode,
+      editMode: editMode,
       getProjectData: getProjectData,
       getAttributes: getAttributes,
       getProjectAttributes: attributesService.getProjectAttributes,
@@ -29,7 +30,6 @@
       jumpToNewProject: jumpToNewProject,
       newProject: newProject,
       printValue: attributesService.printValue,
-      projectID: $stateParams.projectID,
       RestoreState: RestoreState,
       saveProject: saveProject,
       SaveState: SaveState,
@@ -41,7 +41,7 @@
     };
     
     service.RestoreState();
-    if (typeof service.attributes() == "undefined" && service.restoredParams) {
+    if (typeof service.getProjectAttributes() == "undefined" && service.restoredParams) {
       service.getProjectData(service.restoredParams);
     }
     
@@ -89,6 +89,13 @@
       return $state.current.name.substring(8);
     }
     
+    function editMode() {
+      if ($state.current.name.indexOf("edit") > -1) {
+        return true;
+      }
+      return false;
+    }
+    
     function getAttributes() {
       return service.attributes;
     }
@@ -104,10 +111,11 @@
     
     function getProjectDataFromLocation() {
       var state = stateLocationService.getStateFromLocation();
-      if ("projectID" in state.stateParams && state.stateParams.projectID != service.projectID) {
-        service.projectID = state.stateParams.projectID;
-        service.getProjectData(state.stateParams);
-        if ("commentID" in state.stateParams) {
+      if ("projectID" in state.params && state.params.projectID != service.projectID) {
+        service.projectID = state.params.projectID;
+        service.getProjectData(state.params);
+        projectListService.updateProjectListProjectID(service.projectID);
+        if ("commentID" in state.params) {
           //
         }
       }
@@ -115,8 +123,12 @@
 
     function hideDetails(tableName, keys) {
       var selected = attributesService.updateProjAttrsFromRawItem(tableName, keys);
-      $state.go("project.edit." + tableName, 
-                {projectID: $state.params.projectID});
+      if (loginStateService.canEditProjects()) {
+        $state.go("project." + tableName + ".edit", {projectID: $state.params.projectID});
+      }
+      else {
+        $state.go("project.detail", {projectID: $state.params.projectID});
+      }
     }
 
     function jumpToAtachFile() {
@@ -125,13 +137,16 @@
     
     function jumpToAddForm(tableName, keys) {
       attributesService.updateProjAttrsFromRawItem(tableName, keys);
+      if (_.contains(["comment"], tableName)) {
+        $state.go("project." + tableName + ".edit", {projectID: $state.params.projectID});
+      }
       $state.go("project.add." + tableName, {projectID: $state.params.projectID});
     };
 
     function jumpToNewProject(result) {
       service.setProjectData(result);
       projectListService.updateAllProjects(result.data.projectID);
-      $state.go("project.edit.description", {projectID: result.data.projectID});
+      $state.go("project.description.edit", {projectID: result.data.projectID});
     }
 
     function newProject() {
@@ -159,7 +174,7 @@
       $http(request)
         .then(service.setProjectData);
       service.noCheck = true;
-      $state.go("project.edit." + tableName, {projectID: $state.params.projectID, noCheck: true});
+      $state.go("project." + tableName + ".edit", {projectID: $state.params.projectID, noCheck: true});
     };
 
     function SaveState() {
@@ -169,6 +184,7 @@
     function setProjectData(result, params) {
       //return;
       attributesService.updateProjectAttributes(result, params);
+      service.projectID = result.data.projectID;
       service.success = result.data.success;
       service.SaveState();
       attributesService.SaveState();
@@ -177,11 +193,11 @@
     function showDetails(tableName, keys) {
       var selected = attributesService.updateProjAttrsFromRawItem(tableName, keys);
       if (tableName == 'comment') {
-        $state.go("project.edit.commentDetail", 
+        $state.go("project.comment.edit.detail", 
                   {projectID: service.projectID, commentID: selected.commentID});
       }
       if (tableName == 'disposition') {
-        $state.go("project.edit.dispositionDetail", 
+        $state.go("project.disposition.edit.detail", 
                   {projectID: service.projectID, disposedInFY: selected.disposedInFY.id,
                    disposedInQ: selected.disposedInQ.id});
       }

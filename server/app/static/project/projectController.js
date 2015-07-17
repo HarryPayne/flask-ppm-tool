@@ -7,14 +7,15 @@
     .controller("Project", Project);
   
   Project.$inject = ["$scope", "$state", "projectDataService", "projectListService", 
-                     "attributesService", "modalConfirmService"];
+                     "attributesService", "modalConfirmService", "loginStateService"];
   
   function Project($scope, $state, projectDataService, projectListService, 
-                   attributesService, modalConfirmService){
+                   attributesService, modalConfirmService, loginStateService){
     
     this.as = attributesService;
     this.ds = projectDataService;
     this.ls = projectListService;
+    this.log_s = loginStateService;
     
     this.attributes = attributesService.getAttributes;
     this.changeMode = projectDataService.changeMode;

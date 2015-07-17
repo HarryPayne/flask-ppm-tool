@@ -11,6 +11,10 @@
   
   function loginStateService($rootScope, $http, store, jwtHelper, loginService) {
     var service = {
+      can_edit_roles: ["Curator", "Manager"],
+      canAddComments: canAddComments,
+      canEditProjects: canEditProjects,
+      hasRole: hasRole,
       loggedIn: loggedIn,
       login: login,
       logout: logout,
@@ -20,6 +24,30 @@
     
     return service;    
     
+    function canAddComments() {
+      if (service.loggedIn()) {
+        return true;
+      }
+      return false;
+    }
+    function canEditProjects() {
+      if (service.loggedIn()) {
+        if (_.intersection($rootScope.currentUser.roles, service.can_edit_roles)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function hasRole(role) {
+      if (service.loggedIn()) {
+        if (_.contains($rootScope.currentUser.roles, role)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
     function loggedIn() {
       return Boolean(store.get('jwt'));
     }

@@ -321,7 +321,8 @@ Data attributes:
           var childName = parent.child.name;
           parent.child = service.allAttributes[childName];
         });
-        return  selected;
+        SaveState();
+        return selected;
       }
       else {
         var tableAttrs = _.where(service.allAttributes, {table: tableName});
@@ -337,6 +338,7 @@ Data attributes:
           service.projectAttributes[tableName].push(attr);
         });
       }
+      SaveState();
     }
     
     function updateAllAttributes() {
@@ -366,12 +368,12 @@ Data attributes:
       if (result.statusText == "OK") {
         _.each(result.data.formData, updateProjectAttributesFromForm);
       }
-      if ("disposedInFY" in params || "disposedInQ" in params) {
+      if (typeof params != "undefined" && ("disposedInFY" in params || "disposedInQ" in params)) {
         updateProjAttrsFromRawItem("disposition", 
                                    [{name: 'disposedInFY', id: service.allAttributes['disposedInFY'].value['id']}, 
                                     {name: 'disposedInQ', id: service.allAttributes['disposedInQ'].value['id']}]);
       }
-      else if ("commentID" in params) {
+      else if (typeof params != "undefined" && "commentID" in params) {
         updateProjAttrsFromRawItem("comment", 
                                    [{name: 'commentID', id: service.allAttributes["commentID"].value}]);
       }

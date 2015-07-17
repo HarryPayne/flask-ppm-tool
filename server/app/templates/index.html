@@ -18,8 +18,8 @@
     <link href="/static/vendor/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" media="screen">
     <link href="/static/vendor/angular-datatables/dist/plugins/bootstrap/datatables.bootstrap.min.css" rel="stylesheet" media="screen">
     <link href="/static/vendor/angular-readmore-master/css/style.css" rel="stylesheet" media="screen">
-    <link href="/static/browse/browse.css" rel="stylesheet" media="screen">
     <link href="/static/login/login.css" rel="stylesheet" media="screen">
+    <link href="/static/report/report.css" rel="stylesheet" media="screen">
     <link href="/static/select/select.css" rel="stylesheet" media="screen">
     {% endif %}
     <style>     
@@ -54,7 +54,7 @@
                 <ul class="nav nav-tabs">
                   <li role="presentation" ng-class="{active:header.isActive('select')}"><a ui-sref="select">Select</a></li>
                   <li role="presentation" ng-class="{active:header.isActive('filter')}"><a ui-sref="filter">Filter Builder</a></li>
-                  <li role="presentation" ng-class="{active:header.isActive('browse')}"><a ui-sref="browse">Browse</a></li>
+                  <li role="presentation" ng-class="{active:header.isActive('report')}"><a ui-sref="report.table({query_string: header.getSql()})">Report</a></li>
                   <li role="presentation" ng-class="{active:header.isActive('project')}"><a ui-sref="project.detail">Project</a></li>
                   <li role="presentation" ng-class="{active:header.hasPrevious()}"><a href="#" onclick="return false;" ng-click="header.jumpToPreviousProject()">Previous</a></li>
                   <li role="presentation" ng-class="{active:header.hasNext()}"><a href="#" onclick="return false;" ng-click="header.jumpToNextProject()">Next</a></li>
@@ -109,11 +109,6 @@
     <script type="text/javascript" src="/static/attributes/attributesController.js"></script>
     <script type="text/javascript" src="/static/attributes/attributesService.js"></script>
     
-    <script type="text/javascript" src="/static/browse/app.browse.js"></script>
-    <script type="text/javascript" src="/static/browse/browseConfig.js"></script>
-    <script type="text/javascript" src="/static/browse/browseController.js"></script>
-    <script type="text/javascript" src="/static/browse/browseTableService.js"></script>
-    
     <script type="text/javascript" src="/static/comment/app.comment.js"></script>
     <script type="text/javascript" src="/static/comment/commentConfig.js"></script>
     <script type="text/javascript" src="/static/comment/commentController.js"></script>
@@ -152,6 +147,11 @@
     <script type="text/javascript" src="/static/project/projectController.js"></script>
     <script type="text/javascript" src="/static/project/projectDataService.js"></script>
     <script type="text/javascript" src="/static/project/projectListService.js"></script>
+    
+    <script type="text/javascript" src="/static/report/app.report.js"></script>
+    <script type="text/javascript" src="/static/report/reportConfig.js"></script>
+    <script type="text/javascript" src="/static/report/reportController.js"></script>
+    <script type="text/javascript" src="/static/report/reportTableService.js"></script>
     
     <script type="text/javascript" src="/static/select/app.select.js"></script>
     <script type="text/javascript" src="/static/select/selectConfig.js"></script>

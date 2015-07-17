@@ -1,0 +1,69 @@
+<h4 class="col-sm-12">Description Attributes</h4>
+  <dl class="dl-horizontal"
+    ng-repeat="attr in project.as.getProjectAttributes('description')" 
+    ng-include src="'static/project/templates/view-field.html'">
+  </dl>
+
+  <h4 class="col-sm-12">Portfolio Attributes</h4>
+
+  <dl class="dl-horizontal"
+    ng-repeat="attr in project.as.getProjectAttributes('portfolio')" 
+    ng-include src="'static/project/templates/view-field.html'">
+  </dl>
+
+<h4 class="col-sm-12">Disposition History</h4>
+
+<dl class="dl-horizontal" 
+  ng-repeat="disp in project.as.getRawAttributes('disposition')">
+  <dt>
+    <label ng-bind="disp['disposedInFY'].desc"></label>
+    <label ng-bind="disp['disposedInQ'].desc"></label>
+  </dt>
+  <dd>
+    <p>
+    <span ng-bind="disp['dispositionID'].desc" class="text-capitalize"></span>.
+
+    <span ng-show="disp['reconsiderInQ'].desc || disp['reconsiderInFY'].desc">
+      Reconsider in <span ng-bind="disp['reconsiderInFY'].desc"></span>
+      <span ng-bind="disp['reconsiderInQ'].desc"></span>.
+    </span>
+
+    <span ng-show="disp['startInY'].desc || disp['startInM'].desc">
+      Start in <span ng-bind="disp['startInM'].desc"></span>
+      <span ng-bind="disp['startInY'].desc"></span>.
+    </span>
+
+    <span ng-show="disp['finishInY'].desc || disp['finishInM'].desc">
+      Finish in <span ng-bind="disp['finishInM'].desc"></span>
+      <span ng-bind="disp['finishInY'].desc"></span>.
+    </span>
+    
+    <!-- span>
+    Last modified by <span ng-bind="disp['lastModifiedBy']"></span> on <span ng-bind="disp['lastModified.printValue']"></span>
+    </span-->
+    
+    </p>
+  </dd>
+</dl>
+
+<h4 class="col-sm-12">Project Management Attributes</h4>
+
+<dl class="dl-horizontal"
+  ng-repeat="attr in project.as.getProjectAttributes('project')" 
+  ng-include src="'static/project/templates/view-field.html'">
+</dl>
+
+<h4 class="col-sm-12">Comments</h4>
+
+<dl class="dl-horizontal"
+  ng-repeat="comment in project.as.getRawAttributes('comment')">
+  <dt>
+    <label ng-bind="comment['commentAuthor']"></label><br/>
+  </dt>
+  <dd>
+    <span ng-bind="comment['comment']"></span><br/>
+    Entered <span ng-bind="comment['commentAuthored.printValue']"></span>
+    <span ng-show="comment['commentEditor']"><br/>Last edited by <span ng-bind="comment['commentEditor']"></span> on <span ng-bind="comment['commentEdited.printValue']"></span></span>
+  </dd>
+</dl>
+

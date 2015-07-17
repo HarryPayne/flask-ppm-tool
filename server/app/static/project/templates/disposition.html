@@ -1,6 +1,6 @@
 
-<h4 ng-show="project.currentMode() == 'add.disposition'" class="col-sm-12">Add a Disposition</h4>
-<div ng-show="project.currentMode() == 'add.disposition'">
+<h4 ng-show="project.currentMode() == 'disposition.add'" class="col-sm-12">Add a Disposition</h4>
+<div ng-show="project.currentMode() == 'disposition.add'">
 
   <div class="form-group">
     <label for="dispositionID" class="col-sm-2 control-label">
@@ -51,14 +51,14 @@
   </div>
 </div>
 
-<h4 ng-show="project.currentMode() == 'add.disposition'" 
+<h4 ng-show="project.currentMode() == 'disposition.add'" 
   class="col-sm-12">Previous Dispositions</h4>
 
-<h4 ng-show="project.currentMode() == 'view' || project.currentMode().substring(0, 'edit.disposition'.length) == 'edit.disposition'"
+<h4 ng-show="project.currentMode() == 'view' || project.currentMode().substring(0, 'disposition.edit'.length) == 'disposition.edit'"
   class="col-sm-12">Disposition History</h4>
 
 <dl class="dl-horizontal" 
-  ng-show="project.currentMode() == 'view' || project.currentMode() == 'add.disposition' || project.currentMode() == 'edit.disposition'"
+  ng-show="project.currentMode() == 'view' || project.currentMode() == 'disposition.add' || project.currentMode() == 'disposition.edit'"
   ng-repeat="disp in project.as.getRawAttributes('disposition')">
   <dt>
     <label ng-bind="disp['disposedInFY'].desc"></label>
@@ -88,7 +88,7 @@
     </span-->
     
     <button type="button"
-      ng-show="project.currentMode() == 'edit.disposition'"
+      ng-show="project.currentMode() == 'disposition.edit'"
       ng-click="project.ds.showDetails('disposition', 
                   [{name: 'disposedInFY', id: disp['disposedInFY']['id']}, 
                    {name: 'disposedInQ', id: disp['disposedInQ']['id']}])"> Edit </button>
@@ -96,7 +96,7 @@
   </dd>
 </dl>
 
-<div ng-show="project.currentMode() == 'edit.dispositionDetail'"
+<div ng-show="project.currentMode() == 'disposition.edit.detail'"
   ng-repeat="disp in project.as.getRawAttributes('disposition')">
 
   <div class="form-group"
