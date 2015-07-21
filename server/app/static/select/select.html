@@ -144,7 +144,7 @@
             <div class="input-group">
               <input type="text" name="searchText" id="searchText" 
                 class="form-control"
-                ng-model="select.selectState.searchText"
+                ng-model="select.ss.getMasterList().searchText"
                 placeholder="keywords or phrase"
                 aria-describedBy="helpBlock4">
               <span class="input-group-btn">
@@ -160,19 +160,19 @@
               <span class="radio-inline">
                 <label>
                   <input type="radio" name="nameLogic" id="nameLogic_or" value="or" 
-                    ng-model="select.selectState.nameLogic"> with 'or'
+                    ng-model="select.ss.getMasterList().nameLogic"> with 'or'
                 </label>
               </span>
               <span class="radio-inline">
                 <label>
                   <input type="radio" name="nameLogic" id="nameLogic_and" value="and" 
-                    ng-model="select.selectState.nameLogic"> with 'and'
+                    ng-model="select.ss.getMasterList().nameLogic"> with 'and'
                 </label> or
               </span>
               <span class="radio-inline">
                 <label>
                   <input type="radio" name="nameLogic" id="nameLogic_phrase" value="phrase" 
-                    ng-model="select.selectState.nameLogic">
+                    ng-model="select.ss.getMasterList().nameLogic">
                   as a phrase.
                 </label>
               </span>
@@ -183,14 +183,14 @@
               </span>
               <div class="radio-inline">
                 <label>
-                  <input type="radio" value="0" name="finalID" ng-model="select.selectState.finalID">
+                  <input type="radio" value="0" name="finalID" ng-model="select.ss.getMasterList().finalID">
                   active projects only
                 </label>
                 or
               </div>
               <div class="radio-inline">
                 <label>
-                  <input type="radio" value="" name="finalID" ng-model="select.selectState.finalID">
+                  <input type="radio" value="" name="finalID" ng-model="select.ss.getMasterList().finalID">
                   all projects.
                 </label>
               </div>
@@ -199,9 +199,9 @@
         </div>
       </form>
 
-      <div id="searchTextResult" ng-show="select.selectState.searchText" class="col-xs-offset-2 col-lg-offset-2 col-xs-10 col-lg-10">
+      <div id="searchTextResult" ng-show="select.ss.getMasterList().searchText" class="col-xs-offset-2 col-lg-offset-2 col-xs-10 col-lg-10">
         <p>There are {{ filtered.length }} matches:</p>
-        <dl ng-repeat="project in filtered = (select.masterList().allProjects | nameSearch:select.selectState.searchText:select.selectState.nameLogic:select.selectState.finalID)"> 
+        <dl ng-repeat="project in filtered = (select.masterList().allProjects | nameSearch:select.ss.getMasterList().searchText:select.ss.getMasterList().nameLogic:select.ss.getMasterList().finalID)"> 
           <dt>{{project.projectID}}. <a href="" ng-click="select.jumpToProject(project.projectID)">{{project.name}}</a>
           </dt>
           <dd read-more content="{{ project.description }}" limit="200"></dd>

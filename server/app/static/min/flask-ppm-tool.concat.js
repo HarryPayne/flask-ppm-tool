@@ -59,60 +59,17 @@
     .module("PPT")
     .run(initializeApp);
   
-  initializeApp.$inject = ["$rootScope", "projectListService", "projectDataService", 
-                               "stateLocationService"];
+  initializeApp.$inject = ["$rootScope"];
   
-  function initializeApp($rootScope, projectListService, projectDataService, stateLocationService) {
+  function initializeApp($rootScope) {
     $rootScope.$on("$stateChangeStart", _initializeApp);
     
     function _initializeApp(e, toState, toParams, fromState, fromParams){
       window.onbeforeunload = function (event) {
+        // save state before navigating away from the application
         $rootScope.$broadcast('savestate');
       };
       
-      var tab = _.first(toState.name.split("."));
-      if (tab =="select" || tab == "filter") {
-        // Reload the master list before selecting projects, in case a new one was added.
-        projectListService.updateAllProjects();
-        projectListService.setList(projectListService.getIDListFromAllProjects());
-        projectListService.setDescription("none;");
-      }
-      else if (tab == "project" && (!projectListService.hasProjects() || toParams.projectID == "")) {
-        // Make sure project data are present if starting the app from a bookmarked project url.
-        if (!projectListService.hasProjects()) {
-          projectListService.updateAllProjects();
-        }
-
-        var projectID;
-        var masterList = projectListService.getMasterList();
-        var selectedIds = masterList.selectedIds;
-        var oldProjectID = masterList.projectID;
-
-        if (!toParams.projectID) {
-          projectID = stateLocationService.getStateFromLocation().params.projectID;
-          if (!projectID) {
-            if (projectListService.hasProjects()) {
-              projectID = projectListService.getProjectID();
-            }
-          }
-        }
-        else {
-          projectID = parseInt(toParams.projectID);
-          //selectedIds = [projectID];
-          projectListService.setList(selectedIds);
-          projectListService.setDescription("projectID = " + projectID + ";");
-          projectListService.setSql({col_name: "projectID",
-                                     val: projectID,
-                                     op: "equals" });
-        }
-        //projectListService.updateProjectListProjectID(projectID, selectedIds);
-
-        toParams.projectID = projectID;
-
-        if (!projectDataService.projectID || projectDataService.projectID != projectID) {
-          projectDataService.getProjectData(toParams);
-        }
-      }
     }   
   }
   
@@ -587,7 +544,6 @@ Data attributes:
   function commentConfig($stateProvider) {
     $stateProvider
       .state("comment", {
-        name: "comment",
         url: "/comment",
         templateUrl: "/static/comment/comment.html",
         controller: "Comment",
@@ -636,7 +592,6 @@ Data attributes:
   function curateConfig($stateProvider) {
     $stateProvider
       .state("curate", {
-        name: "curate",
         url: "/curate",
         templateUrl: "/static/curate/curate.html",
         controller: "Curate",
@@ -670,11 +625,7 @@ Data attributes:
 (function() {
   
   angular
-    .module("app.filter", [
-      "ui.router",
-      "angular-storage",
-      "angular-jwt"
-    ]);
+    .module("app.filter", []);
     
 }());
 
@@ -698,7 +649,10 @@ Data attributes:
         templateUrl: "/static/filter/filter.html",
         data: {
           requiresLogin: false
-        }
+        },
+        onEnter: ["projectListService", function(projectListService) {
+          projectListService.resetList();
+        }]
       });
   };
   
@@ -712,11 +666,9 @@ Data attributes:
     .module("app.filter")
     .controller("Filter", Filter);
   
-  Filter.$inject = ['$scope', '$http', 'store', 'jwtHelper', 
-                    'projectListService', 'selectStateService'];
+  Filter.$inject = ["projectListService", "selectStateService"];
   
-  function Filter($scope, $http, store, jwtHelper, projectListService, 
-                  selectStateService) {
+  function Filter(projectListService, selectStateService) {
     
     this.ls = projectListService;
     this.masterList = projectListService.getMasterList;
@@ -1102,7 +1054,6 @@ Data attributes:
   function manageConfig($stateProvider) {
     $stateProvider
       .state("manage", {
-        name: "manage",
         url: "/manage",
         templateUrl: "/static/manage/manage.html",
         controller: "Manage",
@@ -1152,17 +1103,17 @@ Data attributes:
   function ModalConfirmService($modal) {
     var service = {
       modalDefaults: {
-                       backdrop: true,
-                       keyboard: true,
-                       modalFade: true,
-                       templateUrl: "/static/modalConfirm/confirm.html"
-                     },
+        backdrop: true,
+        keyboard: true,
+        modalFade: true,
+        templateUrl: "/static/modalConfirm/confirm.html"
+      },
       modalOptions: {
-                      actionText: "OK",
-                      bodyText: "OK to proceed?",
-                      closeText: "Close",
-                      headerText: "Confirm"
-                    },
+        actionText: "OK",
+        bodyText: "OK to proceed?",
+        closeText: "Close",
+        headerText: "Confirm"
+      },
       show: show,
       showModal: showModal
     };
@@ -1177,15 +1128,17 @@ Data attributes:
       jQuery.extend(currentOptions, service.modalOptions, customOptions);
       
       if (!currentDefaults.controller) {
-        currentDefaults.controller = function($scope, $modalInstance) {
-          $scope.modalOptions = currentOptions;
-          $scope.modalOptions.ok = function(result) {
-            $modalInstance.close(result);
-          };
-          $scope.modalOptions.close = function(result) {
-            $modalInstance.dismiss("cancel");
-          };
-        };
+        currentDefaults.controller = ["$scope", "$modalInstance",
+          function($scope, $modalInstance) {
+            $scope.modalOptions = currentOptions;
+            $scope.modalOptions.ok = function(result) {
+              $modalInstance.close(result);
+            };
+            $scope.modalOptions.close = function(result) {
+              $modalInstance.dismiss("cancel");
+            };
+          }
+        ];
       }
       
       return $modal.open(currentDefaults).result;
@@ -1227,7 +1180,46 @@ Data attributes:
         data: {
           requiresLogin: false,
           viewUrl: "/static/project/project.html"
-        }
+        },
+        onEnter: ["$stateParams", "projectDataService", "projectListService", 
+                  "stateLocationService",
+          function($stateParams, projectDataService, projectListService, stateLocationService) {
+            // Make sure the project list is ready and $stateParams contains a projectID
+            if (!projectListService.hasProjects()) {
+              projectListService.updateAllProjects();
+            }
+
+            var projectID;
+            var masterList = projectListService.getMasterList();
+            var selectedIds = masterList.selectedIds;
+            var oldProjectID = masterList.projectID;
+
+            if (!$stateParams.projectID) {
+              projectID = stateLocationService.getStateFromLocation().params.projectID;
+              if (!projectID) {
+                if (projectListService.hasProjects()) {
+                  projectID = projectListService.getProjectID();
+                }
+              }
+            }
+            else {
+              projectID = $stateParams.projectID;
+              //selectedIds = [projectID];
+              projectListService.setList(selectedIds);
+              projectListService.setDescription("projectID = " + projectID + ";");
+              projectListService.setSql({col_name: "projectID",
+                                         val: projectID,
+                                         op: "equals" });
+            }
+            //projectListService.updateProjectListProjectID(projectID, selectedIds);
+
+            $stateParams.projectID = projectID;
+
+            if (!projectDataService.projectID || projectDataService.projectID != projectID) {
+              projectDataService.getProjectData($stateParams);
+            }
+          }
+        ]
       }) 
       .state("project.add",  {
         url: "/add",
@@ -1660,6 +1652,7 @@ Data attributes:
   
   function ProjectListService($rootScope, $http, $state, $stateParams, $location) {
     var service = {
+      allProjectsCount: allProjectsCount,
       getAllProjectResults: getAllProjectResults,
       getIDListFromAllProjects: getIDListFromAllProjects,
       getMasterList: getMasterList,
@@ -1670,8 +1663,10 @@ Data attributes:
       initModel: initModel,
       jumpToProject: jumpToProject,
       jumpToProjectInList: jumpToProjectInList,
+      resetList: resetList,
       RestoreState: RestoreState,
       SaveState: SaveState,
+      selectedIdsCount: selectedIdsCount,
       setDescription: setDescription,
       setList: setList,
       setSql: setSql,
@@ -1688,6 +1683,10 @@ Data attributes:
     $rootScope.$on("restorestate", service.RestoreState);
     
     return service;    
+
+    function allProjectsCount() {
+      return service.getMasterList().allProjects.length;
+    }
 
     function getAllProjectResults(results, projectID) {
       if (typeof projectID == "undefined") {
@@ -1723,7 +1722,7 @@ Data attributes:
     }
     
     function hasProjects() {
-      return Boolean(service.getMasterList().allProjects.length > 0);
+      return Boolean(service.allProjectsCount() > 0);
     }
     
     function initModel( ){
@@ -1777,6 +1776,13 @@ Data attributes:
       $state.go('project.detail', {projectID: projectID});
     };
 
+    function resetList() {
+      service.updateAllProjects();
+      service.setList(service.getIDListFromAllProjects());
+      service.setDescription("none");
+      service.setSql("");
+    }
+
     function RestoreState() {
         service.masterList = angular.fromJson(sessionStorage.projectListService);
     };
@@ -1784,6 +1790,10 @@ Data attributes:
     function SaveState() {
         sessionStorage.projectListService = angular.toJson(service.masterList);
     };
+
+    function selectedIdsCount() {
+      return service.masterList.selectedIds.length;
+    }
     
     function setDescription(description) {
       service.masterList.description = description;
@@ -1889,7 +1899,21 @@ Data attributes:
         templateUrl: "/static/report/templates/table.html",
         controller: function ($stateParams) {
           console.log($stateParams);
-        }
+        },
+        onEnter: ["$stateParams", "projectListService", "reportTableService", 
+          function($stateParams, projectListService, reportTableService) {
+            if (!projectListService.hasProjects()) {
+              projectListService.updateAllProjects();
+            }
+            var state_query = $stateParams.query_string;
+            if (state_query && state_query != projectListService.getSql()) {
+              reportTableService.getReportResults(state_query);
+            }
+            else if (state_query == "" && reportTableService.projectCount() != projectListService.allProjectsCount()) {
+              reportTableService.getReportResults(state_query);
+            }
+          }
+        ]
       });
   }
   
@@ -1927,34 +1951,45 @@ Data attributes:
     .factory('reportTableService', ReportTableService);
     
   ReportTableService.$inject = ["$rootScope", "$http", "$stateParams", "$compile", 
-                                "DTOptionsBuilder",  "DTColumnBuilder", 
+                                "DTOptionsBuilder",  "DTColumnBuilder", "DTInstances",
                                 "projectListService"];
   
   function ReportTableService($rootScope, $http, $stateParams, $compile, 
-                              DTOptionsBuilder, DTColumnBuilder, 
+                              DTOptionsBuilder, DTColumnBuilder, DTInstances,
                               projectListService) {
     var service = {
-      master: {
-        dtColumns: [{mData: "name", sTitle: "Name"},
-                    {mData: "description", sTitle: "Description"},
-                    {mData: "maturityID", sTitle: "Maturity"},
-                    {mData: "driverID", sTitle: "Driver"}],
-        tableColumns: ["name", "description", "maturityID", "driverID"]
-      },
       checkForQueryChange: checkForQueryChange,
       createdRow: createdRow,
+      projectCount: projectCount,
       deleteOptions: deleteOptions,
       getReportResults: getReportResults,
       getReportTableData: getReportTableData,
+      projectIDColumn: {data: "projectID",
+                        title: "ID",
+                        render: jumpToProjectLink,
+                        defaultContent: ""},
       RestoreState: RestoreState,
       SaveState: SaveState,
       scope: $rootScope.$new(), // http://stackoverflow.com/questions/17600905/compile-directives-via-service-in-angularjs#comment41413717_17601350
       setReportResults: setReportResults,
-      setReportTableData: setReportTableData
+      setReportTableData: setReportTableData,
+      tableColumns: tableColumns,
+      master: {
+        dtColumns: [{data: "projectID",
+                        title: "ID",
+                        render: jumpToProjectLink,
+                        defaultContent: ""},
+                    {data: "name", title: "Name"},
+                    {data: "description", title: "Description"},
+                    {data: "maturityID", title: "Maturity"},
+                    {data: "driverID", title: "Driver"}],
+        dtInstance: {},
+        dtOptions: {}
+      },
     };
     
     service.RestoreState();
-    $rootScope.$on("$locationChangeSuccess", service.checkForQueryChange());
+    //$rootScope.$on("$locationChangeSuccess", service.checkForQueryChange());
     
     function checkForQueryChange() {
       var state_query = $stateParams.query_string;
@@ -1976,8 +2011,8 @@ Data attributes:
         method: "POST",
         url: "/getReportResults",
         data: {query_string: encodeURIComponent(query_string),
-               tableColumns: service.master.tableColumns}
-      }
+               tableColumns: service.tableColumns()}
+      };
       $http(request)
         .then(service.setReportResults);
     }
@@ -1987,15 +2022,36 @@ Data attributes:
         method: "POST",
         url: "/getReportTableJSON",
         data: {projectID: projectListService.getSelectedIds(),
-               tableColumns: service.master.tableColumns}
+               tableColumns: service.tableColumns()}
       };
       $http(request)
         .then(service.setReportTableData);
     }
     
+    function jumpToProjectLink( data, type, full, meta ) {
+      return '<a ui-sref="project.detail({projectID: ' + data + '})">' + data + '</a>';
+    }
+
+    function projectCount() {
+      try {
+        return service.master.dtOptions.data.length;
+      }
+      catch (e) {
+        return 0;
+      }
+    }
+    
     function RestoreState() {
       if (typeof sessionStorage.reportTableService != "undefined") {
-        service.master = angular.fromJson(sessionStorage.reportTableService);
+        var master = angular.fromJson(sessionStorage.reportTableService);
+
+        // render function gets lost in conversion to JSON and needs to be replaced
+        service.master.dtColumns = master.dtColumns;
+        service.master.dtColumns[0] = service.projectIDColumn; 
+
+        // createdRow option function gets lost in converstion to JSON
+        service.master.dtOptions = master.dtOptions;
+        service.master.dtOptions.createdRow = service.createdRow;
       }
     }
     
@@ -2004,11 +2060,13 @@ Data attributes:
     }
 
     function setReportResults(response) {
-      setReportTableData(response);
       projectListService.setList(response.data.projectList);
       projectListService.setDescription(response.data.query_desc);
       projectListService.setSql(response.data.query_string);
       projectListService.SaveState();
+      setReportTableData(response);
+      service.master.dtInstance.rerender();
+      service.SaveState();
     }
 
     function setReportTableData(response) {
@@ -2017,19 +2075,14 @@ Data attributes:
          service.master.dtOptions.withOption(key, response.data.options[key]);
       });
       service.master.dtOptions.withOption("createdRow", createdRow);
+      service.master.dtColumns = [service.projectIDColumn].concat(response.data.columns);
       service.master.dtOptions.data = response.data.data;
-      service.master.dtColumns = response.data.columns;
-      service.master.dtColumns.unshift({
-        data: "projectID",
-        title: "ID",
-        render: jumpToProjectLink,
-        defaultContent: ""
-      });
+      service.master.dtInstance.rerender();
       service.SaveState();
     }
-    
-    function jumpToProjectLink( data, type, full, meta ) {
-      return '<a ui-sref="project.detail({projectID: ' + data + '})">' + data + '</a>';
+
+    function tableColumns() {
+      return _.pluck(service.master.dtColumns, "data");
     }
     
     service.SaveState();
@@ -2060,17 +2113,20 @@ Data attributes:
   function selectConfig($stateProvider) {
     $stateProvider
       .state("select", {
-        name: "select",
         url: "/select",
         controller: "Select",
         controllerAs: "select",
         templateUrl: "/static/select/select.html",
         data: {
           requiresLogin: false
-        }
+        },
+        onEnter: ["projectListService", 
+          function(projectListService) {
+            projectListService.resetList();
+          }
+        ]
       })
       .state("select.addProject", {
-        name: "select",
         url: "/addProject",
         controller: "Select",
         controllerAs: "select",
@@ -2103,7 +2159,7 @@ Data attributes:
     this.jumpToProject = this.ls.jumpToProject;
     
     this.ss = selectStateService;
-    this.selectState = this.ss.masterList;
+    this.selectState = selectStateService.getMasterList;
     
     this.ds = projectDataService;
 
@@ -2211,6 +2267,7 @@ Data attributes:
       getBreakdownByAttribute: getBreakdownByAttribute,
       getBreakdownChoices: getBreakdownChoices,
       getBreakdownTotal: getBreakdownTotal,
+      getMasterList: getMasterList,
       jumpToBreakdownTable: jumpToBreakdownTable,
       setBreakdownChoices: setBreakdownChoices,
       updateBreakdownByAttribute: updateBreakdownByAttribute,
@@ -2251,13 +2308,11 @@ Data attributes:
       return total;
     }
 
+    function getMasterList() {
+      return service.masterList;
+    }
+
     function jumpToBreakdownTable(breakdown_row) {
-      /*
-      if (breakdown_row.query_sql != projectListService.getSql()) {
-        reportTableService.deleteOptions();
-        reportTableService.SaveState();
-      }
-      */
       projectListService.setList(breakdown_row.projectList);
       projectListService.setDescription(breakdown_row.query_desc);
       projectListService.setSql(breakdown_row.query_string);
@@ -2267,7 +2322,7 @@ Data attributes:
     }
 
     function RestoreState() {
-      if (sessionStorage.selectStateService != "undefined") {
+      if (typeof sessionStorage.selectStateService != "undefined") {
         service.masterList = angular.fromJson(sessionStorage.selectStateService);
       }
     }
@@ -2295,6 +2350,7 @@ Data attributes:
         .then(setBreakdownChoices);
     }
     
+    SaveState();
     return service;    
   };
   
@@ -2458,7 +2514,7 @@ Data attributes:
       var location = $location.url();
       var entry = stateHistoryService.get(location);
       if (entry == null) {
-        entry = service.getStateFromLocation();
+        return; //entry = service.getStateFromLocation();
       }
       if ("projectID" in entry.params) {
         projectListService.updateProjectListProjectID(entry.params.projectID);

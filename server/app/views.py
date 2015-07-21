@@ -436,7 +436,8 @@ def getReportTableJSON():
     allAttrsFromDB = getAllAttributes()
     columns = []
     for col_name in tableColumns:
-        columns.append(allAttrsFromDB[col_name])
+        if col_name in allAttrsFromDB.keys():
+            columns.append(allAttrsFromDB[col_name])
     
     # Query for all projects in specified list
     p = alch.Description.query.filter(alch.Description.projectID.in_(projectIDList)).all()
@@ -447,61 +448,85 @@ def getReportTableJSON():
 @app.route("/getReportResults", methods=["POST"])
 def getReportResults():
     """ Get report data matching query_string """
-    
+
     # Parse with strict parsing. An error will raise an exception
     query_string = request.json.get("query_string", "")
     tableColumns = request.json.get("tableColumns", [])
 
-    query = parse_qs(unquote(query_string), True, True)
-        
     # Find out everything about the specified table columns
     allAttrsFromDB = getAllAttributes()
     columns = []
     for col_name in tableColumns:
-        columns.append(allAttrsFromDB[col_name])
+        if col_name in allAttrsFromDB.keys():
+            columns.append(allAttrsFromDB[col_name])
     
     attr_names = allAttrsFromDB.keys()
     
     # Base for query
-    p = alch.Description.query
+    d = alch.Description
+    pt = alch.Portfolio
+    pr = alch.Project
+    p = db.session.query(d).join(pt).join(pr)
     
     desc = []
     query_descs = []
     filters = []
     
-    for key in query.keys():
-        if key not in attr_names:
-            continue
-        attr = allAttrsFromDB[key]
-        if attr["format"] != "multipleSelect":
-            continue
-        raw_values = query[key]
-        int_values = [int(item) for item in raw_values]
-        accepted_choices = [choice for choice in attr["choices"] if choice["id"] in int_values]
-        accepted_descs = [item["desc"] for item in accepted_choices]
-        accepted_values = [item["id"] for item in accepted_choices]
+    if query_string != "":
+        # Apply the filters specified in the query_string
+        query = parse_qs(unquote(query_string), True, True)
         
-        if len(accepted_descs) > 1:
-            accepted_descs.sort()
-            desc = "{} in [{}]".format(attr["label"], ", ".join(accepted_descs))
-        elif len(accepted_descs) == 1:
-            desc = "{}={}".format(attr["label"], accepted_descs[0])
-        query_descs.append(desc)
-        
-        if len(accepted_values) > 1:
-            accepted_values.sort()
-            filter = "{} in {}".format(key, ", ".join(accepted_values))
-        elif len(accepted_values) == 1:
-            filter = "{}={}".format(key, accepted_values[0])
-        filters.append(filter)
-        
-        if len(accepted_values):    
-            p = p.filter(getattr(alch.Description, key).in_(accepted_values))
+        for key in query.keys():
+            if key not in attr_names:
+                continue
+            attr = allAttrsFromDB[key]
+            if attr["format"] != "multipleSelect":
+                continue
+            if attr["table"] == "description":
+                table = d
+            elif attr["table"] == "portfolio":
+                table = pt
+            elif attr["table"] == "project":
+                table = pr
     
-    p = p.all()
+            # get unique list of integer values
+            raw_values = list(set(query[key]))
+            int_values = map(int, raw_values)
+            accepted_choices = [choice for choice in attr["choices"] if choice["id"] in int_values]
+            accepted_descs = [item["desc"] for item in accepted_choices]
+            accepted_values = [item["id"] for item in accepted_choices]
+            
+            if len(accepted_descs) > 1:
+                accepted_descs.sort()
+                desc = "{} in [{}]".format(attr["label"], ", ".join(accepted_descs))
+            elif len(accepted_descs) == 1:
+                desc = "{}={}".format(attr["label"], accepted_descs[0])
+            
+            if len(accepted_values) > 1:
+                filts = []
+                accepted_values.sort()
+                for val in accepted_values:
+                    filt = "{}={}".format(key, val)
+                    filts.append(filt)
+                filter = "&".join(filts)
+            elif len(accepted_values) == 1:
+                filter = "{}={}".format(key, accepted_values[0])
+
+            if len(accepted_values):
+                query_descs.append(desc)
+                filters.append(filter)
+                if attr["multi"]:
+                    # join with the relationship table and filter on its key column
+                    table_name = "t_" + key[:-2]    # trim off "ID"
+                    table = getattr(alch, table_name)
+                    col = getattr(table.c, key)
+                    p = p.join(table).filter(col.in_(accepted_values))
+                else:
+                    p = p.filter(getattr(table, key).in_(accepted_values))
+        
     response = getReportRowsFromQuery(p, columns)
     response["projectList"] = [item.projectID for item in p]
-    response["query_desc"] = ", ".join(query_descs)
+    response["query_desc"] = ", ".join(query_descs) if len(query_descs) else "none"
     response["query_string"] = "&".join(filters)
     
     return dumps(response)
@@ -515,7 +540,6 @@ def getReportRowsFromQuery(p, columns):
         columns         send back the column names and labels
         options         default datatables options
     """
-    
     rows = []
     response = {}
     for item in p:
@@ -554,34 +578,35 @@ def getReportRowsFromQuery(p, columns):
                     value = ", ".join([getattr(val, relationship_name+"Desc") for val in value])
             row[col_name] = value
         rows.append(row)
-        response = {"data": rows}
-        
-        # Datatable column definitions for specified columns. 
-        # The projectID column requires a render function, which can't be 
-        # serialized. That needs to be added in the client.
-        aoColumns = []
-        for column in columns:
-            dt_col = {"data": column["name"],
-                      "title": column["label"].capitalize()}
-            aoColumns.append(dt_col)
-        response["columns"] = aoColumns
-        
-        # Datatables options
-        #    Hide pagination if there is only one page of results
-        #    Don't show the option to change the number of results
-        #    Action is client-side, not server side
-        #    No searching
-        pageLength = 25
-        response["options"] = {
-            "destroy": True,
-            "lengthChange": False,
-            "pageLength": pageLength,
-            "paging": len(rows) > pageLength,
-            "pagingType": "full_numbers",
-            "saveState": True,
-            "searching": False,
-            "serverSide": False
-        }
+    
+    response = {"data": rows}
+    
+    # Datatable column definitions for specified columns. 
+    # The projectID column requires a render function, which can't be 
+    # serialized. That needs to be added in the client.
+    aoColumns = []
+    for column in columns:
+        dt_col = {"data": column["name"],
+                  "title": column["label"].capitalize()}
+        aoColumns.append(dt_col)
+    response["columns"] = aoColumns
+    
+    # Datatables options
+    #    Hide pagination if there is only one page of results
+    #    Don't show the option to change the number of results
+    #    Action is client-side, not server side
+    #    No searching
+    pageLength = 25
+    response["options"] = {
+        "destroy": True,
+        "lengthChange": False,
+        "pageLength": pageLength,
+        "paging": len(rows) > pageLength,
+        "pagingType": "full_numbers",
+        "saveState": True,
+        "searching": False,
+        "serverSide": False
+    }
     
     return response
 

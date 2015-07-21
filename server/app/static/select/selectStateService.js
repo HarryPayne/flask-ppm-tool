@@ -23,6 +23,7 @@
       getBreakdownByAttribute: getBreakdownByAttribute,
       getBreakdownChoices: getBreakdownChoices,
       getBreakdownTotal: getBreakdownTotal,
+      getMasterList: getMasterList,
       jumpToBreakdownTable: jumpToBreakdownTable,
       setBreakdownChoices: setBreakdownChoices,
       updateBreakdownByAttribute: updateBreakdownByAttribute,
@@ -63,13 +64,11 @@
       return total;
     }
 
+    function getMasterList() {
+      return service.masterList;
+    }
+
     function jumpToBreakdownTable(breakdown_row) {
-      /*
-      if (breakdown_row.query_sql != projectListService.getSql()) {
-        reportTableService.deleteOptions();
-        reportTableService.SaveState();
-      }
-      */
       projectListService.setList(breakdown_row.projectList);
       projectListService.setDescription(breakdown_row.query_desc);
       projectListService.setSql(breakdown_row.query_string);
@@ -79,7 +78,7 @@
     }
 
     function RestoreState() {
-      if (sessionStorage.selectStateService != "undefined") {
+      if (typeof sessionStorage.selectStateService != "undefined") {
         service.masterList = angular.fromJson(sessionStorage.selectStateService);
       }
     }
@@ -107,6 +106,7 @@
         .then(setBreakdownChoices);
     }
     
+    SaveState();
     return service;    
   };
   

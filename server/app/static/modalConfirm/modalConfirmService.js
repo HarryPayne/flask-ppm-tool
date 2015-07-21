@@ -12,17 +12,17 @@
   function ModalConfirmService($modal) {
     var service = {
       modalDefaults: {
-                       backdrop: true,
-                       keyboard: true,
-                       modalFade: true,
-                       templateUrl: "/static/modalConfirm/confirm.html"
-                     },
+        backdrop: true,
+        keyboard: true,
+        modalFade: true,
+        templateUrl: "/static/modalConfirm/confirm.html"
+      },
       modalOptions: {
-                      actionText: "OK",
-                      bodyText: "OK to proceed?",
-                      closeText: "Close",
-                      headerText: "Confirm"
-                    },
+        actionText: "OK",
+        bodyText: "OK to proceed?",
+        closeText: "Close",
+        headerText: "Confirm"
+      },
       show: show,
       showModal: showModal
     };
@@ -37,15 +37,17 @@
       jQuery.extend(currentOptions, service.modalOptions, customOptions);
       
       if (!currentDefaults.controller) {
-        currentDefaults.controller = function($scope, $modalInstance) {
-          $scope.modalOptions = currentOptions;
-          $scope.modalOptions.ok = function(result) {
-            $modalInstance.close(result);
-          };
-          $scope.modalOptions.close = function(result) {
-            $modalInstance.dismiss("cancel");
-          };
-        };
+        currentDefaults.controller = ["$scope", "$modalInstance",
+          function($scope, $modalInstance) {
+            $scope.modalOptions = currentOptions;
+            $scope.modalOptions.ok = function(result) {
+              $modalInstance.close(result);
+            };
+            $scope.modalOptions.close = function(result) {
+              $modalInstance.dismiss("cancel");
+            };
+          }
+        ];
       }
       
       return $modal.open(currentDefaults).result;

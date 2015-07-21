@@ -36,7 +36,7 @@
     
     <div  class="container">
       <h3>{{ project.masterList().projectID}}: {{project.masterList().projectName}}</h3>
-      <ul class="nav navbar-default nav-tabs col-lg-8" ng-show="project.ds.editMode()">
+      <ul class="nav navbar-default nav-tabs col-lg-12" ng-show="project.ds.editMode()">
         <li role="presentation" ng-class="{active:project.currentMode() == 'description.edit'}"><a ui-sref="project.description.edit({projectID:project.ds.projectID})">Description</a></li>
         <li role="presentation" ng-class="{active:project.currentMode() == 'portfolio.edit'}"><a ui-sref="project.portfolio.edit({projectID:project.ds.projectID})">Portfolio</a></li>
         <li role="presentation" ng-class="{active:project.currentMode().substring(0, 'disposition.edit'.length) == 'disposition.edit'}"><a ui-sref="project.disposition.edit({projectID:project.ds.projectID})">Dispositions</a></li>

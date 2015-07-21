@@ -19,7 +19,7 @@
     this.jumpToProject = this.ls.jumpToProject;
     
     this.ss = selectStateService;
-    this.selectState = this.ss.masterList;
+    this.selectState = selectStateService.getMasterList;
     
     this.ds = projectDataService;
 

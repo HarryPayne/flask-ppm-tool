@@ -6,32 +6,40 @@
     .module('app.report')
     .factory('reportTableService', ReportTableService);
     
-  ReportTableService.$inject = ["$rootScope", "$http", "$stateParams", "$compile", 
-                                "DTOptionsBuilder",  "DTColumnBuilder", "DTInstances",
-                                "projectListService"];
+  ReportTableService.$inject = ["$compile", "DTColumnBuilder", "DTInstances", "DTOptionsBuilder", 
+                                "$http", "$location", "projectListService", "$rootScope", "$stateParams"];
   
-  function ReportTableService($rootScope, $http, $stateParams, $compile, 
-                              DTOptionsBuilder, DTColumnBuilder, DTInstances,
-                              projectListService) {
+  function ReportTableService($compile, DTColumnBuilder, DTInstances, DTOptionsBuilder, 
+                              $http, $location, projectListService, $rootScope, $stateParams) {
     var service = {
-      master: {
-        dtColumns: [{mData: "name", sTitle: "Name"},
-                    {mData: "description", sTitle: "Description"},
-                    {mData: "maturityID", sTitle: "Maturity"},
-                    {mData: "driverID", sTitle: "Driver"}],
-        dtInstance: {},
-        tableColumns: ["name", "description", "maturityID", "driverID"]
-      },
       checkForQueryChange: checkForQueryChange,
       createdRow: createdRow,
+      projectCount: projectCount,
       deleteOptions: deleteOptions,
       getReportResults: getReportResults,
       getReportTableData: getReportTableData,
+      projectIDColumn: {data: "projectID",
+                        title: "ID",
+                        render: jumpToProjectLink,
+                        defaultContent: ""},
       RestoreState: RestoreState,
       SaveState: SaveState,
       scope: $rootScope.$new(), // http://stackoverflow.com/questions/17600905/compile-directives-via-service-in-angularjs#comment41413717_17601350
       setReportResults: setReportResults,
-      setReportTableData: setReportTableData
+      setReportTableData: setReportTableData,
+      tableColumns: tableColumns,
+      master: {
+        dtColumns: [{data: "projectID",
+                        title: "ID",
+                        render: jumpToProjectLink,
+                        defaultContent: ""},
+                    {data: "name", title: "Name"},
+                    {data: "description", title: "Description"},
+                    {data: "maturityID", title: "Maturity"},
+                    {data: "driverID", title: "Driver"}],
+        dtInstance: {},
+        dtOptions: {}
+      },
     };
     
     service.RestoreState();
@@ -57,7 +65,7 @@
         method: "POST",
         url: "/getReportResults",
         data: {query_string: encodeURIComponent(query_string),
-               tableColumns: service.master.tableColumns}
+               tableColumns: service.tableColumns()}
       };
       $http(request)
         .then(service.setReportResults);
@@ -68,15 +76,36 @@
         method: "POST",
         url: "/getReportTableJSON",
         data: {projectID: projectListService.getSelectedIds(),
-               tableColumns: service.master.tableColumns}
+               tableColumns: service.tableColumns()}
       };
       $http(request)
         .then(service.setReportTableData);
     }
     
+    function jumpToProjectLink( data, type, full, meta ) {
+      return '<a ui-sref="project.detail({projectID: ' + data + '})">' + data + '</a>';
+    }
+
+    function projectCount() {
+      try {
+        return service.master.dtOptions.data.length;
+      }
+      catch (e) {
+        return 0;
+      }
+    }
+    
     function RestoreState() {
       if (typeof sessionStorage.reportTableService != "undefined") {
-        service.master = angular.fromJson(sessionStorage.reportTableService);
+        var master = angular.fromJson(sessionStorage.reportTableService);
+
+        // render function gets lost in conversion to JSON and needs to be replaced
+        service.master.dtColumns = master.dtColumns;
+        service.master.dtColumns[0] = service.projectIDColumn; 
+
+        // createdRow option function gets lost in converstion to JSON
+        service.master.dtOptions = master.dtOptions;
+        service.master.dtOptions.createdRow = service.createdRow;
       }
     }
     
@@ -88,9 +117,10 @@
       projectListService.setList(response.data.projectList);
       projectListService.setDescription(response.data.query_desc);
       projectListService.setSql(response.data.query_string);
-      setReportTableData(response);
       projectListService.SaveState();
+      setReportTableData(response);
       service.master.dtInstance.rerender();
+      service.SaveState();
     }
 
     function setReportTableData(response) {
@@ -99,19 +129,18 @@
          service.master.dtOptions.withOption(key, response.data.options[key]);
       });
       service.master.dtOptions.withOption("createdRow", createdRow);
+      service.master.dtColumns = [service.projectIDColumn].concat(response.data.columns);
       service.master.dtOptions.data = response.data.data;
-      service.master.dtColumns = response.data.columns;
-      service.master.dtColumns.unshift({
-        data: "projectID",
-        title: "ID",
-        render: jumpToProjectLink,
-        defaultContent: ""
-      });
+      //service.master.dtInstance.rerender();
+      var path = $location.path().split("/");
+      path.pop();
+      path.push(response.data.query_string)
+      $location.url(path.join("/"));
       service.SaveState();
     }
-    
-    function jumpToProjectLink( data, type, full, meta ) {
-      return '<a ui-sref="project.detail({projectID: ' + data + '})">' + data + '</a>';
+
+    function tableColumns() {
+      return _.pluck(service.master.dtColumns, "data");
     }
     
     service.SaveState();

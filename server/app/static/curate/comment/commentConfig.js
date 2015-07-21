@@ -11,7 +11,6 @@
   function commentConfig($stateProvider) {
     $stateProvider
       .state("comment", {
-        name: "comment",
         url: "/comment",
         templateUrl: "/static/comment/comment.html",
         controller: "Comment",

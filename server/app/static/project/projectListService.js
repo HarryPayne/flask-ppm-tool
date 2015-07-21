@@ -10,6 +10,7 @@
   
   function ProjectListService($rootScope, $http, $state, $stateParams, $location) {
     var service = {
+      allProjectsCount: allProjectsCount,
       getAllProjectResults: getAllProjectResults,
       getIDListFromAllProjects: getIDListFromAllProjects,
       getMasterList: getMasterList,
@@ -20,8 +21,10 @@
       initModel: initModel,
       jumpToProject: jumpToProject,
       jumpToProjectInList: jumpToProjectInList,
+      resetList: resetList,
       RestoreState: RestoreState,
       SaveState: SaveState,
+      selectedIdsCount: selectedIdsCount,
       setDescription: setDescription,
       setList: setList,
       setSql: setSql,
@@ -38,6 +41,10 @@
     $rootScope.$on("restorestate", service.RestoreState);
     
     return service;    
+
+    function allProjectsCount() {
+      return service.getMasterList().allProjects.length;
+    }
 
     function getAllProjectResults(results, projectID) {
       if (typeof projectID == "undefined") {
@@ -73,7 +80,7 @@
     }
     
     function hasProjects() {
-      return Boolean(service.getMasterList().allProjects.length > 0);
+      return Boolean(service.allProjectsCount() > 0);
     }
     
     function initModel( ){
@@ -127,6 +134,13 @@
       $state.go('project.detail', {projectID: projectID});
     };
 
+    function resetList() {
+      service.updateAllProjects();
+      service.setList(service.getIDListFromAllProjects());
+      service.setDescription("none");
+      service.setSql("");
+    }
+
     function RestoreState() {
         service.masterList = angular.fromJson(sessionStorage.projectListService);
     };
@@ -134,6 +148,10 @@
     function SaveState() {
         sessionStorage.projectListService = angular.toJson(service.masterList);
     };
+
+    function selectedIdsCount() {
+      return service.masterList.selectedIds.length;
+    }
     
     function setDescription(description) {
       service.masterList.description = description;

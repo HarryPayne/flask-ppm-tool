@@ -11,17 +11,20 @@
   function selectConfig($stateProvider) {
     $stateProvider
       .state("select", {
-        name: "select",
         url: "/select",
         controller: "Select",
         controllerAs: "select",
         templateUrl: "/static/select/select.html",
         data: {
           requiresLogin: false
-        }
+        },
+        onEnter: ["projectListService", 
+          function(projectListService) {
+            projectListService.resetList();
+          }
+        ]
       })
       .state("select.addProject", {
-        name: "select",
         url: "/addProject",
         controller: "Select",
         controllerAs: "select",

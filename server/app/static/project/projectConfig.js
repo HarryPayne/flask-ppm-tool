@@ -18,7 +18,46 @@
         data: {
           requiresLogin: false,
           viewUrl: "/static/project/project.html"
-        }
+        },
+        onEnter: ["$stateParams", "projectDataService", "projectListService", 
+                  "stateLocationService",
+          function($stateParams, projectDataService, projectListService, stateLocationService) {
+            // Make sure the project list is ready and $stateParams contains a projectID
+            if (!projectListService.hasProjects()) {
+              projectListService.updateAllProjects();
+            }
+
+            var projectID;
+            var masterList = projectListService.getMasterList();
+            var selectedIds = masterList.selectedIds;
+            var oldProjectID = masterList.projectID;
+
+            if (!$stateParams.projectID) {
+              projectID = stateLocationService.getStateFromLocation().params.projectID;
+              if (!projectID) {
+                if (projectListService.hasProjects()) {
+                  projectID = projectListService.getProjectID();
+                }
+              }
+            }
+            else {
+              projectID = $stateParams.projectID;
+              //selectedIds = [projectID];
+              projectListService.setList(selectedIds);
+              projectListService.setDescription("projectID = " + projectID + ";");
+              projectListService.setSql({col_name: "projectID",
+                                         val: projectID,
+                                         op: "equals" });
+            }
+            //projectListService.updateProjectListProjectID(projectID, selectedIds);
+
+            $stateParams.projectID = projectID;
+
+            if (!projectDataService.projectID || projectDataService.projectID != projectID) {
+              projectDataService.getProjectData($stateParams);
+            }
+          }
+        ]
       }) 
       .state("project.add",  {
         url: "/add",

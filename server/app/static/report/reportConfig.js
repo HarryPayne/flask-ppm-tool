@@ -44,6 +44,9 @@
             if (state_query && state_query != projectListService.getSql()) {
               reportTableService.getReportResults(state_query);
             }
+            else if (state_query == "" && reportTableService.projectCount() != projectListService.allProjectsCount()) {
+              reportTableService.getReportResults(state_query);
+            }
           }
         ]
       });
