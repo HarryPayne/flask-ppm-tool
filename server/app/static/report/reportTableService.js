@@ -135,7 +135,7 @@
       var path = $location.path().split("/");
       path.pop();
       path.push(response.data.query_string)
-      $location.url(path.join("/"));
+      //$location.url(path.join("/"));
       service.SaveState();
     }
 

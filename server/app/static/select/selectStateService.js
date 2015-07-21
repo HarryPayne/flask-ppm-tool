@@ -73,7 +73,6 @@
       projectListService.setDescription(breakdown_row.query_desc);
       projectListService.setSql(breakdown_row.query_string);
       projectListService.SaveState();
-      reportTableService.getReportTableData();
       $state.go("report.table", {query_string: breakdown_row.query_string});
     }
 

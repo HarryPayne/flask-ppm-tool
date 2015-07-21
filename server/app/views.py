@@ -493,12 +493,12 @@ def getReportResults():
             raw_values = list(set(query[key]))
             int_values = map(int, raw_values)
             accepted_choices = [choice for choice in attr["choices"] if choice["id"] in int_values]
-            accepted_descs = [item["desc"] for item in accepted_choices]
+            accepted_descs = ["'{}'".format(item["desc"]) for item in accepted_choices]
             accepted_values = [item["id"] for item in accepted_choices]
             
             if len(accepted_descs) > 1:
                 accepted_descs.sort()
-                desc = "{} in [{}]".format(attr["label"], ", ".join(accepted_descs))
+                desc = "{} is {}".format(attr["label"], " or ".join(accepted_descs))
             elif len(accepted_descs) == 1:
                 desc = "{}={}".format(attr["label"], accepted_descs[0])
             
@@ -526,7 +526,7 @@ def getReportResults():
         
     response = getReportRowsFromQuery(p, columns)
     response["projectList"] = [item.projectID for item in p]
-    response["query_desc"] = ", ".join(query_descs) if len(query_descs) else "none"
+    response["query_desc"] = ", and ".join(query_descs) if len(query_descs) else "none"
     response["query_string"] = "&".join(filters)
     
     return dumps(response)
