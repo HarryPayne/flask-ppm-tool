@@ -20,28 +20,11 @@
       <h3 class="clearfix">Select a Project</h3>
     </div>
   
+    
     <div class="container" ng-show="select.state.current.name == 'select'">
-      <form name="myform" class="form-horizontal" ng-submit="select.jumpToProject(projectID)">
-        <div class="form-group">
-          <label for="projectID" class="control-label col-xs-2 col-lg-2"> 
-            Jump:
-          </label>
-          <div class="col-xs-10 col-lg-10">
-            <div class="input-group">
-              <input type="number" step="1" name="projectID" id="projectID"
-                class="form-control" 
-                ng-model="projectID" 
-                placeholder="project ID" autofocus
-                aria-describedBy="helpBlock1">
-              <span class="input-group-btn">
-                <button class="btn btn-default" type="submit"> Go </button>
-              </span>
-            </div>
-            <span id="helpBlock1" class="help-block">Enter a numeric project ID and go to that project.</span>
-          </div>
-        </div>
-      </form>
-          
+      <div jump-to-project-id label="'Jump'" on-submit="select.jumpToProject(projectID)"
+        help="'Enter a numeric project ID and go to that project.'"></div>
+      
       <form name="myform2" class="form-horizontal" novalidate ng-submit="select.jumpToProject(option.projectID)">
         <div class="form-group">
           <label for="projectID2" class="control-label col-xs-2 col-lg-2"> 

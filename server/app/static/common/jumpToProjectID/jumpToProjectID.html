@@ -1,0 +1,19 @@
+  <form class="form-horizontal" ng-submit="submit()">
+    <div class="form-group">
+      <label for="projectID" class="control-label col-xs-2 col-lg-2" ng-bind="label + ':'"></label>
+      <div class="col-xs-10 col-lg-10">
+        <div class="input-group">
+          <input id="projectID"
+            type="number" min="1" step="1"
+            class="form-control" 
+            ng-model="projectID" 
+            placeholder="project ID" autofocus
+            aria-describedBy="helpBlock_jumpToProjectID">
+          <span class="input-group-btn">
+            <button class="btn btn-default" type="submit"> Go </button>
+          </span>
+        </div>
+        <span id="helpBlock_jumpToProjectID" class="help-block" ng-bind="help"></span>
+      </div>
+    </div>
+  </form>

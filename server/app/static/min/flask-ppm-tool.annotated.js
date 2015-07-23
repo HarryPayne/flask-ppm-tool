@@ -1151,8 +1151,16 @@ Data attributes:
 
 (function() {
   
+  /**
+   *  @module app.project
+   *  @desc   A module for handling the Project tab states of the application
+   */
+  
   angular
-    .module("app.project", ["ui.date", "ui.router"]);
+    .module("app.project", [
+        "ui.date", 
+        "ui.router"
+      ]);
   
 }());
 
@@ -1674,6 +1682,49 @@ Data attributes:
 
 (function() {
   
+  /**
+   *  @name projectListService
+   *  @desc A factory for the service that maintains a list of project short
+   *        descriptions. Each description consists of the values for project
+   *        attributes projectID, name, description, and finalID.
+   *
+   *  The projectListService has a number of uses:
+   *
+   *    project navigation
+   *      The service keeps track of the last project you looked at, and if you
+   *      navigate away from the Project tab and come back you will see the 
+   *      same project, without going back to the server again. So there is
+   *      the concept of a "current project." At the start of the session the
+   *      current project will be the one with the lowest projectID.
+   *
+   *      The (ordered) list of projects allows for stepping through the list
+   *      and the concept of previous and next projects. At the start of a 
+   *      session the next project will be the one with the second lowest
+   *      projectID, and there will not be a previous project. This functionality
+   *      is revealed by the Previous and Next tabs, and their appearance 
+   *      changes according to whether there are prevous and next projects.
+   *
+   *    project selection
+   *      Other services provide the ability for you to select a subset of all
+   *      available projects. This service holds a list of selected projectIDs
+   *      along with a human-readable description of the selection criteria
+   *      and a http GET query string that records the actual metadata values.
+   *
+   *      This service allows other services to show you a report of all 
+   *      selected services, work on selected projects one at a time, and to
+   *      navigate through selected projects using the Previous and Next tabs,
+   *      which will skip over projects not selected.
+   *
+   *      The Select tab functionality for selecting a project from a dropdown
+   *      menu is built on the short description data. The search functionality
+   *      there uses a filter on the same data. Final state is one of the
+   *      attributes sent out from the backend just for this purpose.
+   *
+   *      The Filter Builder and Report tabs use the descriptions of the project
+   *      selection criteria for restoring state, providing a basis for 
+   *      modifying the criteria.
+   */
+
   "use strict";
   
   angular
@@ -1683,9 +1734,10 @@ Data attributes:
   ProjectListService.$inject = ['$rootScope', '$http', '$state', '$stateParams', '$location'];
   
   function ProjectListService($rootScope, $http, $state, $stateParams, $location) {
+
+    /** service to be returned by this factory */
     var service = {
       allProjectsCount: allProjectsCount,
-      getAllProjectResults: getAllProjectResults,
       getIDListFromAllProjects: getIDListFromAllProjects,
       getMasterList: getMasterList,
       getProjectID: getProjectID,
@@ -1699,11 +1751,12 @@ Data attributes:
       RestoreState: RestoreState,
       SaveState: SaveState,
       selectedIdsCount: selectedIdsCount,
+      setAllProjectResults: setAllProjectResults,
       setDescription: setDescription,
       setList: setList,
+      setProjectID: setProjectID,
       setSql: setSql,
-      updateAllProjects: updateAllProjects,
-      setProjectID: setProjectID
+      updateAllProjects: updateAllProjects
     };
   
     service.RestoreState();
@@ -1716,43 +1769,67 @@ Data attributes:
     
     return service;    
 
+    /**
+     *  @name allProjectsCount
+     *  @desc return the total number of available projects
+     *  @returns {Number}
+     */
     function allProjectsCount() {
       return service.getMasterList().allProjects.length;
     }
 
-    function getAllProjectResults(results, projectID) {
-      if (typeof projectID == "undefined") {
-        var projectID = service.masterList.projectID;        
-      }
-      service.masterList.allProjects = results.data;
-      var projectIDList = service.getIDListFromAllProjects();
-      if (typeof projectID == "undefined" || projectID < 0) {
-        projectID =  projectIDList[0];
-      }
-      setProjectID(projectID, projectIDList);
-    };
-    
+    /**
+     *  @name getIDListFromAllProjects
+     *  @desc return the list of projectIDs for all available projects
+     *  @returns {Number[]}
+     */
     function getIDListFromAllProjects() {
       return _.map(service.masterList.allProjects, function(item) {
         return item.projectID;});
     };
 
+    /**
+     *  @name getMasterList
+     *  @desc getter for service.masterList
+     *  @returns {Object}
+     */
     function getMasterList() {
       return service.masterList;
     };
 
+    /**
+     *  @name getProjectID
+     *  @desc getter for service.masterList.projectID
+     *  @returns {Number}
+     */
     function getProjectID() {
       return service.masterList.projectID;
     }
     
+    /**
+     *  @name getSelectedIds
+     *  @desc getter for service.masterList.selectedIds
+     *  @returns {Number[]}
+     */
     function getSelectedIds() {
       return service.masterList.selectedIds;
     }
 
+    /**
+     *  @name getSql
+     *  @desc getter for service.masterList.sql
+     *  @returns {string}
+     */
     function getSql() {
       return service.masterList.sql;
     }
     
+    /**
+     *  @name hasProjects
+     *  @desc return the validity of the statement "there are available 
+     *        projects in service.masterList.allProjects"
+     *  @returns {Boolean}
+     */
     function hasProjects() {
       return Boolean(service.allProjectsCount() > 0);
     }
@@ -1815,24 +1892,85 @@ Data attributes:
       service.setSql("");
     }
 
+    /**
+     *  @name RestoreState
+     *  @desc restore the service.masterList object from client session storage
+     */
     function RestoreState() {
+      if (typeof sessionStorage.projectListService != "undefined") {
         service.masterList = angular.fromJson(sessionStorage.projectListService);
+      }
     };
 
+    /**
+     *  @name SaveState
+     *  @desc save the service.masterList object in client session storage
+     */
     function SaveState() {
         sessionStorage.projectListService = angular.toJson(service.masterList);
     };
 
+    /**
+     *  @name selectedIdsCount
+     *  @desc return the number of selected projects
+     */
     function selectedIdsCount() {
       return service.masterList.selectedIds.length;
     }
     
+    /**
+     *  @name setAllProjectResults
+     *  @desc Callback to save the response to a backend request for a complete
+     *        list of project short descriptions sent by updateAllProjects().
+     *  @param {Object} response - JSON response containing a list of project
+     *        brief descriptions.
+     *  @param {Number} [projectID=service.masterList.selectIds[0] || -1] - the 
+     *        projectID to be configured as the current project.
+     *
+     *  The idea is that the list of available projects be loaded at the start 
+     *  of a session an then re-used. But you, or some other user, might have
+     *  added a new project that you want to work on. So you need to be able to
+     *  update the list with out disrupting you workflow, which means not 
+     *  changing the list of selected projects or the current project.
+     */
+    function setAllProjectResults(response, projectID) {
+      service.masterList.allProjects = response.data;
+      if (typeof projectID == "undefined" || projectID < 0) {
+        if (typeof service.masterList.selectIds != "undefined" && 
+            service.masterList.selectIds.length) {
+          projectID = service.masterList.selectIds[0];
+          setProjectID(projectID);
+        }
+        else {
+          var selectedIds = service.getIDListFromAllProjects();
+          setProjectID(selectedIds[0], selectedIds);
+        }
+      }
+    };
+    
+    /**
+     *  @name setDescription
+     *  @desc setter for service.masterList.description
+     *  @param {string} description - human readable description of the query
+     *        used to select the current list of projects that is stored in 
+     *        service.master.selectedIds
+     */
     function setDescription(description) {
       service.masterList.description = description;
     };
     
+    /**
+     *  @name setList
+     *  @desc setter for service.masterList.selectedIds
+     *  @param {Number[]} selectIds - a list of projectIDs to be saved as the
+     *        list of selected projects.
+     */
     function setList(selectedIds) {
       service.masterList.selectedIds = selectedIds;
+      if (typeof selectIds == "undefined") {
+        var what_the_;
+      }
+
       var index = selectedIds.indexOf(service.masterList.projectID);
       if (index < 0) {
         var projectID = selectedIds[0];
@@ -1840,17 +1978,15 @@ Data attributes:
       }
     }
 
-    function setSql(sqlObj) {
-      service.masterList.sql = sqlObj;
-    }
-      
-    function updateAllProjects(projectID) {
-      $http.post('/getBriefDescriptions')
-        .then(function(results) {
-          service.getAllProjectResults(results, projectID);
-        });
-    };
-    
+    /**
+     *  @name setProjectID
+     *  @desc setter for service.masterList.projectID and
+     *        service.masterList.selectedIds
+     *  @param {Number} projectID - the projectID to be configured as the 
+     *        current project.
+     *  @param {Number[]} [selectedIds=service.masterList.selectedIds] - a list 
+     *        of projectIDs to be saved as the list of selected projects.
+     */
     function setProjectID(projectID, selectedIds) {
       if (projectID) {
         if (typeof selectedIds == "undefined") {
@@ -1884,6 +2020,34 @@ Data attributes:
       }
       service.SaveState();
     };
+
+    /**
+     *  @name setSql
+     *  @desc setter for service.masterList.sql
+     *  @param {string} query_string - an http GET query_string to represent
+     *        the actual SQL used to filter from all projects down to the
+     *        selected projects.
+     */
+    function setSql(query_string) {
+      service.masterList.sql = query_string;
+    }
+      
+    /**
+     *  @name updateAllProjects
+     *  @desc Obtain the complete list of project brief descriptions from the
+     *        back end and promise sending them to the setAllProjectResults
+     *        callback function. Each brief description contains values for
+     *        project attributes projectID, name, description, and finalID.
+     *  @param {Number} [projectID] - projectID passed to the callback, which
+     *        needs to be aware that it might be absent.
+     */
+    function updateAllProjects(projectID) {
+      $http.post('/getBriefDescriptions')
+        .then(function(response) {
+          service.setAllProjectResults(response, projectID);
+        });
+    };
+    
   }
     
 }());
@@ -2002,15 +2166,17 @@ Data attributes:
     .module('app.report')
     .factory('reportTableService', ReportTableService);
     
-  ReportTableService.$inject = ['$compile', 'DTColumnBuilder', 'DTInstances', 'DTOptionsBuilder', '$http', '$location', 'projectListService', '$rootScope', '$stateParams'];
+  ReportTableService.$inject = ['$compile', '$http', '$location', '$rootScope', '$state', '$stateParams', 'DTColumnBuilder', 'DTInstances', 'DTOptionsBuilder', 'projectListService', 'stateLocationService'];
   
-  function ReportTableService($compile, DTColumnBuilder, DTInstances, DTOptionsBuilder, 
-                              $http, $location, projectListService, $rootScope, $stateParams) {
+  function ReportTableService($compile, $http, $location, $rootScope, $state, 
+                               $stateParams, DTColumnBuilder, DTInstances, 
+                               DTOptionsBuilder, projectListService,
+                               stateLocationService) {
 
     /** service to be returned by factory */
     var service = {
       createdRow: createdRow,
-      projectCount: projectCount,
+      dataTableRowCount: dataTableRowCount,
       getReportResults: getReportResults,
       getReportTableData: getReportTableData,
       initService: initService,
@@ -2034,7 +2200,16 @@ Data attributes:
                     {data: "maturityID", title: "Maturity"},
                     {data: "driverID", title: "Driver"}],
         dtInstance: {},
-        dtOptions: {}
+        dtOptions: {        
+          destroy: true,
+          lengthChange: false,
+          pageLength: 25,
+          paging: false,
+          pagingType: "full_numbers",
+          saveState: true,
+          searching: false,
+          serverSide: false
+        }
       },
     };
     
@@ -2042,6 +2217,8 @@ Data attributes:
     
     $rootScope.$on("savestate", service.SaveState);
     $rootScope.$on("restorestate", service.RestoreState);
+    
+    return service;
 
     /**
      *  @name createdRow
@@ -2095,25 +2272,39 @@ Data attributes:
     /**
      *  @name initService
      *  @desc called onEnter from reportConfig.js to ensure that data for the
-     *        report are obtained from the backend.
+     *        report from the backend are already in hand (or promised).
      */
     function initService() {
       if (!projectListService.hasProjects()) {
         projectListService.updateAllProjects();
       }
-      var state_query = $stateParams.query_string;
+      /** query from location bar */
+      var state_from_location = stateLocationService.getStateFromLocation();
+      var location_query = state_from_location.params.query_string;
+
+      /** query saved in the project list service */
       var saved_query = projectListService.getSql();
-      if (state_query && state_query != saved_query) {
-        service.getReportResults(state_query);
+
+      if (typeof location_query == "undefined") {
+        /** If the state derived from the location bar has no location_query
+            parameter... This is the case using the Break Down functionality 
+            on the Select tab, where the location indicates a Select tab state. */
+        service.getReportResults(saved_query);
       }
-      else if (!state_query && saved_query) {
-        service.getReportResults(saved_query)
+      else if (location_query && location_query != saved_query) {
+        /** If the location tells us what we need, and know we have something 
+            else ... This is the bookmarked report case. */
+        service.getReportResults(location_query);
       }
-      else if (state_query == "" && service.projectCount() != projectListService.allProjectsCount()) {
-        service.getReportResults(state_query);
+      else if (location_query == "" && service.dataTableRowCount() != projectListService.allProjectsCount()) {
+        /** If the location tells us we really want everything and the data
+            tell us we have something less ... */
+        service.getReportResults(location_query);
       }
-      else if (service.projectCount() == 0) {
-        service.getReportResults(state_query);
+      else if (service.dataTableRowCount() == 0) {
+        /** if we know what we want and it is what we have, but there is no 
+            data for the table ... */
+        service.getReportTableData();
       }
     }
 
@@ -2133,10 +2324,10 @@ Data attributes:
     }
 
     /**
-     *  @name projectCount
+     *  @name dataTableRowCount
      *  @desc return the number of data rows in the DataTable
      */
-    function projectCount() {
+    function dataTableRowCount() {
       try {
         return service.master.dtOptions.data.length;
       }
@@ -2185,6 +2376,10 @@ Data attributes:
 
     function setReportTableData(response) {
       service.master.dtOptions = DTOptionsBuilder.newOptions().withBootstrap();
+
+      /** initial data to be replaced when the promise is resolved */
+      service.master.dtOptions.withOption("data", []); 
+
       _.each(Object.keys(response.data.options), function(key) {
          service.master.dtOptions.withOption(key, response.data.options[key]);
       });
@@ -2192,9 +2387,9 @@ Data attributes:
       service.master.dtColumns = [service.projectIDColumn].concat(response.data.columns);
       service.master.dtOptions.data = response.data.data;
       //service.master.dtInstance.rerender();
-      var path = $location.path().split("/");
-      path.pop();
-      path.push(response.data.query_string)
+      //var path = $location.path().split("/");
+      //path.pop();
+      //path.push(response.data.query_string)
       //$location.url(path.join("/"));
       service.SaveState();
     }
@@ -2208,9 +2403,6 @@ Data attributes:
     function tableColumns() {
       return _.pluck(service.master.dtColumns, "data");
     }
-    
-    service.SaveState();
-    return service;
   }
       
 }());
@@ -2543,7 +2735,15 @@ Data attributes:
 }());
 
 (function() {
-  
+
+  /**
+   *  @name stateHistoryService
+   *  @desc A factory for the service that saves the most recent state and
+   *        parameters, keyed by location. It allows the app to look at the
+   *        current location and decide whether or not it indicates a state
+   *        change. Client session storage is used.
+   */ 
+    
   "use strict";
   
   angular
@@ -2632,18 +2832,20 @@ Data attributes:
     }
     
     function locationChange() {
-      if (service.preventCall.pop('locationChange') != null) {
+      //if (service.preventCall.pop('locationChange') != null) {
+      if (service.preventCall.pop() == "locationChange") {
         return;
       }
       var location = $location.url();
       var entry = stateHistoryService.get(location);
       if (entry == null) {
-        return; //entry = service.getStateFromLocation();
+        var entry = service.getStateFromLocation();
       }
       if ("projectID" in entry.params) {
         projectListService.setProjectID(entry.params.projectID);
       }
-      service.preventCall.push("stateChange");
+      service.preventCall = ["stateChange"];
+      //service.preventCall.push("stateChange");
       $state.go(entry.name, entry.params, {location: false});
     };
     
@@ -2696,6 +2898,7 @@ Data attributes:
     
     function stateChange() {
       if (service.preventCall.pop("stateChange") != null){
+      //if (service.preventCall.pop() == "stateChange"){
         return;
       }
       if (!$state.current.name) {
@@ -2707,7 +2910,8 @@ Data attributes:
         "params": $stateParams
       };
       stateHistoryService.set(url, entry);
-      service.preventCall.push('locationChange');
+      //service.preventCall.push('locationChange');
+      service.preventCall = ["locationChange"];
       $location.url(url);
     }
     

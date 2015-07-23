@@ -1,5 +1,11 @@
 (function() {
   
+  /**
+   *  @name Project
+   *  @desc A controller for the states and views associated with the Project 
+   *        tab. 
+   */
+  
   "use strict";
   
   angular
@@ -26,7 +32,22 @@
     this.masterList = this.ls.getMasterList;
     this.viewUrl = projectDataService.viewUrl;
 
-    $scope.$on(["$stateChangeStart"], function(event, toState, toParams, fromState, fromParams) {
+    $scope.$on(["$stateChangeStart"], unsavedDataPopup);
+    
+    /**
+     *  @name unsavedDataPopup
+     *  @desc Open a popup and ask how to proceed in the case of attempting to 
+     *        navigate away from one of the project edit sub-tabs when there 
+     *        is unsaved data in the form. The  function is bound to the 
+     *        $stateChangeStart event, and the calling sequence is that of a 
+     *        handler for this event.
+     *  @param {Object} event
+     *  @param {Object} toState
+     *  @param {Object} toParams
+     *  @param {Object} fromState
+     *  @param {Object} fromParams
+     */
+    function unsavedDataPopup(event, toState, toParams, fromState, fromParams) {
       projectDataService.success = "";
       if (typeof projectDataService.noCheck != "undefined") {
         $scope.projectForm.$setPristine(true);
@@ -34,6 +55,8 @@
         //projectDataService.getProjectData(projectDataService.projectID); // forced discard
         //$state.go(toState, toParams);
       }
+      
+      /** if the "projectForm" project editing form has unsaved changes ... */
       if ($scope.projectForm.$dirty) {
         event.preventDefault();
 
@@ -45,14 +68,28 @@
                       + " navigate away, or press Cancel to stay on this page."
         };
 
-        modalConfirmService.showModal({}, modalOptions).then(function (result) {
-          $scope.projectForm.$setPristine(true);
-          var target = toParams.projectID ? toParams.projectID : fromParams.projectID;
-          projectDataService.getProjectData(target, toParams); // forced discard
-          $state.go(toState, toParams);
-        });
+        /** Open a modal window that asks the question shown above as bodyText,
+         *  and shows Continue and Cancel buttons for making a response. The
+         *  promised response is passed to a callback function.
+         */
+        modalConfirmService.showModal({}, modalOptions).then(unsavedChangesConfirmed);
       }
-    });
+    }
+    
+    /**
+     *  @name unsavedChangesConfirmed
+     *  @desc Callback to handle the user's choice to discard unsaved changes
+     *        and navigate away with saving.The form is set back to the pristine
+     *        state, form data is returned to the last saved state, and a state
+     *        change for navigating away is started.
+     *  @param {Object} response 
+     */
+    function unsavedChangesConfirmed(response) {
+      $scope.projectForm.$setPristine(true);
+      var target = toParams.projectID ? toParams.projectID : fromParams.projectID;
+      projectDataService.getProjectData(target, toParams); // forced discard
+      $state.go(toState, toParams);
+    }
   };
   
 }());

@@ -6,10 +6,21 @@
    *        with the Project tab. That is a lot, and it gets help from a couple
    *        of other services: 
    *
-   *          attributesService - for lower level data attribute management.
+   *          attributesService - for lower level data attribute management 
+   *            (from the app.attributes module).
+   *          loginStateService - a service from the app.login module for 
+   *            logging in and out and reporting user roles.
    *          projectListService - for the data that support the Previous and
    *            Next top-level tabs, and also remember just which projects were
    *            selected by your last filter or breakdown by attribute.
+   *          stateLocationService - a service from the app.stateLocation
+   *            module. It handles the interaction between state changes and
+   *            location changes, and allows the user change the state of the
+   *            application by typing in the browser location bar. For example
+   *            you can change which project you are working on by changing
+   *            the projectID in the location bar, and you can change the
+   *            project selection query for a report by changing the query
+   *            string in the location bar.
    */
 
   "use strict";
@@ -25,6 +36,8 @@
   function projectDataService($rootScope, $http, $state, $stateParams, 
                               $location, attributesService, loginStateService,
                               projectListService, stateLocationService) {
+    
+    /** service to be returned by this factory */
     var service = {
       attributes: attributesService.getAllAttributes,
       cancelAddProject: cancelAddProject,
@@ -33,7 +46,6 @@
       currentMode: currentMode,
       editMode: editMode,
       getProjectData: getProjectData,
-      getAttributes: getAttributes,
       getProjectAttributes: attributesService.getProjectAttributes,
       getProjectDataFromLocation: getProjectDataFromLocation,
       hideDetails: hideDetails,
@@ -60,12 +72,26 @@
     
     $rootScope.$on("savestate", service.SaveState);
     $rootScope.$on("restorestate", service.RestoreState);
-    //$rootScope.$on("$locationChangeSuccess", service.getProjectDataFromLocation);
+
+    service.SaveState();
+    return service;
     
+    /**
+     *  @name cancelAddProject
+     *  @desc Cancel out of the Add a Project screen (under the Select tab) by
+     *        navigating back to the select state
+     */
     function cancelAddProject() {
       $state.go("select");
     }
 
+    /**
+     *  @name changeMode
+     *  @desc a function for navigating between the views under the Project tab
+     *        for a specified project
+     *  @param {string} mode - the name of a state under the "project" virtual
+     *        state or "view" as an alias for "project.detail".
+     */
     function changeMode(mode) {
       if (!mode) {
         $state.go("project.detail", {projectID: service.projectID});
@@ -75,9 +101,26 @@
       }
     }
     
+    /**
+     *  @name createProject
+     *  @desc Gather form data for creating a new project and send it to the 
+     *        back end to create a new project in the database. The response
+     *        from that server request is handed to a callback that navigates
+     *        to that new project. Only data saved in the description table
+     *        is shown on the add form. Data for other tables can be added
+     *        once the project has been created.
+     *  @callback jumpToNewProject
+     */
     function createProject() {
+
+      /** Gather all of the form data values by pulling them from the 
+       *  attributes in memory that are marked as associated with the
+       *  description table. We don't look at the form -- we use it mostly
+       *  for validation (if there were any required fields) and the unsaved
+       *  data check. 
+       *  */
       var formData = attributesService.getFormData('description', []);
-      /* null out project attributes and get csrf token */
+      /* null out project attributes and get a fresh csrf token */
       $http.get("getProjectAttributes/0")
         .then(function(result) {
           service.setProjectData(result);
@@ -88,6 +131,8 @@
             headers: {
               "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
             },
+            /** We use jQuery.param to serialize the data -- Python, or
+             *  at least Flask, has a problem with the angularjs serializer. */
             data: jQuery.param(formData, true)
           };
           $http(request)
@@ -95,6 +140,12 @@
         });
     };
 
+    /**
+     *  @name currentMode
+     *  @desc return the current mode
+     *  @returns {string} "view" if state name is "project.detail" else state 
+     *        name
+     */
     function currentMode() {
       if ($state.current.name == "project.detail") {
         return "view";
@@ -102,6 +153,11 @@
       return $state.current.name.substring(8);
     }
     
+    /**
+     *  @name editMode
+     *  @desc return the answer to the question "am I in edit mode?"
+     *  @returns {Boolean}
+     */    
     function editMode() {
       if ($state.current.name.indexOf("edit") > -1) {
         return true;
@@ -109,19 +165,32 @@
       return false;
     }
     
-    function getAttributes() {
-      return service.attributes;
-    }
-    
+    /**
+     *  @name getProjectData
+     *  @desc Get all of the project attributes values from the server. In a
+     *        callback, these values are merged with attributes held by the
+     *        attributesService from the app.attributes module/
+     *  @param {Object} params - a $stateParams object or a custom object
+     *        with the same attributes, passed to the callback function.
+     *  @callback setProjectData
+     */
     function getProjectData(params) {
       if (parseInt(params.projectID) > -1) {
         $http.get("getProjectAttributes/" + params.projectID)
-          .then(function(result) {
-            service.setProjectData(result, params);
+          .then(function(response) {
+            service.setProjectData(response, params);
         });
       }
     }
     
+    /**
+     *  @name getProjectDataFromLocation
+     *  @desc Generate an analogue for $state and $stateParams by looking at
+     *        the location instead of state, and use those parameters for 
+     *        getting data for that project. This allows you to change the
+     *        projectID in the location bar and have the application change
+     *        state to match what you typed.
+     */
     function getProjectDataFromLocation() {
       var state = stateLocationService.getStateFromLocation();
       if ("projectID" in state.params && state.params.projectID != service.projectID) {
@@ -131,6 +200,17 @@
       }
     }
 
+    /**
+     *  @name hideDetails
+     *  @desc a function for canceling out of Add a Comment or Add a Disposition
+     *        by navigating away to the project edit Comments or Dispositions
+     *        sub-tab, respectively. Add a Comment users may not have a role
+     *        that gives them access to the edit view, in which case they are
+     *        taken back to view mode/state project.detail.
+     * @param {string} tableName - "comment" for Add a Comment, "disposition" 
+     *        for Add a Disposition.
+     * @param {Object[]} keys - 
+     */
     function hideDetails(tableName, keys) {
       var selected = attributesService.updateProjAttrsFromRawItem(tableName, keys);
       if (loginStateService.canEditProjects()) {
@@ -141,8 +221,13 @@
       }
     }
 
+    /**
+     *  @name initService
+     *  @desc called onEnter from projectConfig.js to ensure that data for the
+     *        report from the backend are already in hand (or promised).
+     */
     function initService() {
-      // Make sure the project list is ready and $stateParams contains a projectID
+      /** if the list of all project brief descriptions is empty, then get it */
       if (!projectListService.hasProjects()) {
         projectListService.updateAllProjects();
       }
@@ -152,9 +237,9 @@
       var selectedIds = masterList.selectedIds;
       var oldProjectID = masterList.projectID;
 
+      /** if $stateParams does not give you projectID, look at the location */
       if (!$stateParams.projectID) {
         getProjectDataFromLocation();
-        //projectID = stateLocationService.getStateFromLocation().params.projectID;
         if (!service.projectID) {
           if (projectListService.hasProjects()) {
             projectID = projectListService.getProjectID();
@@ -163,7 +248,6 @@
       }
       else {
         projectID = $stateParams.projectID;
-        //selectedIds = [projectID];
         projectListService.setList(selectedIds);
         projectListService.setDescription("projectID = " + projectID + ";");
         projectListService.setSql({col_name: "projectID",
@@ -254,9 +338,6 @@
     function showEditSuccess() {
       return Boolean(_.contains(projectForm.classList, "ng-pristine") && service.success);
     }
-
-    service.SaveState();
-    return service;
   }
 
 }());

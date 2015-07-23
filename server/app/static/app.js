@@ -1,9 +1,15 @@
 (function() {
   
+  /**
+   *  @module PPT
+   *  @desc   The parent module for the PPT application
+   */
+  
   angular
     .module("PPT", [
       "app.attributes",
       "app.comment",
+      "app.common",
       "app.curate",
       "app.filter", 
       "app.header", 

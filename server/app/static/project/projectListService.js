@@ -89,7 +89,7 @@
 
     /**
      *  @name allProjectsCount
-     *  @desc return the total number of available projects
+     *  @desc Return the total number of available projects
      *  @returns {Number}
      */
     function allProjectsCount() {
@@ -98,7 +98,7 @@
 
     /**
      *  @name getIDListFromAllProjects
-     *  @desc return the list of projectIDs for all available projects
+     *  @desc Return the list of projectIDs for all available projects
      *  @returns {Number[]}
      */
     function getIDListFromAllProjects() {
@@ -108,7 +108,7 @@
 
     /**
      *  @name getMasterList
-     *  @desc getter for service.masterList
+     *  @desc Getter for service.masterList
      *  @returns {Object}
      */
     function getMasterList() {
@@ -117,7 +117,7 @@
 
     /**
      *  @name getProjectID
-     *  @desc getter for service.masterList.projectID
+     *  @desc Getter for service.masterList.projectID
      *  @returns {Number}
      */
     function getProjectID() {
@@ -126,7 +126,7 @@
     
     /**
      *  @name getSelectedIds
-     *  @desc getter for service.masterList.selectedIds
+     *  @desc Getter for service.masterList.selectedIds
      *  @returns {Number[]}
      */
     function getSelectedIds() {
@@ -135,7 +135,7 @@
 
     /**
      *  @name getSql
-     *  @desc getter for service.masterList.sql
+     *  @desc Getter for service.masterList.sql
      *  @returns {string}
      */
     function getSql() {
@@ -144,7 +144,7 @@
     
     /**
      *  @name hasProjects
-     *  @desc return the validity of the statement "there are available 
+     *  @desc Return the validity of the statement "there are available 
      *        projects in service.masterList.allProjects"
      *  @returns {Boolean}
      */
@@ -152,10 +152,15 @@
       return Boolean(service.allProjectsCount() > 0);
     }
     
+    /**
+     *  @name initModel
+     *  @desc Initialize the masterList object to make it ready for receiving
+     *        data
+     */
     function initModel( ){
       service.masterList = {
         allProjects: [],
-        description: "",
+        description: "none",
         sql: "",
         index: -1,
         next: -1,
@@ -166,13 +171,22 @@
       };
     };
 
+    /**
+     *  @name jumpToProject
+     *  @desc Go to the project.detail state for the given projectID. There
+     *        must be a project to match the given projectID. Otherwise an 
+     *        is raised.
+     *  @param {Number|string} projectID - project identifier
+     */
     function jumpToProject(projectID) {
       projectID = parseInt(projectID);
       var index = service.masterList.selectedIds.indexOf(projectID);
+      /** if in selectedIds, make it the current project */
       if (service.masterList.selectedIds.indexOf(projectID) > -1) {
         service.jumpToProjectInList(projectID, service.masterList.selectedIds);
         return;
       }
+      /** otherwise just go, if it exists */
       var projectIDlist = service.getIDListFromAllProjects();
       if (projectIDlist.indexOf(projectID) > -1) {
         service.jumpToProjectInList(projectID, projectIDlist);
@@ -181,28 +195,21 @@
       alert("Can't find a project to display.");
     };
     
-    function jumpToProjectInList(projectID, selectedIds) {
-      var index = selectedIds.indexOf(projectID);
-      service.masterList.index = index;
-      service.masterList.projectID = projectID;
-      if (index > 0) {
-        service.masterList.previous = selectedIds[index-1];
-      }
-      else {
-        service.masterList.previous = -1;
-      }
-      if (index < selectedIds.length) {
-        service.masterList.next = selectedIds[index+1];
-      }
-      else {
-        service.masterList.next = -1;
-      }
-      var projectIDList = service.getIDListFromAllProjects();
-      index = projectIDList.indexOf(projectID);
-      service.masterList.projectName = service.masterList.allProjects[index].name;
+    
+    /**
+     *  @name jumpToProjectInList
+     *  @desc Go to the project.detail state for the specified project and make
+     *        it the current project
+     */
+    function jumpToProjectInList(projectID) {
+      service.setProjectID(projectID);
       $state.go('project.detail', {projectID: projectID});
     };
 
+    /**
+     *  @name resetList
+     *  @desc Reset the project list to the state where all projects are selected
+     */
     function resetList() {
       service.updateAllProjects();
       service.setList(service.getIDListFromAllProjects());
@@ -212,7 +219,7 @@
 
     /**
      *  @name RestoreState
-     *  @desc restore the service.masterList object from client session storage
+     *  @desc Restore the service.masterList object from client session storage
      */
     function RestoreState() {
       if (typeof sessionStorage.projectListService != "undefined") {
@@ -222,7 +229,7 @@
 
     /**
      *  @name SaveState
-     *  @desc save the service.masterList object in client session storage
+     *  @desc Save the service.masterList object in client session storage
      */
     function SaveState() {
         sessionStorage.projectListService = angular.toJson(service.masterList);
@@ -230,7 +237,7 @@
 
     /**
      *  @name selectedIdsCount
-     *  @desc return the number of selected projects
+     *  @desc Return the number of selected projects
      */
     function selectedIdsCount() {
       return service.masterList.selectedIds.length;
@@ -268,7 +275,7 @@
     
     /**
      *  @name setDescription
-     *  @desc setter for service.masterList.description
+     *  @desc Setter for service.masterList.description
      *  @param {string} description - human readable description of the query
      *        used to select the current list of projects that is stored in 
      *        service.master.selectedIds
@@ -279,7 +286,7 @@
     
     /**
      *  @name setList
-     *  @desc setter for service.masterList.selectedIds
+     *  @desc Setter for service.masterList.selectedIds
      *  @param {Number[]} selectIds - a list of projectIDs to be saved as the
      *        list of selected projects.
      */
@@ -298,7 +305,7 @@
 
     /**
      *  @name setProjectID
-     *  @desc setter for service.masterList.projectID and
+     *  @desc Setter for service.masterList.projectID and
      *        service.masterList.selectedIds
      *  @param {Number} projectID - the projectID to be configured as the 
      *        current project.
@@ -341,7 +348,7 @@
 
     /**
      *  @name setSql
-     *  @desc setter for service.masterList.sql
+     *  @desc Setter for service.masterList.sql
      *  @param {string} query_string - an http GET query_string to represent
      *        the actual SQL used to filter from all projects down to the
      *        selected projects.
