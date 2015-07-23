@@ -1,5 +1,13 @@
 (function() {
-  
+
+  /**
+   *  @name stateHistoryService
+   *  @desc A factory for the service that saves the most recent state and
+   *        parameters, keyed by location. It allows the app to look at the
+   *        current location and decide whether or not it indicates a state
+   *        change. Client session storage is used.
+   */ 
+    
   "use strict";
   
   angular

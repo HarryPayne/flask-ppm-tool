@@ -8,11 +8,11 @@
   
   function SessionService() {
     var service = {
-      "setStorage": setStorage,
-      "getStorage": getStorage,
-      "clear": clear,
-      "stateHistory": stateHistory,
-      "accessor": accessor
+      setStorage: setStorage,
+      getStorage: getStorage,
+      clear: clear,
+      stateHistory: stateHistory,
+      accessor: accessor
     };
     
     return service;

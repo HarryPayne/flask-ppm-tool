@@ -1,5 +1,10 @@
 (function() {
   
+  /**
+   *  @name reportConfig
+   *  @desc Configuration for app.report module
+   */
+  
   "use strict";
   
   angular
@@ -11,7 +16,7 @@
   function reportConfig($stateProvider) {
     $stateProvider
       .state("report", {
-        name: "report",
+        /** virtual root state */
         url: "/report",
         controller: "Report",
         controllerAs: "report",
@@ -21,7 +26,7 @@
         }
       })
       .state("report.columns", {
-        name: "report",
+        /** state for the Select Other Columns view */
         url: "/columns/:query_string",
         templateUrl: "/static/report/templates/columns.html",
         controller: function ($stateParams) {
@@ -29,24 +34,16 @@
         }
       })
       .state("report.table", {
-        name: "report",
+        /** state for the View Project List as Table view */
         url: "/:query_string",
         templateUrl: "/static/report/templates/table.html",
         controller: function ($stateParams) {
           console.log($stateParams);
         },
-        onEnter: ["$stateParams", "projectListService", "reportTableService", 
-          function($stateParams, projectListService, reportTableService) {
-            if (!projectListService.hasProjects()) {
-              projectListService.updateAllProjects();
-            }
-            var state_query = $stateParams.query_string;
-            if (state_query && state_query != projectListService.getSql()) {
-              reportTableService.getReportResults(state_query);
-            }
-            else if (state_query == "" && reportTableService.projectCount() != projectListService.allProjectsCount()) {
-              reportTableService.getReportResults(state_query);
-            }
+        /** service initialization */
+        onEnter: ["reportTableService", 
+          function(reportTableService) {
+            reportTableService.initService();
           }
         ]
       });

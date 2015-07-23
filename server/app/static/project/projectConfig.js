@@ -1,5 +1,10 @@
 (function() {
   
+  /**
+   *  @name reportConfig
+   *  @desc Configuration for app.project module
+   */
+  
   "use strict";
   
   angular
@@ -11,6 +16,7 @@
   function projectConfig($stateProvider) {
     $stateProvider
       .state('project', {
+        /** virtual root state for Project tab view */
         url: '/project',
         controller: "Project",
         controllerAs: "project",
@@ -19,54 +25,41 @@
           requiresLogin: false,
           viewUrl: "/static/project/project.html"
         },
-        onEnter: ["$stateParams", "projectDataService", "projectListService", 
-                  "stateLocationService",
-          function($stateParams, projectDataService, projectListService, stateLocationService) {
-            // Make sure the project list is ready and $stateParams contains a projectID
-            if (!projectListService.hasProjects()) {
-              projectListService.updateAllProjects();
-            }
-
-            var projectID;
-            var masterList = projectListService.getMasterList();
-            var selectedIds = masterList.selectedIds;
-            var oldProjectID = masterList.projectID;
-
-            if (!$stateParams.projectID) {
-              projectID = stateLocationService.getStateFromLocation().params.projectID;
-              if (!projectID) {
-                if (projectListService.hasProjects()) {
-                  projectID = projectListService.getProjectID();
-                }
-              }
-            }
-            else {
-              projectID = $stateParams.projectID;
-              //selectedIds = [projectID];
-              projectListService.setList(selectedIds);
-              projectListService.setDescription("projectID = " + projectID + ";");
-              projectListService.setSql({col_name: "projectID",
-                                         val: projectID,
-                                         op: "equals" });
-            }
-            //projectListService.updateProjectListProjectID(projectID, selectedIds);
-
-            $stateParams.projectID = projectID;
-
-            if (!projectDataService.projectID || projectDataService.projectID != projectID) {
-              projectDataService.getProjectData($stateParams);
-            }
+        /** service initialization */
+        onEnter: ["projectDataService", 
+          function(projectDataService) {
+            projectDataService.initService();
           }
         ]
       }) 
       .state("project.add",  {
+        /** state for adding a project */
         url: "/add",
         templateUrl: "/static/project/templates/description.html",
         data: {
           requiresLogin: true
         }
       })
+      .state('project.attach', {
+        /** virtual root for project.attach views */
+        url: '/attach',
+        data: {
+          requiresLogin: true
+        }
+      })
+      .state("project.attach.edit", {
+        /** state for attaching a file under the Attach sub-tab */
+        url: "/edit/:projectID",
+        controller: function ($stateParams) {
+          console.log($stateParams);
+        },
+        controllerAs: "project",
+        data: {
+          requiresLogin: true
+        }
+      })
       .state('project.comment', {
+        /** virtual root for project.comment views */
         url: '/comment',
         templateUrl: "/static/project/templates/comment.html",
         data: {
@@ -79,12 +72,14 @@
         }
       })
       .state("project.comment.add", {
+        /** state for adding a comment to specified project */
         url: "/add/:projectID",
         controller: function ($stateParams) {
           console.log($stateParams, projectID);
         }
       })
       .state("project.comment.edit", {
+        /** state for the project editing Comment sub-tab */
         url: "/edit/:projectID",
         resolve: {
           projectID: ["$stateParams", function($stateParams) {
@@ -96,6 +91,7 @@
         }
       })
       .state("project.comment.edit.detail", {
+        /** state for editing the specified comment */
         url: "/detail/:commentID",
         controller: function ($stateParams, projectID) {
           $stateParams.projectID = projectID;
@@ -103,6 +99,7 @@
         }
       })
       .state("project.description", {
+        /** virtual root for project.description views */
         url: "/description",
         templateUrl: "/static/project/templates/description.html",
         data: {
@@ -110,6 +107,7 @@
         }
       })
       .state("project.description.edit", {
+        /** state for project editing Description sub-tab */
         url: "/edit/:projectID",
         controller: function ($stateParams) {
           console.log($stateParams);
@@ -119,6 +117,7 @@
         }
       })
       .state('project.detail', {
+        /** state for project display view */
         url: '/:projectID',
         controller: function ($stateParams) {
           console.log($stateParams);
@@ -128,23 +127,8 @@
           requiresLogin: false
         }
       })
-      .state('project.edit', {
-        url: '/edit',
-        data: {
-          requiresLogin: true
-        }
-      })
-      .state("project.edit.attach", {
-        url: "/attach/:projectID",
-        controller: function ($stateParams) {
-          console.log($stateParams);
-        },
-        controllerAs: "project",
-        data: {
-          requiresLogin: true
-        }
-      })
       .state("project.disposition", {
+        /** virtual root for project.disposition views */
         url: "/disposition",
         templateUrl: "/static/project/templates/disposition.html",
         data: {
@@ -152,12 +136,14 @@
         }
       })
       .state("project.disposition.add", {
+        /** state for adding a disposition to the specified project */
         url: "/add/:projectID",
         controller: function($stateParams) {
           console.log($stateParams);
         }
       })
       .state("project.disposition.edit", {
+        /** state for project editing Disposition tab */
         url: "/edit/:projectID",
         resolve: {
           projectID: ["$stateParams", function($stateParams) {
@@ -169,12 +155,15 @@
         }
       })
       .state("project.disposition.edit.detail", {
+        /** state for editing the specified disposition, where the primary key
+            consists of the year and quarter of the disposition */
         url: "/detail/:disposedInFY/:disposedInQ",
         controller: function ($stateParams, projectID) {
           console.log($stateParams);
         }
       })
       .state("project.portfolio", {
+        /** virtual root for the project.portfolio views */
         url: "/portfolio",
         templateUrl: "/static/project/templates/portfolio.html",
         data: {
@@ -182,12 +171,14 @@
         }
       })
       .state("project.portfolio.edit", {
+        /** state for project editing under the Portfolio sub-tab */
         url: "/edit/:projectID",
         controller: function ($stateParams) {
           console.log($stateParams);
         }
       })
       .state("project.projectMan", {
+        /** virtual root for the project.projectMan views */
         url: "/projectMan",
         templateUrl: "/static/project/templates/projectMan.html",
         data: {
@@ -195,6 +186,7 @@
         }
       })
       .state("project.projectMan.edit", {
+        /** state for project editing under the Project Management sub-tab */
         url: "/edit/:projectID",
         controller: function ($stateParams) {
           console.log($stateParams);

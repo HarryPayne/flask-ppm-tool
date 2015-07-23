@@ -1,5 +1,17 @@
 (function() {
-  
+
+  /**
+   *  @name projectDataService
+   *  @desc A factory for the primary service that manages the data associated 
+   *        with the Project tab. That is a lot, and it gets help from a couple
+   *        of other services: 
+   *
+   *          attributesService - for lower level data attribute management.
+   *          projectListService - for the data that support the Previous and
+   *            Next top-level tabs, and also remember just which projects were
+   *            selected by your last filter or breakdown by attribute.
+   */
+
   "use strict";
   
   angular
@@ -25,6 +37,7 @@
       getProjectAttributes: attributesService.getProjectAttributes,
       getProjectDataFromLocation: getProjectDataFromLocation,
       hideDetails: hideDetails,
+      initService: initService,
       jumpToAtachFile: jumpToAtachFile,
       jumpToAddForm: jumpToAddForm,
       jumpToNewProject: jumpToNewProject,
@@ -47,7 +60,7 @@
     
     $rootScope.$on("savestate", service.SaveState);
     $rootScope.$on("restorestate", service.RestoreState);
-    $rootScope.$on("$locationChangeSuccess", service.getProjectDataFromLocation);
+    //$rootScope.$on("$locationChangeSuccess", service.getProjectDataFromLocation);
     
     function cancelAddProject() {
       $state.go("select");
@@ -114,10 +127,7 @@
       if ("projectID" in state.params && state.params.projectID != service.projectID) {
         service.projectID = state.params.projectID;
         service.getProjectData(state.params);
-        projectListService.updateProjectListProjectID(service.projectID);
-        if ("commentID" in state.params) {
-          //
-        }
+        projectListService.setProjectID(service.projectID);
       }
     }
 
@@ -128,6 +138,44 @@
       }
       else {
         $state.go("project.detail", {projectID: $state.params.projectID});
+      }
+    }
+
+    function initService() {
+      // Make sure the project list is ready and $stateParams contains a projectID
+      if (!projectListService.hasProjects()) {
+        projectListService.updateAllProjects();
+      }
+
+      var projectID;
+      var masterList = projectListService.getMasterList();
+      var selectedIds = masterList.selectedIds;
+      var oldProjectID = masterList.projectID;
+
+      if (!$stateParams.projectID) {
+        getProjectDataFromLocation();
+        //projectID = stateLocationService.getStateFromLocation().params.projectID;
+        if (!service.projectID) {
+          if (projectListService.hasProjects()) {
+            projectID = projectListService.getProjectID();
+          }
+        }
+      }
+      else {
+        projectID = $stateParams.projectID;
+        //selectedIds = [projectID];
+        projectListService.setList(selectedIds);
+        projectListService.setDescription("projectID = " + projectID + ";");
+        projectListService.setSql({col_name: "projectID",
+                                   val: projectID,
+                                   op: "equals" });
+      }
+      //projectListService.setProjectID(projectID, selectedIds);
+
+      $stateParams.projectID = projectID;
+
+      if (!service.projectID || service.projectID != projectID) {
+        service.getProjectData($stateParams);
       }
     }
 

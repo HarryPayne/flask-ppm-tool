@@ -448,7 +448,7 @@ def getReportTableJSON():
 @app.route("/getReportResults", methods=["POST"])
 def getReportResults():
     """ Get report data matching query_string """
-
+        
     # Parse with strict parsing. An error will raise an exception
     query_string = request.json.get("query_string", "")
     tableColumns = request.json.get("tableColumns", [])
@@ -518,12 +518,14 @@ def getReportResults():
                 if attr["multi"]:
                     # join with the relationship table and filter on its key column
                     table_name = "t_" + key[:-2]    # trim off "ID"
-                    table = getattr(alch, table_name)
-                    col = getattr(table.c, key)
-                    p = p.join(table).filter(col.in_(accepted_values))
+                    t = getattr(alch, table_name)
+                    col = getattr(t.c, key)
+                    p = p.join(t).filter(col.in_(accepted_values))
                 else:
                     p = p.filter(getattr(table, key).in_(accepted_values))
         
+        p = p.order_by(getattr(d, "projectID"))
+
     response = getReportRowsFromQuery(p, columns)
     response["projectList"] = [item.projectID for item in p]
     response["query_desc"] = ", and ".join(query_descs) if len(query_descs) else "none"

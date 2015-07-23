@@ -34,18 +34,20 @@
     }
     
     function locationChange() {
-      if (service.preventCall.pop('locationChange') != null) {
+      //if (service.preventCall.pop('locationChange') != null) {
+      if (service.preventCall.pop() == "locationChange") {
         return;
       }
       var location = $location.url();
       var entry = stateHistoryService.get(location);
       if (entry == null) {
-        return; //entry = service.getStateFromLocation();
+        var entry = service.getStateFromLocation();
       }
       if ("projectID" in entry.params) {
-        projectListService.updateProjectListProjectID(entry.params.projectID);
+        projectListService.setProjectID(entry.params.projectID);
       }
-      service.preventCall.push("stateChange");
+      service.preventCall = ["stateChange"];
+      //service.preventCall.push("stateChange");
       $state.go(entry.name, entry.params, {location: false});
     };
     
@@ -98,6 +100,7 @@
     
     function stateChange() {
       if (service.preventCall.pop("stateChange") != null){
+      //if (service.preventCall.pop() == "stateChange"){
         return;
       }
       if (!$state.current.name) {
@@ -109,7 +112,8 @@
         "params": $stateParams
       };
       stateHistoryService.set(url, entry);
-      service.preventCall.push('locationChange');
+      //service.preventCall.push('locationChange');
+      service.preventCall = ["locationChange"];
       $location.url(url);
     }
     

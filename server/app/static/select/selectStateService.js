@@ -24,6 +24,7 @@
       getBreakdownChoices: getBreakdownChoices,
       getBreakdownTotal: getBreakdownTotal,
       getMasterList: getMasterList,
+      initService: initService,
       jumpToBreakdownTable: jumpToBreakdownTable,
       setBreakdownChoices: setBreakdownChoices,
       updateBreakdownByAttribute: updateBreakdownByAttribute,
@@ -66,6 +67,10 @@
 
     function getMasterList() {
       return service.masterList;
+    }
+
+    function initService() {
+      projectListService.resetList();
     }
 
     function jumpToBreakdownTable(breakdown_row) {

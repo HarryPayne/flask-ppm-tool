@@ -18,9 +18,9 @@
         data: {
           requiresLogin: false
         },
-        onEnter: ["projectListService", 
-          function(projectListService) {
-            projectListService.resetList();
+        onEnter: ["selectStateService", 
+          function(selectStateService) {
+            selectStateService.initService();
           }
         ]
       })

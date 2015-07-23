@@ -18,10 +18,7 @@
         templateUrl: "/static/filter/filter.html",
         data: {
           requiresLogin: false
-        },
-        onEnter: ["projectListService", function(projectListService) {
-          projectListService.resetList();
-        }]
+        }
       });
   };
   

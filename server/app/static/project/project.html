@@ -42,7 +42,7 @@
         <li role="presentation" ng-class="{active:project.currentMode().substring(0, 'disposition.edit'.length) == 'disposition.edit'}"><a ui-sref="project.disposition.edit({projectID:project.ds.projectID})">Dispositions</a></li>
         <li role="presentation" ng-class="{active:project.currentMode() == 'projectMan.edit'}"><a ui-sref="project.projectMan.edit({projectID:project.ds.projectID})">Project Management</a></li>
         <li role="presentation" ng-class="{active:project.currentMode().substring(0,12) == 'comment.edit'}"><a ui-sref="project.comment.edit({projectID:project.ds.projectID})">Comments</a></li>
-        <li role="presentation" ng-class="{active:project.currentMode() == 'edit.attach'}"><a ui-sref="project.edit.attach({projectID:project.ds.projectID})">Attach a File</a></li>
+        <li role="presentation" ng-class="{active:project.currentMode() == 'attach.edit'}"><a ui-sref="project.attach.edit({projectID:project.ds.projectID})">Attach a File</a></li>
       </ul>
                 
       <div class="clearfix">

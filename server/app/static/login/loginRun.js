@@ -26,7 +26,7 @@
         loginService()
           .then(
             function () {
-              return $state.go(toState.name);
+              return $state.go(toState.name, toParams);
             },
             function () {
               if (fromState.name == "") {
