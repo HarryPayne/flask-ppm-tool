@@ -82,6 +82,17 @@
           state.params.projectID = parseInt(path[0]);
         }
       }
+      else if (base == "filter") {
+        if (path[1] == "attributes") {
+          state.name = "filter.builder.attributes";
+          state.params.query_string = path[2]
+          state.params.attribute_list = path[0]
+        }
+        else {
+          state.name = "filter.builder";
+          state.params.query_string = path[0];
+        }
+      }
       else if (base == "report") {
         if (path[1] == "columns") {
           state.name = "report.columns";

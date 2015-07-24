@@ -12,6 +12,8 @@
     
     this.ls = projectListService;
     this.masterList = projectListService.getMasterList;
+    this.jumpToProject = this.ls.jumpToProject;
+    
     this.selectState = selectStateService;
 
   };

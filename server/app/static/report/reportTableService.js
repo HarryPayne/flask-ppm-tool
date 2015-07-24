@@ -155,7 +155,7 @@
         service.getReportResults(location_query);
       }
       else if (service.dataTableRowCount() == 0) {
-        /** if we know what we want and it is what we have, but there is no 
+        /** if we know what we want and it is what we have, but there are no 
             data for the table ... */
         service.getReportTableData();
       }
@@ -223,7 +223,7 @@
       projectListService.setSql(response.data.query_string);
       projectListService.SaveState();
       setReportTableData(response);
-      service.master.dtInstance.rerender();
+      //service.master.dtInstance.rerender();
       service.SaveState();
     }
 

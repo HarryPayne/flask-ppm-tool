@@ -53,7 +53,7 @@
             <div role="presentation">
                 <ul class="nav nav-tabs">
                   <li role="presentation" ng-class="{active:header.isActive('select')}"><a ui-sref="select">Select</a></li>
-                  <li role="presentation" ng-class="{active:header.isActive('filter')}"><a ui-sref="filter">Filter Builder</a></li>
+                  <li role="presentation" ng-class="{active:header.isActive('filter')}"><a ui-sref="filter.builder({query_string: header.getSql()})">Filter Builder</a></li>
                   <li role="presentation" ng-class="{active:header.isActive('report')}"><a ui-sref="report.table({query_string: header.getSql()})">Report</a></li>
                   <li role="presentation" ng-class="{active:header.isActive('project')}"><a ui-sref="project.detail">Project</a></li>
                   <li role="presentation" ng-class="{active:header.hasPrevious()}"><a href="#" onclick="return false;" ng-click="header.jumpToPreviousProject()">Previous</a></li>
@@ -115,12 +115,14 @@
 
     <script type="text/javascript" src="/static/common/app.common.js"></script>
     <script type="text/javascript" src="/static/common/jumpToProjectID/jumpToProjectIDDirective.js"></script>
+    <script type="text/javascript" src="/static/common/jumpToProjectChoice/jumpToProjectChoiceDirective.js"></script>
     
     <script type="text/javascript" src="/static/curate/app.curate.js"></script>
     <script type="text/javascript" src="/static/curate/curateConfig.js"></script>
     <script type="text/javascript" src="/static/curate/curateController.js"></script>
 
     <script type="text/javascript" src="/static/filter/app.filter.js"></script>
+    <script type="text/javascript" src="/static/filter/filterBuilderService.js"></script>
     <script type="text/javascript" src="/static/filter/filterConfig.js"></script>
     <script type="text/javascript" src="/static/filter/filterController.js"></script>
 

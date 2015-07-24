@@ -60,6 +60,7 @@
       getMasterList: getMasterList,
       getProjectID: getProjectID,
       getSelectedIds: getSelectedIds,
+      getSelectedProjects: getSelectedProjects,
       getSql: getSql,
       hasProjects: hasProjects,
       initModel: initModel,
@@ -134,6 +135,15 @@
     }
 
     /**
+     *  @name getSelectedProjects
+     *  @desc Return the brief descriptions for all of the selected projects
+     *  @returns {Object[]}
+     */
+    function getSelectedProjects() {
+      return service.masterList.selectedProjects;
+    }
+
+    /**
      *  @name getSql
      *  @desc Getter for service.masterList.sql
      *  @returns {string}
@@ -167,7 +177,8 @@
         previous: -1,
         projectID: -1,
         projectName: "",
-        selectedIds: []
+        selectedIds: [],
+        selectedProjects: []
       };
     };
 
@@ -292,7 +303,7 @@
      */
     function setList(selectedIds) {
       service.masterList.selectedIds = selectedIds;
-      if (typeof selectIds == "undefined") {
+      if (typeof selectedIds == "undefined") {
         var what_the_;
       }
 
@@ -342,6 +353,11 @@
             service.masterList.projectName = proj.name;
           }
         });
+        
+        service.masterList.selectedProjects = _.filter(service.masterList.allProjects, function(project) {
+          return _.contains(service.masterList.selectedIds, project.projectID);
+        });
+
       }
       service.SaveState();
     };

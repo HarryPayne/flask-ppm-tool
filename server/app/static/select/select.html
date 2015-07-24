@@ -22,32 +22,14 @@
   
     
     <div class="container" ng-show="select.state.current.name == 'select'">
-      <div jump-to-project-id label="'Jump'" on-submit="select.jumpToProject(projectID)"
+
+      <div jump-to-project-id on-submit="select.jumpToProject" label="'Jump'" 
         help="'Enter a numeric project ID and go to that project.'"></div>
       
-      <form name="myform2" class="form-horizontal" novalidate ng-submit="select.jumpToProject(option.projectID)">
-        <div class="form-group">
-          <label for="projectID2" class="control-label col-xs-2 col-lg-2"> 
-            Select:
-          </label>
-          <div class="col-xs-10 col-lg-10">
-            <div class="input-group">
-              <select name="projectID" id="projectID2" 
-                class="form-control"
-                aria-describedBy="helpBlock2"
-                ng-model="option" 
-                ng-options="item.projectID+'. '+item.name for item in select.masterList().allProjects track by item.projectID"
-                ng-change="select.jumpToProject(option.projectID)">
-              </select>
-              <span class="input-group-btn">
-                <button class="btn btn-default" type="submit"> Go </button>
-              </span>
-            </div>
-            <span id="helpBlock2" class="help-block">Select a project from the list and go to that project.</span>
-          </div>
-        </div>
-      </form>
-
+      <div jump-to-project-choice on-submit="select.jumpToProject"
+        label="'Select'" options="select.masterList().allProjects" 
+        help="'Select a project from the list and go to that project.'"></div>
+        
       <div class="form-horizontal">
         <div class="form-group">
           <label class="control-label col-xs-2 col-lg-2">
