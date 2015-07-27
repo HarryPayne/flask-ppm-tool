@@ -72,6 +72,31 @@
     
     $rootScope.$on("savestate", service.SaveState);
     $rootScope.$on("restorestate", service.RestoreState);
+    $rootScope.$on("$stateChangeSuccess", function() {
+
+      var state_from_location = stateLocationService.getStateFromLocation();
+
+      /** if we landed under the Project tab ... */
+      if (_.first(state_from_location.name.split(".")) == "project") {
+
+          /** project id from state params */
+          var state_projectID = $stateParams.projectID;
+
+          /** projectID saved in the project list service */
+          var saved_projectID = projectListService.getProjectID();
+
+          if (state_projectID && saved_projectID != state_projectID 
+              && state_projectID > -1){
+            /** the data we want is not what we have, so ... */
+            service.getProjectData({projectID: state_projectID});
+          }
+          else if (saved_projectID && saved_projectID == state_projectID
+                   &&  typeof service.getProjectAttributes() == "undefined") {
+            /** should be good to go but there are no saved data, so ... */
+            service.getProjectData({projectID: state_projectID});
+          }
+      }
+    });
 
     service.SaveState();
     return service;
@@ -232,34 +257,30 @@
         projectListService.updateAllProjects();
       }
 
-      var projectID;
-      var masterList = projectListService.getMasterList();
-      var selectedIds = masterList.selectedIds;
-      var oldProjectID = masterList.projectID;
+      /** query from location bar */
+      var state_from_location = stateLocationService.getStateFromLocation();
+      var location_projectID = state_from_location.params.projectID;
 
-      /** if $stateParams does not give you projectID, look at the location */
-      if (!$stateParams.projectID) {
-        getProjectDataFromLocation();
-        if (!service.projectID) {
-          if (projectListService.hasProjects()) {
-            projectID = projectListService.getProjectID();
-          }
-        }
+      /** projectID saved in the project list service */
+      var saved_projectID = projectListService.getProjectID();
+
+      //if (typeof location_projectID == "undefined") {
+        /** If the state derived from the location bar has no location_projectID
+            parameter... This is the case using the Break Down functionality 
+            on the Select tab, where the location indicates a Select tab state. */
+      //  service.getProjectData({projectID: saved_projectID});
+      //}
+      if (location_projectID && location_projectID > -1
+          && location_projectID != saved_projectID) {
+        /** If the location tells us what we need, and know we have something 
+            else ... This is the bookmarked report case. */
+        service.getProjectData({projectID: location_projectID});
       }
-      else {
-        projectID = $stateParams.projectID;
-        projectListService.setList(selectedIds);
-        projectListService.setDescription("projectID = " + projectID + ";");
-        projectListService.setSql({col_name: "projectID",
-                                   val: projectID,
-                                   op: "equals" });
-      }
-      //projectListService.setProjectID(projectID, selectedIds);
-
-      $stateParams.projectID = projectID;
-
-      if (!service.projectID || service.projectID != projectID) {
-        service.getProjectData($stateParams);
+      else if (location_projectID && location_projectID > -1 
+               && location_projectID == saved_projectID
+               && typeof service.getProjectAttributes() == "undefined") {
+        /** should be good to go but there are no saved data, so ... */
+        service.getProjectData({projectID: location_projectID});
       }
     }
 
@@ -316,7 +337,8 @@
     function setProjectData(result, params) {
       //return;
       attributesService.updateProjectAttributes(result, params);
-      service.projectID = result.data.projectID;
+      projectListService.setProjectID(result.data.projectID);
+      service.projectID = projectListService.getProjectID();
       service.success = result.data.success;
       service.SaveState();
       attributesService.SaveState();

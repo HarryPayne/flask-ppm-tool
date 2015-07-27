@@ -58,10 +58,14 @@
       allProjectsCount: allProjectsCount,
       getIDListFromAllProjects: getIDListFromAllProjects,
       getMasterList: getMasterList,
+      getNextID: getNextID,
+      getPreviousID: getPreviousID,
       getProjectID: getProjectID,
       getSelectedIds: getSelectedIds,
       getSelectedProjects: getSelectedProjects,
       getSql: getSql,
+      hasNextID: hasNextID,
+      hasPreviousID: hasPreviousID,
       hasProjects: hasProjects,
       initModel: initModel,
       jumpToProject: jumpToProject,
@@ -117,6 +121,24 @@
     };
 
     /**
+     *  @name getNextID
+     *  @desc Getter for service.masterList.next
+     *  @returns {Number} projectID
+     */
+    function getNextID() {
+      return service.masterList.next;
+    }
+
+    /**
+     *  @name getPreviousID
+     *  @desc Getter for service.masterList.previous
+     *  @returns {Number} projectID
+     */
+    function getPreviousID() {
+      return service.masterList.previous;
+    }
+
+    /**
      *  @name getProjectID
      *  @desc Getter for service.masterList.projectID
      *  @returns {Number}
@@ -152,6 +174,15 @@
       return service.masterList.sql;
     }
     
+    
+    function hasNextID() {
+      return service.masterList.next != -1;
+    }
+
+    function hasPreviousID() {
+      return service.masterList.previous != -1;
+    }
+
     /**
      *  @name hasProjects
      *  @desc Return the validity of the statement "there are available 
@@ -220,10 +251,11 @@
     /**
      *  @name resetList
      *  @desc Reset the project list to the state where all projects are selected
+     *        without forgetting which is the current project.
      */
     function resetList() {
       service.updateAllProjects();
-      service.setList(service.getIDListFromAllProjects());
+      service.setProjectID(service.getProjectID(), service.getIDListFromAllProjects());
       service.setDescription("none");
       service.setSql("");
     }
@@ -325,6 +357,7 @@
      */
     function setProjectID(projectID, selectedIds) {
       if (projectID) {
+        projectID = parseInt(projectID);
         if (typeof selectedIds == "undefined") {
           selectedIds = service.masterList.selectedIds;
         }

@@ -9,6 +9,9 @@ module.exports = function(grunt){
 		              "server/app/static/app.run.js",
 		              "server/app/static/attributes/*.js",
 		              "server/app/static/comment/*.js",
+		              "server/app/static/common/*.js",
+		              "server/app/static/common/*/*.js",
+		              "server/app/static/common/*/*/*.js",
 		              "server/app/static/curate/*.js",
 		              "server/app/static/filter/*.js",
 		              "server/app/static/header/*.js",
@@ -17,7 +20,7 @@ module.exports = function(grunt){
 		              "server/app/static/manage/*.js",
 		              "server/app/static/modalConfirm/*.js",
 		              "server/app/static/project/*.js",
-                  "server/app/static/report/*.js",
+                      "server/app/static/report/*.js",
 		              "server/app/static/select/*.js",
 		              "server/app/static/stateLocation/*.js",
 		              "server/app/static/title/*.js"

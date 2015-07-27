@@ -1,6 +1,16 @@
-<h4 ng-show="project.currentMode() == 'add.description'" class="col-sm-12">Add a Project</h4>
 
-  <div 
+<div project-data-display-table
+  attributes="project.as.getProjectAttributes('description')"
+  error="project.ds.error"
+  header="'Description Attributes'"
+  mode="'edit'"
+  on-save-click="project.ds.saveProject(table)"
+  relationship="'one'"
+  success="project.ds.success"
+  table="'description'"
+  ></div>
+  
+  <!-- div 
     ng-repeat="attr in project.as.getProjectAttributes('description')" 
     ng-include src="'static/project/templates/form-edit-field.html'">
   </div>
@@ -8,4 +18,4 @@
   <div class="col-sm-offset-2 col-sm-10">
     <button type="button" ng-click="project.ds.saveProject('description')"> Save </button>
     <span ng-show="project.ds.showEditSuccess()" ng-bind="project.ds.success" class="alert alert-success" role="alert"></span>
-  </div>
+  </div -->

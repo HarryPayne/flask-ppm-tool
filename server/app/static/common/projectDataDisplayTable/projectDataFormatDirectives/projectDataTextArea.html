@@ -1,0 +1,10 @@
+<span ng-if="ctrl.mode=='view'">
+  <span ng-bind="attr.value"></span>
+</span>
+<span ng-if="ctrl.mode=='edit'">
+  <p ng-bind="attr.help"></p>
+  <textarea rows="8" cols="80" name="{{attr.name}}"
+  class="form-control col-lg-4"
+    ng-viewEditModel="attr.value"
+    ng-bind="attr.value"></textarea>
+</span>

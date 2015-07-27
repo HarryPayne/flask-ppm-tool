@@ -1,0 +1,21 @@
+<h4 class="col-sm-12" ng-bind="ctrl.header"></h4>
+
+<div class="form-group" ng-repeat="attr in ctrl.attributes()" ng-if="ctrl.hasAValue(attr)">
+  <div>
+    <label for="{{attr.name}}" ng-bind="attr.label" class="col-sm-2 control-label text-capitalize"></label>
+    <div ng-switch="attr.format" class="col-sm-10" style="padding-top: 7px;">
+      <span ng-show="attr.errors" ng-bind="attr.errors" class="alert alert-danger" role="alert"></span>
+      <span ng-switch-when="date" project-data-date></span>
+      <span ng-switch-when="dateRangeSelect" project-data-date-range-select></span>
+      <span ng-switch-when="multipleSelect" project-data-multiple-select></span>
+      <span ng-switch-when="number" project-data-number></span>
+      <span ng-switch-when="string" project-data-string></span>
+      <span ng-switch-when="textArea" project-data-text-area></span>
+    </div>
+  </div>
+</div>
+
+<div ng-if="ctrl.mode=='edit'" class="col-sm-offset-2 col-sm-10">
+  <button type="button" ng-click="submit()"> Save </button>
+  <span ng-bind="ctlr.success" class="alert alert-success" role="alert"></span>
+</div>

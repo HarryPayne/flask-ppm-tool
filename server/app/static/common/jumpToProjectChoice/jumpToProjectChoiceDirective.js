@@ -5,7 +5,7 @@
    *  @desc Render a form with a select element and on submit execute a 
    *        callback function, passing in the input.
    *  
-   *  Used under the Select tab to select a project from a listand call a 
+   *  Used under the Select tab to select a project from a list and call a 
    *  function to jump to that project under the Project tab. Here is the HTML 
    *  for the prototype application of this directive:
    *

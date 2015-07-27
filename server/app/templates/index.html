@@ -33,7 +33,13 @@
         color:#00f;
         text-decoration:underline;
       }
-      .nav, .pagination, .carousel, .panel-title a { cursor: pointer; }
+      .nav, .pagination, .carousel, .panel-title a { 
+        cursor: pointer; 
+      }
+      a.disabled {
+        pointer-events: none;
+        cursor: default;
+      }
     </style>
     
   </head>
@@ -50,21 +56,22 @@
             <li ng-show="currentUser"><a href="#" ng-click="header.logout();">Logout</a></li>
           </ul>
           {% endraw %}
-            <div role="presentation">
-                <ul class="nav nav-tabs">
-                  <li role="presentation" ng-class="{active:header.isActive('select')}"><a ui-sref="select">Select</a></li>
-                  <li role="presentation" ng-class="{active:header.isActive('filter')}"><a ui-sref="filter.builder({query_string: header.getSql()})">Filter Builder</a></li>
-                  <li role="presentation" ng-class="{active:header.isActive('report')}"><a ui-sref="report.table({query_string: header.getSql()})">Report</a></li>
-                  <li role="presentation" ng-class="{active:header.isActive('project')}"><a ui-sref="project.detail">Project</a></li>
-                  <li role="presentation" ng-class="{active:header.hasPrevious()}"><a href="#" onclick="return false;" ng-click="header.jumpToPreviousProject()">Previous</a></li>
-                  <li role="presentation" ng-class="{active:header.hasNext()}"><a href="#" onclick="return false;" ng-click="header.jumpToNextProject()">Next</a></li>
-                  <li role="presentation" ng-class="{active:header.isActive('comment')}" 
-                    ng-show="currentUser.roles.indexOf('ContentProvider') > -1 || currentUser.roles.indexOf('Curator') > -1">
-                    <a ui-sref="comment">Comments</a></li>
-                  <li role="presentation" ng-class="{active:header.isActive('curate')}" ng-show="currentUser.roles.indexOf('Curator') > -1"><a ui-sref="curate">Curate</a></li>
-                  <li role="presentation" ng-class="{active:header.isActive('manage')}" ng-show="currentUser.roles.indexOf('Manager') > -1"><a ui-sref="manage">Manage</a></li>
-                </ul>
-            </div>
+          <div role="presentation">
+            <ul class="nav nav-tabs">
+              <li role="presentation" ng-class="{active:header.isActive('select')}"><a ui-sref="select">Select</a></li>
+              <li role="presentation" ng-class="{active:header.isActive('filter')}"><a ui-sref="filter.builder({query_string: header.getSql()})">Filter Builder</a></li>
+              <li role="presentation" ng-class="{active:header.isActive('report')}"><a ui-sref="report.table({query_string: header.getSql()})">Report</a></li>
+              <li role="presentation" ng-class="{active:header.isActive('project')}"><a ui-sref="project.detail({projectID: header.getProjectID()})">Project</a></li>
+              <li role="presentation" ng-class="{active:header.hasPrevious()}"><a ui-sref="project.detail({projectID: header.getPreviousID()})" ng-click="header.jumpToPreviousProject()" ng-show="header.hasPreviousID()">Previous</a><a class="disabled ng-hide" ng-hide="header.hasPreviousID()">Previous</a></li>
+              <li role="presentation" ng-class="{active:header.hasNext()}"><a ui-sref="project.detail({projectID: header.getNextID()})" ng-click="header.jumpToNextProject" ng-show="header.hasNext()">Next</a><a class="disabled ng-hide" ng-hide="header.hasNext()">Next</a></li>
+              <li role="presentation" ng-class="{active:header.isActive('comment')}" 
+                ng-show="currentUser.roles.indexOf('ContentProvider') > -1 || currentUser.roles.indexOf('Curator') > -1">
+                <a ui-sref="comment">Comments</a></li>
+              <li role="presentation" ng-class="{active:header.isActive('curate')}" ng-show="currentUser.roles.indexOf('Curator') > -1"><a ui-sref="curate">Curate</a></li>
+              <li role="presentation" ng-class="{active:header.isActive('manage')}" ng-show="currentUser.roles.indexOf('Manager') > -1"><a ui-sref="manage">Manage</a></li>
+            </ul>
+          </div>
+          
         </div>
       </header>
       <section id="body">
@@ -116,6 +123,13 @@
     <script type="text/javascript" src="/static/common/app.common.js"></script>
     <script type="text/javascript" src="/static/common/jumpToProjectID/jumpToProjectIDDirective.js"></script>
     <script type="text/javascript" src="/static/common/jumpToProjectChoice/jumpToProjectChoiceDirective.js"></script>
+    <script type="text/javascript" src="/static/common/projectDataDisplayTable/projectDataDisplayTableDirective.js"></script>
+    <script type="text/javascript" src="/static/common/projectDataDisplayTable/projectDataFormatDirectives/projectDataDateDirective.js"></script>
+    <script type="text/javascript" src="/static/common/projectDataDisplayTable/projectDataFormatDirectives/projectDataDateRangeSelectDirective.js"></script>
+    <script type="text/javascript" src="/static/common/projectDataDisplayTable/projectDataFormatDirectives/projectDataMultipleSelectDirective.js"></script>
+    <script type="text/javascript" src="/static/common/projectDataDisplayTable/projectDataFormatDirectives/projectDataNumberDirective.js"></script>
+    <script type="text/javascript" src="/static/common/projectDataDisplayTable/projectDataFormatDirectives/projectDataStringDirective.js"></script>
+    <script type="text/javascript" src="/static/common/projectDataDisplayTable/projectDataFormatDirectives/projectDataTextAreaDirective.js"></script>
     
     <script type="text/javascript" src="/static/curate/app.curate.js"></script>
     <script type="text/javascript" src="/static/curate/curateConfig.js"></script>

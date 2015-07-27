@@ -14,6 +14,11 @@
     this.currentUser = $rootScope.currentUser;
     this.masterList = projectListService.getMasterList;
     this.getSql = projectListService.getSql;
+    this.getNextID = projectListService.getNextID;
+    this.getPreviousID = projectListService.getPreviousID;
+    this.getProjectID = projectListService.getProjectID;
+    this.hasNextID = projectListService.hasNextID;
+    this.hasPreviousID = projectListService.hasPreviousID;
 
     this.loggedIn = loginStateService.loggedIn;
     this.login = loginStateService.login;

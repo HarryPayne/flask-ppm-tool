@@ -1,0 +1,18 @@
+<span ng-if="ctrl.mode=='view'">
+  <span ng-bind="attr.printValue"></span>
+</span>
+<span ng-if="ctrl.mode=='edit'">
+  <p ng-bind="attr.help"></p>
+  <span ng-if="attr.computed">
+    <span ng-bind="attr.printValue"></span>
+  </span>
+  <span ng-if="!attr.computed">
+    <input name="{{attr.name}}"
+      ui-date="project.dateOptions" 
+      ui-date-format="MM/dd/yy"
+      class="form-control col-lg-2"
+      ng-viewEditModel="attr.value"
+      type="text"
+     />
+  </span>
+</span>

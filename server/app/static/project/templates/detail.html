@@ -1,17 +1,16 @@
-<h4 class="col-sm-12">Description Attributes</h4>
-  <dl class="dl-horizontal"
-    ng-repeat="attr in project.as.getProjectAttributes('description')" 
-    ng-include src="'static/project/templates/view-field.html'">
-  </dl>
+<div project-data-display-table
+  attributes="project.as.getProjectAttributes('description')"
+  header="'Description Attributes'"
+  mode="'view'"
+  relationship="'many'"
+  table="'description'"></div>
 
-  <h4 class="col-sm-12">Portfolio Attributes</h4>
-
-  <dl class="dl-horizontal"
-    ng-repeat="attr in project.as.getProjectAttributes('portfolio')" 
-    ng-include src="'static/project/templates/view-field.html'">
-  </dl>
-
-<h4 class="col-sm-12">Disposition History</h4>
+<div project-data-display-table
+  attributes="project.as.getProjectAttributes('portfolio')"
+  header="'Portfolio Attributes'"
+  mode="'view'"
+  relationship="'one'"
+  table="'portfolio'"></div>
 
 <dl class="dl-horizontal" 
   ng-repeat="disp in project.as.getRawAttributes('disposition')">
@@ -46,12 +45,12 @@
   </dd>
 </dl>
 
-<h4 class="col-sm-12">Project Management Attributes</h4>
-
-<dl class="dl-horizontal"
-  ng-repeat="attr in project.as.getProjectAttributes('project')" 
-  ng-include src="'static/project/templates/view-field.html'">
-</dl>
+<div project-data-display-table
+  attributes="project.as.getProjectAttributes('project')"
+  header="'Project Management Attributes'"
+  mode="'view'"
+  relationship="'one'"
+  table="'project'"></div>
 
 <h4 class="col-sm-12">Comments</h4>
 
