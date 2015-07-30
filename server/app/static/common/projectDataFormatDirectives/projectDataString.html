@@ -1,7 +1,7 @@
 <span ng-if="ctrl.mode=='view'">
   <span ng-bind="attr.value"></span>
 </span>
-<span ng-if="ctrl.mode=='edit'">
+<span ng-if="ctrl.mode=='edit' || ctrl.mode=='edit.detail' || ctrl.mode == 'add'">
   <p ng-bind="attr.help"></p>
   <span ng-if="attr.computed">
     <span ng-bind="attr.value"></span>
@@ -9,6 +9,6 @@
   <span ng-if="!attr.computed">
     <input type="text" name="{{attr.name}}"
       class="form-control"
-      ng-viewEditModel="attr.value"/>
+      ng-model="attr.value"/>
   </span>
 </span>

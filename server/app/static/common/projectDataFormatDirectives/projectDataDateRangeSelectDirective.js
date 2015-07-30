@@ -10,7 +10,7 @@
     
     return {
       restrict: "EA",
-      templateUrl: "static/common/projectDataDisplayTable/projectDataFormatDirectives/projectDataDateRangeSelect.html" 
+      templateUrl: "static/common/projectDataFormatDirectives/projectDataDateRangeSelect.html" 
     };
     
   }

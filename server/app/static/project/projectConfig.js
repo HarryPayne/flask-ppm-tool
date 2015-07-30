@@ -96,7 +96,8 @@
         controller: function ($stateParams, projectID) {
           $stateParams.projectID = projectID;
           console.log($stateParams, projectID);
-        }
+        },
+        templateUrl: "/static/project/templates/commentDetail.html"
       })
       .state("project.description", {
         /** virtual root for project.description views */

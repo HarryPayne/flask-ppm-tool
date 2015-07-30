@@ -70,8 +70,8 @@
         else if (_.last(path) == "disposition" && path[2] == "detail") {
           state.name = "project.disposition.edit.detail";
           state.params.projectID = parseInt(path[3]);
-          state.params.disposedInFY = parseInt(path(1));
-          state.params.disposedInQ = parseInt(path(0));
+          state.params.disposedInFY = parseInt(path[1]);
+          state.params.disposedInQ = parseInt(path[0]);
         }
         else if (path.length == 1) {
           state.name = "project.detail";

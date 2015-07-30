@@ -1,9 +1,15 @@
 (function() {
   
+  /**
+   *  @module PPT
+   *  @desc   The parent module for the PPT application
+   */
+  
   angular
     .module("PPT", [
       "app.attributes",
       "app.comment",
+      "app.common",
       "app.curate",
       "app.filter", 
       "app.header", 
@@ -189,7 +195,7 @@ Data attributes:
           });
         }
         if (attr.child) {
-          if (!_.isArray(attr.child.value)) {
+          if (attr.child.value && !_.isArray(attr.child.value)) {
             this[attr.child.name] = attr.child.value.id;
           }
           else {
@@ -572,6 +578,720 @@ Data attributes:
   }
   
 }());
+(function (){
+  
+  /**
+   *  @module app.common
+   *  @desc   A module for shared components
+   */
+  
+  angular
+    .module("app.common", []);
+
+}());
+
+(function() {
+  
+  /*
+   *  @name jumpToProjectChoice
+   *  @desc Render a form with a select element and on submit execute a 
+   *        callback function, passing in the input.
+   *  
+   *  Used under the Select tab to select a project from a list and call a 
+   *  function to jump to that project under the Project tab. Here is the HTML 
+   *  for the prototype application of this directive:
+   *
+   *    <div jump-to-project-choice label="'Select'" 
+   *      on-submit="select.jumpToProject"
+   *      options="select.masterList().allProjects" 
+   *      help="'Select a project from the list and go to that project.'"></div>
+   *
+   *  Notice that the onSubmit reference does not have parentheses at the end.
+   *
+   *  The attributes for this directive are:
+   *
+   *    options - a list of objects with "name" and "projectID" attributes for
+   *      rendering the option elements for the select element.
+   *    help - text for an aria-describedBy block, to explain the use of this
+   *      field.
+   *    label - text to label the input field.
+   *    on-submit - tThe function to be run when the form is submitted.
+   */
+
+  "use strict";
+  
+  angular
+    .module("app.common")
+    .directive("jumpToProjectChoice", JumpToProjectChoice);
+  
+  function JumpToProjectChoice() {      
+    /**
+     *  @name controller
+     *  @desc A simple controller for pulling together the form data and the
+     *        scope data.
+     */
+    function controller() {
+      this.option;
+      this.jump = jump;
+    }
+
+    return {
+      restrict: "EA",
+      scope: {
+        help: "=",
+        label: "=",
+        onSubmit: "&",
+        options: "="
+      },
+      controller: controller,
+      controllerAs: "ctrl",
+      bindToController: true,
+      templateUrl: "static/common/jumpToProjectChoice/jumpToProjectChoice.html",
+      link: function(scope, element, attributes, ctrl) {
+        /** when the form in the template is submitted call the controller's
+            jump function */
+        scope.submit = ctrl.jump;
+      }
+    };
+
+    /**
+     *  @name jump
+     *  @desc A sneaky way of passing a single item of form data to the external 
+     *        function without caring what the parameter name is. We stored a
+     *        reference to the function in ctrl.onSubmit. The first pair of
+     *        parentheses just gives you the function. The second pair is the
+     *        function parameter list.
+     */
+    function jump() {
+      this.ctrl.onSubmit()(this.ctrl.option.projectID);
+    }
+
+  };
+  
+}());
+
+(function() {
+  
+  /*
+   *  @name jumpToProjectID
+   *  @desc Render a form with a number type input field and on submit execute
+   *        a callback function, passing in the input.
+   *  
+   *  Used under the Select tab to input a projectID and call a function to 
+   *  jump to that project under the Project tab. Here is the HTML for the
+   *  prototype application of this directive:
+   *
+   *    <div jump-to-project-id label="'Jump'" on-submit="select.jumpToProject"
+   *      help="'Enter a numeric project ID and go to that project.'"></div>
+   *
+   *  Notice that the onSubmit reference does not have parentheses at the end.
+   */
+
+  "use strict";
+  
+  angular
+    .module("app.common")
+    .directive("jumpToProjectId", JumpToProjectID);
+  
+  function JumpToProjectID() {      
+    function controller() {
+      this.projectID;
+      this.jump = jump;
+    }
+
+    return {
+      restrict: "EA",
+      scope: {
+        label: "=",
+        help: "=",
+        onSubmit: "&"
+      },
+      controller: controller,
+      controllerAs: "ctrl",
+      bindToController: true,
+      templateUrl: "static/common/jumpToProjectID/jumpToProjectID.html",
+      link: function(scope, element, attributes, ctrl) {
+        /** when the form in the template is submitted call the controller's
+            jump function */
+        scope.submit = ctrl.jump;
+      }
+    };
+
+    /**
+     *  @name jump
+     *  @desc A sneaky way of passing a single item of form data to the external 
+     *        function without caring what the parameter name is. We stored a
+     *        reference to the function in ctrl.onSubmit. The first pair of
+     *        parentheses just gives you the function. The second pair is the
+     *        function parameter list.
+     */
+    function jump() {
+      this.ctrl.onSubmit()(this.ctrl.projectID);
+    }
+
+  };
+  
+}());
+
+(function() {
+  
+  /**
+   *  @name projectDataDisplay
+   *  @desc Render project data for a single database table. A header is 
+   *        followed by rows in Bootstrap form-horizontal layout, even
+   *        in view mode. This is the top of a pyramid of nested directives,
+   *        and basically decides which data model to use, based on the table
+   *        name passed in. Other attributes are passed down to data model
+   *        specific directives.
+   * 
+   *  The attributes for this directive are:
+   * 
+   *    datasource - a list of data items to be displayed:
+   *      In the "one" dataModel (next attribute) it will be a list of
+   *      attribute objects for a single project -- basically one row from
+   *      the specified database table/data category.
+   * 
+   *      In the "comments" dataModel it will be a list of comments. It could
+   *      be all the comments for one project or a list constructed some other
+   *      way (all the comments for a given user, given planning cycle, ...)
+   * 
+   *      In the "dispositions" dataModel it will be a list of dispositions,
+   *      such as all of the dispositions for one project.
+   * 
+   *    dataModel - "one" or "comments" or "dispositions". 
+   *      Use "one" for the data tables that are one-to-one with project ID 
+   *      (description, portfolio, project). In that model that table will 
+   *      contain a list of attributes in order of the attributeID metadata 
+   *      on the column. In view mode string representations of the data
+   *      are shown. In edit mode, there will be edit widgets a Save button.
+   * 
+   *      Use "comments" for a listing of comments. You may pass in a list 
+   *      of all comments for a project or a different list. View and edit 
+   *      modes format the data for one comment into a row in the table. Edit 
+   *      mode has a button on each row to open the edit.detail functionality 
+   *      below the row. Edit.detail mode shows a the list of attributes for a 
+   *      comment with edit widgets, a Save button, and a Cancel button.
+   * 
+   *      Use "dispositions" for a listing of dispositions. View and edit modes 
+   *      format the data for one disposition into a row in the table. Edit 
+   *      mode has a button on each row to open the edit.detail functionality 
+   *      below the row. Edit.detail mode shows a the list of attributes for a 
+   *      disposition with edit widgets, a Save button, and a Cancel button.
+   *    error - an object with error messages to be shown
+   *    header - text for a header for the list of output rows
+   *    hide - a reference to the external function to be run to exit from
+   *      edit.detail mode back to edit mode.
+   *    keys - a list of primary key attributes, used to identify the comment 
+   *      or disposition to be edited in edit.detail mode
+   *    mode - "view", "edit", or "edit.detail". Passed to the inner directive to control 
+   *      the display of each row. In display mode pre-computed display values 
+   *      are shown. In edit mode input "widgets" specific to the format of 
+   *      each attribute are shown.
+   *    onSaveClick - a reference to the external function to be run when 
+   *      a Save button is pressed.
+   *    show - a reference to the external function to be run to edit and item
+   *      in edit.detail mode.
+   *    success - an object with success messages to be shown
+   *    table - database table/project data category name
+   */
+  
+  "use strict";
+  
+  angular
+    .module("app.common")
+    .directive("projectDataDisplay", ProjectDataDisplay);
+  
+  ProjectDataDisplay.$inject = ["$state", "$stateParams", "attributesService",
+                                "projectDataService"];
+
+  function ProjectDataDisplay($state, $stateParams, attributesService,
+                              projectDataService) {
+    
+    function controller($state) {
+      this.as = attributesService;
+      this.dataModel = getDataModelFromTable(this.table);
+      this.ds = projectDataService;
+      this.stateParams = $stateParams;
+      this.hasAValue = hasAValue;
+      this.save = save;
+      this.showDetails = showDetails;
+    }
+    
+    return {
+      restrict: "EA",
+      scope: {
+        datasource: "&",
+        error: "=",
+        header: "=",
+        hide: "&",
+        keys: "=",
+        mode: "=",
+        onSaveClick: "&",
+        show: "&",
+        success: "=",
+        table: "="
+      },
+      controller: controller,
+      controllerAs: "ctrl",
+      bindToController: true,
+      link: function(scope, element, attributes, ctrl) {
+        scope.submit = ctrl.save;
+      },
+      templateUrl: getTemplateForDataModel
+    };
+
+    /**
+     *  @name getDataModelFromTable
+     *  @desc return data model to use based the table directive option. (And
+     *        knowledge of the database. Not considering that a problem right
+     *        now.)
+     *  @param {string} table - table name
+     *  @returns {string} ("one"||"comments"||"dispositions")
+     */
+    function getDataModelFromTable(table) {
+      var oneToOneTables = ["'description'", "'portfolio'", "'project'"];
+      if (_.contains(oneToOneTables, table)) {
+        return "one";
+      }
+      else if (table == "'comment'") {
+        return "comments";
+      }
+      else if (table == "'disposition'") {
+        return "dispositions";
+      }
+    }
+
+    function getTemplateForDataModel(element, attributes) {
+      var model = getDataModelFromTable(attributes.table);
+      if (model == "one") {
+        return "static/common/projectDataDisplay/oneToOneDataModel.html";
+      }
+      else if (model == "comments") {
+        return "static/common/projectDataDisplay/commentsDataModel.html";
+      }
+      else if (model == "dispositions") {
+        return "static/common/projectDataDisplay/dispositionsDataModel.html";
+      }
+    }
+    
+    /**
+     *  @name hasAValue
+     *  @desc Call this function to determine whether the attribute has a value.
+     *        In view mode, only project attributes that have a value are listed.
+     */
+    function hasAValue(attr) {
+      if (attr.name == "childID") {
+        var comment;
+      }
+      if ("value" in attr) {
+        if (typeof attr.value == "string") {
+          if (attr.value != "") {
+            return true;
+          }
+        } 
+        else if (typeof attr.value == "object" && Boolean(attr.value) && "id" in attr.value) {
+          if (!_.isArray(attr.value)) {
+            if (Boolean(attr.value.desc) && attr.value.id != null  && attr.value != "" && attr.value != []) {
+              return true;
+            }
+          }
+          else if (attr.value.length) {
+            return true
+          }
+          return false;
+        }
+        else if (attr.value != null && attr.value != "" && attr.value != []) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    /**
+     *  @name hideDetails
+     *  @desc a function for canceling out of Add a Comment or Add a Disposition
+     *        by navigating away to the project edit Comments or Dispositions
+     *        sub-tab, respectively. Add a Comment users may not have a role
+     *        that gives them access to the edit view, in which case they are
+     *        taken back to view mode/state project.detail.
+     * @param {string} tableName - "comment" for Add a Comment, "disposition" 
+     *        for Add a Disposition.
+     * @param {Object[]} keys - 
+     */
+    function hideDetails(tableName, keys) {
+      var selected = attributesService.updateProjAttrsFromRawItem(tableName, keys);
+      if (loginStateService.canEditProjects()) {
+        $state.go("project." + tableName + ".edit", {projectID: $state.params.projectID});
+      }
+      else {
+        $state.go("project.detail", {projectID: $state.params.projectID});
+      }
+    }
+
+    /**
+     *  @name save
+     *  @desc When the form inside the directive is submitted, call the function 
+     *        specified by the onSaveClick parameter
+     */
+    function save() {
+      this.ctrl.onSaveClick({table: this.ctrl.table});
+    }
+
+    /**
+    function showDetails(key) {
+      this.ctrl.show()({table: this.ctrl.table}, {key: key});
+    }
+    */
+
+    /**
+    */
+    function showDetails(tableName, keys) {
+      var selected = attributesService.updateProjAttrsFromRawItem(tableName, keys);
+      if (tableName == 'comment') {
+        $state.go("project.comment.edit.detail", 
+                  {projectID: $stateParams.projectID, commentID: selected.commentID});
+      }
+      if (tableName == 'disposition') {
+        $state.go("project.disposition.edit.detail", 
+                  {projectID: service.projectID, disposedInFY: selected.disposedInFY.id,
+                   disposedInQ: selected.disposedInQ.id});
+      }
+    }
+
+  }
+  
+}());
+
+(function() {
+  
+  "use strict";
+  
+  angular
+    .module("app.common")
+    .directive("projectDataCommentDetail", ProjectDataCommentDetail);
+  
+  function ProjectDataCommentDetail() {
+    
+    return {
+      restrict: "EA",
+      templateUrl: "static/common/projectDataFormatDirectives/projectDataCommentDetail.html" 
+    };
+    
+  }
+  
+}());
+
+(function() {
+  
+  "use strict";
+  
+  angular
+    .module("app.common")
+    .directive("projectDataComment", ProjectDataComment);
+  
+  function ProjectDataComment() {
+    
+    function controller() {
+      var vm = this;
+    }
+
+    return {
+      controller: controller,
+      controllerAs: "commentCtrl",
+      bindToController: true,
+      restrict: "EA",
+      templateUrl: "static/common/projectDataFormatDirectives/projectDataComment.html",
+      link: function(scope, element, attributes, ctrl) {
+        scope.submit = ctrl.save;
+        scope.commentCtrl.ctrl = scope.$parent.ctrl
+      },
+    };
+    
+  }
+  
+}());
+
+(function() {
+  
+  "use strict";
+  
+  angular
+    .module("app.common")
+    .directive("projectDataDate", ProjectDataDate);
+  
+  function ProjectDataDate() {
+    
+    return {
+      restrict: "EA",
+      templateUrl: "static/common/projectDataFormatDirectives/projectDataDate.html" 
+    };
+    
+  }
+  
+}());
+
+(function() {
+  
+  "use strict";
+  
+  angular
+    .module("app.common")
+    .directive("projectDataDateRangeSelect", ProjectDataDateRangeSelect);
+  
+  function ProjectDataDateRangeSelect() {
+    
+    return {
+      restrict: "EA",
+      templateUrl: "static/common/projectDataFormatDirectives/projectDataDateRangeSelect.html" 
+    };
+    
+  }
+  
+}());
+
+
+(function() {
+  
+  "use strict";
+  
+  angular
+    .module("app.common")
+    .directive("projectDataMultipleSelect", ProjectDataMultipleSelect);
+  
+  function ProjectDataMultipleSelect() {
+    
+    return {
+      restrict: "EA",
+      templateUrl: "static/common/projectDataFormatDirectives/projectDataMultipleSelect.html" 
+    };
+    
+  }
+  
+}());
+
+(function() {
+  
+  "use strict";
+  
+  angular
+    .module("app.common")
+    .directive("projectDataNumber", ProjectDataNumber);
+  
+  function ProjectDataNumber() {
+    
+    return {
+      restrict: "EA",
+      templateUrl: "static/common/projectDataFormatDirectives/projectDataNumber.html" 
+    };
+    
+  }
+  
+}());
+
+(function() {
+  
+  "use strict";
+  
+  angular
+    .module("app.common")
+    .directive("projectDataString", ProjectDataString);
+  
+  function ProjectDataString() {
+    
+    return {
+      restrict: "EA",
+      templateUrl: "static/common/projectDataFormatDirectives/projectDataString.html" 
+    };
+    
+  }
+  
+}());
+
+(function() {
+  
+  "use strict";
+  
+  angular
+    .module("app.common")
+    .directive("projectDataTextArea", ProjectDataTextArea);
+  
+  function ProjectDataTextArea() {
+    
+    return {
+      restrict: "EA",
+      templateUrl: "static/common/projectDataFormatDirectives/projectDataTextArea.html" 
+    };
+    
+  }
+  
+}());
+
+(function() {
+  
+  /**
+   *  @name projectDataModelDisplayDirective
+   *  @desc Render a list of comments as in Bootstrap form-horizontal layout.
+   *        Used for display and editing.
+   * 
+   *  Parameters:
+   * 
+   *    comments - a list of comment objects from the database
+   *    error - an object with error messages to be shown
+   *    header - text for a header for the list of output rows
+   *    mode - "view", "edit", or "edit.detail". View and edit modes format the
+   *      data for one comment into a row in the table. Edit mode has a button
+   *      on each row to open the edit.detail functionality below the row.
+   *      Edit.detail mode shows a the list of attributes for a comment with
+   *      edit widgets, a Save button, and a Cancel button.
+   *    onSaveClick - a reference to the external function to be run when a 
+   *      Save button is pressed
+   *    success - an object with a success message to be shown
+   */
+  
+  "use strict";
+  
+  angular
+    .module("app.common")
+    .directive("projectDataModelDisplay", ProjectDirectModelDisplay);
+  
+  function ProjectDirectModelDisplay() {
+    
+    function controller() {
+      this.save = save;
+    }
+    
+    return {
+      restrict: "EA",
+      scope: {
+        comments: "&",
+        error: "=",
+        header: "=",
+        mode: "=",
+        onSaveClick: "=",
+        success: "="
+      },
+      controller: controller,
+      controllerAs: "ctrl",
+      bindToController: true,
+      templateUrl: "static/common/projectCommentDisplay/projectCommentDisplay.html",
+      link: function(scope, element, attributes, ctrl) {
+        scope.submit = ctrl.save;
+      }
+    };
+
+    /**
+     *  @name save
+     *  @desc When the form inside the directive is submitted, call the function 
+     *        specified by the onSaveClick parameter
+     */
+    function save() {
+      this.ctrl.onSaveClick({table: this.ctrl.table});
+    }
+
+  }
+}());
+
+
+(function() {
+  
+  /**
+   *  @name oneToOneDataModel
+   *  @desc Render project data for a single database table. A header is 
+   *        followed by rows in Bootstrap form-horizontal layout, even
+   *        in view mode. This is the top of a pyramid of nested directives,
+   *        and basically decides which data model to use, based on the table
+   *        name passed in. Other attributes are passed down to data model
+   *        specific directives.
+   * 
+   *  The attributes for this directive are:
+   * 
+   *    datasource - the list of attribute objects with values for a project.
+   *    error - an object with error messages to be shown
+   *    header - text for a header for the list of output rows
+   *    mode - "view", "edit", or "edit.detail". Passed to the inner directive to control 
+   *      the display of each row. In display mode pre-computed display values 
+   *      are shown. In edit mode input "widgets" specific to the format of 
+   *      each attribute are shown.
+   *    onSaveClick - a reference to the external function to be run when 
+   *      a Save button is pressed.
+   *    success - an object with success messages to be shown
+   *    table - database table/project data category name
+   */
+
+  "use strict";
+  
+  angular
+    .module("app.common")
+    .directive("oneToOneDataModel", OneToOneDataModel);
+  
+  function OneToOneDataModel() {
+    
+    function controller() {
+      this.save = save;
+      this.hasAValue = hasAValue;
+    }
+    
+    return {
+      restrict: "EA",
+      scope: {
+        datasource: "&",
+        error: "=",
+        header: "=",
+        mode: "=",
+        onSaveClick: "&",
+        success: "=",
+        table: "="
+      },
+      controller: controller,
+      controllerAs: "ctrl",
+      bindToController: true,
+      templateUrl: "static/common/projectDataModelDisplayDirectives/oneToOneDataModel.html",
+      link: function(scope, element, attributes, ctrl) {
+        scope.submit = ctrl.save;
+      }
+    };
+
+    /**
+     *  @name save
+     *  @desc When the form inside the directive is submitted, call the function 
+     *        specified by the onSaveClick parameter
+     */
+    function save() {
+      this.ctrl.onSaveClick({table: this.ctrl.table});
+    }
+
+    /**
+     *  @name hasAValue
+     *  @desc Call this function to determine whether the attribute has a value.
+     *        In view mode, only project attributes that have a value are listed.
+     */
+    function hasAValue(attr) {
+      if (attr.name == "childID") {
+        var comment;
+      }
+      if ("value" in attr) {
+        if (typeof attr.value == "string" && attr.value != "") {
+          return true;
+        }
+        else if (typeof attr.value != "string" && Boolean(attr.value) && "id" in attr.value) {
+          if (Boolean(attr.value.desc) && attr.value.id != null  && attr.value != "" && attr.value != []) {
+            return true;
+          }
+          else {
+            return false;
+          }
+        }
+        else if (attr.value != null && attr.value != "" && attr.value != []) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+  }
+  
+}());
+
 (function() {
   
   angular
@@ -629,7 +1349,45 @@ Data attributes:
     
 }());
 
+(function (){
+  
+  /**
+   *  @name FilterBuilderService
+   *  @desc A factory for the service that support the Filter Builder view
+   *        under the Filter Builder tab.
+   */
+  
+  "use strict";
+  
+  angular
+    .module("app.filter")
+    .factory("FilterBuilderService", FilterBuilderService);
+  
+  FilterBuilderService.$inject = ["projectListService", "reportTableService",
+                                  "stateLocationService"];
+  
+  function FilterBuilderService(projectListService, reportTableService, 
+                                stateLocationService) {
+
+    /** service to be returned by this factory */
+    var service = {
+    };
+
+    $rootScope.$on("savestate", service.SaveState);
+    $rootScope.$on("restorestate", service.RestoreState);
+    
+    return service;
+
+  }
+  
+}());
+
 (function() {
+  
+  /**
+   *  @name filterConfig
+   *  @desc Configuration for app.filter module
+   */
   
   "use strict";
   
@@ -642,13 +1400,38 @@ Data attributes:
   function filterConfig($stateProvider) {
     $stateProvider
       .state("filter", {
-        name: "filter",
+        /** virtual root state */
         url: "/filter",
         controller: "Filter",
         controllerAs: "filter",
         templateUrl: "/static/filter/filter.html",
         data: {
           requiresLogin: false
+        }
+       })
+      .state("filter.builder", {
+        /** state for filter builder to change query string */
+        url: "/builder/:query_string",
+        templateUrl: "/static/filter/templates/builder.html",
+        resolve: {
+          query_string: ["$stateParams", function($stateParams) {
+            return $stateParams.query_string;
+          }]
+        },
+        /** service initialization */
+        onEnter: ["reportTableService", 
+          function(reportTableService) {
+            reportTableService.initService();
+          }
+        ]
+
+      })
+      .state("filter.builder.attributes", {
+        url: "/attributes/:attribute_list",
+        templateUrl: "/static/filter/templates/attributes.html",
+        controller: function ($stateParams, query_string) {
+          $stateParams.query_string = query_string;
+          console.log($stateParams, query_string);
         }
       });
   };
@@ -669,6 +1452,8 @@ Data attributes:
     
     this.ls = projectListService;
     this.masterList = projectListService.getMasterList;
+    this.jumpToProject = this.ls.jumpToProject;
+    
     this.selectState = selectStateService;
 
   };
@@ -698,6 +1483,11 @@ Data attributes:
     this.currentUser = $rootScope.currentUser;
     this.masterList = projectListService.getMasterList;
     this.getSql = projectListService.getSql;
+    this.getNextID = projectListService.getNextID;
+    this.getPreviousID = projectListService.getPreviousID;
+    this.getProjectID = projectListService.getProjectID;
+    this.hasNextID = projectListService.hasNextID;
+    this.hasPreviousID = projectListService.hasPreviousID;
 
     this.loggedIn = loginStateService.loggedIn;
     this.login = loginStateService.login;
@@ -1263,7 +2053,8 @@ Data attributes:
         controller: function ($stateParams, projectID) {
           $stateParams.projectID = projectID;
           console.log($stateParams, projectID);
-        }
+        },
+        templateUrl: "/static/project/templates/commentDetail.html"
       })
       .state("project.description", {
         /** virtual root for project.description views */
@@ -1365,6 +2156,12 @@ Data attributes:
 
 (function() {
   
+  /**
+   *  @name Project
+   *  @desc A controller for the states and views associated with the Project 
+   *        tab. 
+   */
+  
   "use strict";
   
   angular
@@ -1391,7 +2188,22 @@ Data attributes:
     this.masterList = this.ls.getMasterList;
     this.viewUrl = projectDataService.viewUrl;
 
-    $scope.$on(["$stateChangeStart"], function(event, toState, toParams, fromState, fromParams) {
+    $scope.$on(["$stateChangeStart"], unsavedDataPopup);
+    
+    /**
+     *  @name unsavedDataPopup
+     *  @desc Open a popup and ask how to proceed in the case of attempting to 
+     *        navigate away from one of the project edit sub-tabs when there 
+     *        is unsaved data in the form. The  function is bound to the 
+     *        $stateChangeStart event, and the calling sequence is that of a 
+     *        handler for this event.
+     *  @param {Object} event
+     *  @param {Object} toState
+     *  @param {Object} toParams
+     *  @param {Object} fromState
+     *  @param {Object} fromParams
+     */
+    function unsavedDataPopup(event, toState, toParams, fromState, fromParams) {
       projectDataService.success = "";
       if (typeof projectDataService.noCheck != "undefined") {
         $scope.projectForm.$setPristine(true);
@@ -1399,6 +2211,8 @@ Data attributes:
         //projectDataService.getProjectData(projectDataService.projectID); // forced discard
         //$state.go(toState, toParams);
       }
+      
+      /** if the "projectForm" project editing form has unsaved changes ... */
       if ($scope.projectForm.$dirty) {
         event.preventDefault();
 
@@ -1410,14 +2224,28 @@ Data attributes:
                       + " navigate away, or press Cancel to stay on this page."
         };
 
-        modalConfirmService.showModal({}, modalOptions).then(function (result) {
-          $scope.projectForm.$setPristine(true);
-          var target = toParams.projectID ? toParams.projectID : fromParams.projectID;
-          projectDataService.getProjectData(target, toParams); // forced discard
-          $state.go(toState, toParams);
-        });
+        /** Open a modal window that asks the question shown above as bodyText,
+         *  and shows Continue and Cancel buttons for making a response. The
+         *  promised response is passed to a callback function.
+         */
+        modalConfirmService.showModal({}, modalOptions).then(unsavedChangesConfirmed);
       }
-    });
+    }
+    
+    /**
+     *  @name unsavedChangesConfirmed
+     *  @desc Callback to handle the user's choice to discard unsaved changes
+     *        and navigate away with saving.The form is set back to the pristine
+     *        state, form data is returned to the last saved state, and a state
+     *        change for navigating away is started.
+     *  @param {Object} response 
+     */
+    function unsavedChangesConfirmed(response) {
+      $scope.projectForm.$setPristine(true);
+      var target = toParams.projectID ? toParams.projectID : fromParams.projectID;
+      projectDataService.getProjectData(target, toParams); // forced discard
+      $state.go(toState, toParams);
+    }
   };
   
 }());
@@ -1430,10 +2258,21 @@ Data attributes:
    *        with the Project tab. That is a lot, and it gets help from a couple
    *        of other services: 
    *
-   *          attributesService - for lower level data attribute management.
+   *          attributesService - for lower level data attribute management 
+   *            (from the app.attributes module).
+   *          loginStateService - a service from the app.login module for 
+   *            logging in and out and reporting user roles.
    *          projectListService - for the data that support the Previous and
    *            Next top-level tabs, and also remember just which projects were
    *            selected by your last filter or breakdown by attribute.
+   *          stateLocationService - a service from the app.stateLocation
+   *            module. It handles the interaction between state changes and
+   *            location changes, and allows the user change the state of the
+   *            application by typing in the browser location bar. For example
+   *            you can change which project you are working on by changing
+   *            the projectID in the location bar, and you can change the
+   *            project selection query for a report by changing the query
+   *            string in the location bar.
    */
 
   "use strict";
@@ -1449,6 +2288,8 @@ Data attributes:
   function projectDataService($rootScope, $http, $state, $stateParams, 
                               $location, attributesService, loginStateService,
                               projectListService, stateLocationService) {
+    
+    /** service to be returned by this factory */
     var service = {
       attributes: attributesService.getAllAttributes,
       cancelAddProject: cancelAddProject,
@@ -1457,7 +2298,6 @@ Data attributes:
       currentMode: currentMode,
       editMode: editMode,
       getProjectData: getProjectData,
-      getAttributes: getAttributes,
       getProjectAttributes: attributesService.getProjectAttributes,
       getProjectDataFromLocation: getProjectDataFromLocation,
       hideDetails: hideDetails,
@@ -1484,12 +2324,51 @@ Data attributes:
     
     $rootScope.$on("savestate", service.SaveState);
     $rootScope.$on("restorestate", service.RestoreState);
-    //$rootScope.$on("$locationChangeSuccess", service.getProjectDataFromLocation);
+    $rootScope.$on("$stateChangeSuccess", function() {
+
+      var state_from_location = stateLocationService.getStateFromLocation();
+
+      /** if we landed under the Project tab ... */
+      if (_.first(state_from_location.name.split(".")) == "project") {
+
+          /** project id from state params */
+          var state_projectID = $stateParams.projectID;
+
+          /** projectID saved in the project list service */
+          var saved_projectID = projectListService.getProjectID();
+
+          if (state_projectID && saved_projectID != state_projectID 
+              && state_projectID > -1){
+            /** the data we want is not what we have, so ... */
+            service.getProjectData({projectID: state_projectID});
+          }
+          else if (saved_projectID && saved_projectID == state_projectID
+                   &&  typeof service.getProjectAttributes() == "undefined") {
+            /** should be good to go but there are no saved data, so ... */
+            service.getProjectData({projectID: state_projectID});
+          }
+      }
+    });
+
+    service.SaveState();
+    return service;
     
+    /**
+     *  @name cancelAddProject
+     *  @desc Cancel out of the Add a Project screen (under the Select tab) by
+     *        navigating back to the select state
+     */
     function cancelAddProject() {
       $state.go("select");
     }
 
+    /**
+     *  @name changeMode
+     *  @desc a function for navigating between the views under the Project tab
+     *        for a specified project
+     *  @param {string} mode - the name of a state under the "project" virtual
+     *        state or "view" as an alias for "project.detail".
+     */
     function changeMode(mode) {
       if (!mode) {
         $state.go("project.detail", {projectID: service.projectID});
@@ -1499,9 +2378,26 @@ Data attributes:
       }
     }
     
+    /**
+     *  @name createProject
+     *  @desc Gather form data for creating a new project and send it to the 
+     *        back end to create a new project in the database. The response
+     *        from that server request is handed to a callback that navigates
+     *        to that new project. Only data saved in the description table
+     *        is shown on the add form. Data for other tables can be added
+     *        once the project has been created.
+     *  @callback jumpToNewProject
+     */
     function createProject() {
+
+      /** Gather all of the form data values by pulling them from the 
+       *  attributes in memory that are marked as associated with the
+       *  description table. We don't look at the form -- we use it mostly
+       *  for validation (if there were any required fields) and the unsaved
+       *  data check. 
+       *  */
       var formData = attributesService.getFormData('description', []);
-      /* null out project attributes and get csrf token */
+      /* null out project attributes and get a fresh csrf token */
       $http.get("getProjectAttributes/0")
         .then(function(result) {
           service.setProjectData(result);
@@ -1512,6 +2408,8 @@ Data attributes:
             headers: {
               "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
             },
+            /** We use jQuery.param to serialize the data -- Python, or
+             *  at least Flask, has a problem with the angularjs serializer. */
             data: jQuery.param(formData, true)
           };
           $http(request)
@@ -1519,13 +2417,27 @@ Data attributes:
         });
     };
 
+    /**
+     *  @name currentMode
+     *  @desc return the current mode
+     *  @returns {string} "view" if state name is "project.detail" else state 
+     *        name
+     */
     function currentMode() {
       if ($state.current.name == "project.detail") {
         return "view";
       }
-      return $state.current.name.substring(8);
+      var state_path = $state.current.name.split(".");
+      state_path.shift();
+      state_path.shift();
+      return state_path.join(".");
     }
     
+    /**
+     *  @name editMode
+     *  @desc return the answer to the question "am I in edit mode?"
+     *  @returns {Boolean}
+     */    
     function editMode() {
       if ($state.current.name.indexOf("edit") > -1) {
         return true;
@@ -1533,19 +2445,32 @@ Data attributes:
       return false;
     }
     
-    function getAttributes() {
-      return service.attributes;
-    }
-    
+    /**
+     *  @name getProjectData
+     *  @desc Get all of the project attributes values from the server. In a
+     *        callback, these values are merged with attributes held by the
+     *        attributesService from the app.attributes module/
+     *  @param {Object} params - a $stateParams object or a custom object
+     *        with the same attributes, passed to the callback function.
+     *  @callback setProjectData
+     */
     function getProjectData(params) {
       if (parseInt(params.projectID) > -1) {
         $http.get("getProjectAttributes/" + params.projectID)
-          .then(function(result) {
-            service.setProjectData(result, params);
+          .then(function(response) {
+            service.setProjectData(response, params);
         });
       }
     }
     
+    /**
+     *  @name getProjectDataFromLocation
+     *  @desc Generate an analogue for $state and $stateParams by looking at
+     *        the location instead of state, and use those parameters for 
+     *        getting data for that project. This allows you to change the
+     *        projectID in the location bar and have the application change
+     *        state to match what you typed.
+     */
     function getProjectDataFromLocation() {
       var state = stateLocationService.getStateFromLocation();
       if ("projectID" in state.params && state.params.projectID != service.projectID) {
@@ -1555,6 +2480,17 @@ Data attributes:
       }
     }
 
+    /**
+     *  @name hideDetails
+     *  @desc a function for canceling out of Add a Comment or Add a Disposition
+     *        by navigating away to the project edit Comments or Dispositions
+     *        sub-tab, respectively. Add a Comment users may not have a role
+     *        that gives them access to the edit view, in which case they are
+     *        taken back to view mode/state project.detail.
+     * @param {string} tableName - "comment" for Add a Comment, "disposition" 
+     *        for Add a Disposition.
+     * @param {Object[]} keys - 
+     */
     function hideDetails(tableName, keys) {
       var selected = attributesService.updateProjAttrsFromRawItem(tableName, keys);
       if (loginStateService.canEditProjects()) {
@@ -1565,41 +2501,41 @@ Data attributes:
       }
     }
 
+    /**
+     *  @name initService
+     *  @desc called onEnter from projectConfig.js to ensure that data for the
+     *        report from the backend are already in hand (or promised).
+     */
     function initService() {
-      // Make sure the project list is ready and $stateParams contains a projectID
+      /** if the list of all project brief descriptions is empty, then get it */
       if (!projectListService.hasProjects()) {
         projectListService.updateAllProjects();
       }
 
-      var projectID;
-      var masterList = projectListService.getMasterList();
-      var selectedIds = masterList.selectedIds;
-      var oldProjectID = masterList.projectID;
+      /** query from location bar */
+      var state_from_location = stateLocationService.getStateFromLocation();
+      var location_projectID = state_from_location.params.projectID;
 
-      if (!$stateParams.projectID) {
-        getProjectDataFromLocation();
-        //projectID = stateLocationService.getStateFromLocation().params.projectID;
-        if (!service.projectID) {
-          if (projectListService.hasProjects()) {
-            projectID = projectListService.getProjectID();
-          }
-        }
+      /** projectID saved in the project list service */
+      var saved_projectID = projectListService.getProjectID();
+
+      //if (typeof location_projectID == "undefined") {
+        /** If the state derived from the location bar has no location_projectID
+            parameter... This is the case using the Break Down functionality 
+            on the Select tab, where the location indicates a Select tab state. */
+      //  service.getProjectData({projectID: saved_projectID});
+      //}
+      if (location_projectID && location_projectID > -1
+          && location_projectID != saved_projectID) {
+        /** If the location tells us what we need, and know we have something 
+            else ... This is the bookmarked report case. */
+        service.getProjectData({projectID: location_projectID});
       }
-      else {
-        projectID = $stateParams.projectID;
-        //selectedIds = [projectID];
-        projectListService.setList(selectedIds);
-        projectListService.setDescription("projectID = " + projectID + ";");
-        projectListService.setSql({col_name: "projectID",
-                                   val: projectID,
-                                   op: "equals" });
-      }
-      //projectListService.setProjectID(projectID, selectedIds);
-
-      $stateParams.projectID = projectID;
-
-      if (!service.projectID || service.projectID != projectID) {
-        service.getProjectData($stateParams);
+      else if (location_projectID && location_projectID > -1 
+               && location_projectID == saved_projectID
+               && typeof service.getProjectAttributes() == "undefined") {
+        /** should be good to go but there are no saved data, so ... */
+        service.getProjectData({projectID: location_projectID});
       }
     }
 
@@ -1656,7 +2592,8 @@ Data attributes:
     function setProjectData(result, params) {
       //return;
       attributesService.updateProjectAttributes(result, params);
-      service.projectID = result.data.projectID;
+      projectListService.setProjectID(result.data.projectID);
+      service.projectID = projectListService.getProjectID();
       service.success = result.data.success;
       service.SaveState();
       attributesService.SaveState();
@@ -1678,9 +2615,6 @@ Data attributes:
     function showEditSuccess() {
       return Boolean(_.contains(projectForm.classList, "ng-pristine") && service.success);
     }
-
-    service.SaveState();
-    return service;
   }
 
 }());
@@ -1745,9 +2679,14 @@ Data attributes:
       allProjectsCount: allProjectsCount,
       getIDListFromAllProjects: getIDListFromAllProjects,
       getMasterList: getMasterList,
+      getNextID: getNextID,
+      getPreviousID: getPreviousID,
       getProjectID: getProjectID,
       getSelectedIds: getSelectedIds,
+      getSelectedProjects: getSelectedProjects,
       getSql: getSql,
+      hasNextID: hasNextID,
+      hasPreviousID: hasPreviousID,
       hasProjects: hasProjects,
       initModel: initModel,
       jumpToProject: jumpToProject,
@@ -1776,7 +2715,7 @@ Data attributes:
 
     /**
      *  @name allProjectsCount
-     *  @desc return the total number of available projects
+     *  @desc Return the total number of available projects
      *  @returns {Number}
      */
     function allProjectsCount() {
@@ -1785,7 +2724,7 @@ Data attributes:
 
     /**
      *  @name getIDListFromAllProjects
-     *  @desc return the list of projectIDs for all available projects
+     *  @desc Return the list of projectIDs for all available projects
      *  @returns {Number[]}
      */
     function getIDListFromAllProjects() {
@@ -1795,7 +2734,7 @@ Data attributes:
 
     /**
      *  @name getMasterList
-     *  @desc getter for service.masterList
+     *  @desc Getter for service.masterList
      *  @returns {Object}
      */
     function getMasterList() {
@@ -1803,8 +2742,26 @@ Data attributes:
     };
 
     /**
+     *  @name getNextID
+     *  @desc Getter for service.masterList.next
+     *  @returns {Number} projectID
+     */
+    function getNextID() {
+      return service.masterList.next;
+    }
+
+    /**
+     *  @name getPreviousID
+     *  @desc Getter for service.masterList.previous
+     *  @returns {Number} projectID
+     */
+    function getPreviousID() {
+      return service.masterList.previous;
+    }
+
+    /**
      *  @name getProjectID
-     *  @desc getter for service.masterList.projectID
+     *  @desc Getter for service.masterList.projectID
      *  @returns {Number}
      */
     function getProjectID() {
@@ -1813,7 +2770,7 @@ Data attributes:
     
     /**
      *  @name getSelectedIds
-     *  @desc getter for service.masterList.selectedIds
+     *  @desc Getter for service.masterList.selectedIds
      *  @returns {Number[]}
      */
     function getSelectedIds() {
@@ -1821,17 +2778,35 @@ Data attributes:
     }
 
     /**
+     *  @name getSelectedProjects
+     *  @desc Return the brief descriptions for all of the selected projects
+     *  @returns {Object[]}
+     */
+    function getSelectedProjects() {
+      return service.masterList.selectedProjects;
+    }
+
+    /**
      *  @name getSql
-     *  @desc getter for service.masterList.sql
+     *  @desc Getter for service.masterList.sql
      *  @returns {string}
      */
     function getSql() {
       return service.masterList.sql;
     }
     
+    
+    function hasNextID() {
+      return service.masterList.next != -1;
+    }
+
+    function hasPreviousID() {
+      return service.masterList.previous != -1;
+    }
+
     /**
      *  @name hasProjects
-     *  @desc return the validity of the statement "there are available 
+     *  @desc Return the validity of the statement "there are available 
      *        projects in service.masterList.allProjects"
      *  @returns {Boolean}
      */
@@ -1839,27 +2814,42 @@ Data attributes:
       return Boolean(service.allProjectsCount() > 0);
     }
     
+    /**
+     *  @name initModel
+     *  @desc Initialize the masterList object to make it ready for receiving
+     *        data
+     */
     function initModel( ){
       service.masterList = {
         allProjects: [],
-        description: "",
+        description: "none",
         sql: "",
         index: -1,
         next: -1,
         previous: -1,
         projectID: -1,
         projectName: "",
-        selectedIds: []
+        selectedIds: [],
+        selectedProjects: []
       };
     };
 
+    /**
+     *  @name jumpToProject
+     *  @desc Go to the project.detail state for the given projectID. There
+     *        must be a project to match the given projectID. Otherwise an 
+     *        is raised.
+     *  @param {Number|string} projectID - project identifier
+     */
     function jumpToProject(projectID) {
       projectID = parseInt(projectID);
       var index = service.masterList.selectedIds.indexOf(projectID);
+      /** if in selectedIds, make it the current project */
       if (service.masterList.selectedIds.indexOf(projectID) > -1) {
         service.jumpToProjectInList(projectID, service.masterList.selectedIds);
         return;
       }
+      /** otherwise just go, if it exists */
       var projectIDlist = service.getIDListFromAllProjects();
       if (projectIDlist.indexOf(projectID) > -1) {
         service.jumpToProjectInList(projectID, projectIDlist);
@@ -1868,38 +2858,32 @@ Data attributes:
       alert("Can't find a project to display.");
     };
     
-    function jumpToProjectInList(projectID, selectedIds) {
-      var index = selectedIds.indexOf(projectID);
-      service.masterList.index = index;
-      service.masterList.projectID = projectID;
-      if (index > 0) {
-        service.masterList.previous = selectedIds[index-1];
-      }
-      else {
-        service.masterList.previous = -1;
-      }
-      if (index < selectedIds.length) {
-        service.masterList.next = selectedIds[index+1];
-      }
-      else {
-        service.masterList.next = -1;
-      }
-      var projectIDList = service.getIDListFromAllProjects();
-      index = projectIDList.indexOf(projectID);
-      service.masterList.projectName = service.masterList.allProjects[index].name;
+    
+    /**
+     *  @name jumpToProjectInList
+     *  @desc Go to the project.detail state for the specified project and make
+     *        it the current project
+     */
+    function jumpToProjectInList(projectID) {
+      service.setProjectID(projectID);
       $state.go('project.detail', {projectID: projectID});
     };
 
+    /**
+     *  @name resetList
+     *  @desc Reset the project list to the state where all projects are selected
+     *        without forgetting which is the current project.
+     */
     function resetList() {
       service.updateAllProjects();
-      service.setList(service.getIDListFromAllProjects());
+      service.setProjectID(service.getProjectID(), service.getIDListFromAllProjects());
       service.setDescription("none");
       service.setSql("");
     }
 
     /**
      *  @name RestoreState
-     *  @desc restore the service.masterList object from client session storage
+     *  @desc Restore the service.masterList object from client session storage
      */
     function RestoreState() {
       if (typeof sessionStorage.projectListService != "undefined") {
@@ -1909,7 +2893,7 @@ Data attributes:
 
     /**
      *  @name SaveState
-     *  @desc save the service.masterList object in client session storage
+     *  @desc Save the service.masterList object in client session storage
      */
     function SaveState() {
         sessionStorage.projectListService = angular.toJson(service.masterList);
@@ -1917,7 +2901,7 @@ Data attributes:
 
     /**
      *  @name selectedIdsCount
-     *  @desc return the number of selected projects
+     *  @desc Return the number of selected projects
      */
     function selectedIdsCount() {
       return service.masterList.selectedIds.length;
@@ -1955,7 +2939,7 @@ Data attributes:
     
     /**
      *  @name setDescription
-     *  @desc setter for service.masterList.description
+     *  @desc Setter for service.masterList.description
      *  @param {string} description - human readable description of the query
      *        used to select the current list of projects that is stored in 
      *        service.master.selectedIds
@@ -1966,13 +2950,13 @@ Data attributes:
     
     /**
      *  @name setList
-     *  @desc setter for service.masterList.selectedIds
+     *  @desc Setter for service.masterList.selectedIds
      *  @param {Number[]} selectIds - a list of projectIDs to be saved as the
      *        list of selected projects.
      */
     function setList(selectedIds) {
       service.masterList.selectedIds = selectedIds;
-      if (typeof selectIds == "undefined") {
+      if (typeof selectedIds == "undefined") {
         var what_the_;
       }
 
@@ -1985,7 +2969,7 @@ Data attributes:
 
     /**
      *  @name setProjectID
-     *  @desc setter for service.masterList.projectID and
+     *  @desc Setter for service.masterList.projectID and
      *        service.masterList.selectedIds
      *  @param {Number} projectID - the projectID to be configured as the 
      *        current project.
@@ -1994,6 +2978,7 @@ Data attributes:
      */
     function setProjectID(projectID, selectedIds) {
       if (projectID) {
+        projectID = parseInt(projectID);
         if (typeof selectedIds == "undefined") {
           selectedIds = service.masterList.selectedIds;
         }
@@ -2022,13 +3007,18 @@ Data attributes:
             service.masterList.projectName = proj.name;
           }
         });
+        
+        service.masterList.selectedProjects = _.filter(service.masterList.allProjects, function(project) {
+          return _.contains(service.masterList.selectedIds, project.projectID);
+        });
+
       }
       service.SaveState();
     };
 
     /**
      *  @name setSql
-     *  @desc setter for service.masterList.sql
+     *  @desc Setter for service.masterList.sql
      *  @param {string} query_string - an http GET query_string to represent
      *        the actual SQL used to filter from all projects down to the
      *        selected projects.
@@ -2311,7 +3301,7 @@ Data attributes:
         service.getReportResults(location_query);
       }
       else if (service.dataTableRowCount() == 0) {
-        /** if we know what we want and it is what we have, but there is no 
+        /** if we know what we want and it is what we have, but there are no 
             data for the table ... */
         service.getReportTableData();
       }
@@ -2379,7 +3369,7 @@ Data attributes:
       projectListService.setSql(response.data.query_string);
       projectListService.SaveState();
       setReportTableData(response);
-      service.master.dtInstance.rerender();
+      //service.master.dtInstance.rerender();
       service.SaveState();
     }
 
@@ -2891,6 +3881,17 @@ Data attributes:
         else {
           state.name = ["project", path[2], path[1]].join(".");
           state.params.projectID = parseInt(path[0]);
+        }
+      }
+      else if (base == "filter") {
+        if (path[1] == "attributes") {
+          state.name = "filter.builder.attributes";
+          state.params.query_string = path[2]
+          state.params.attribute_list = path[0]
+        }
+        else {
+          state.name = "filter.builder";
+          state.params.query_string = path[0];
         }
       }
       else if (base == "report") {

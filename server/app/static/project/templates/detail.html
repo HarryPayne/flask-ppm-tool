@@ -1,19 +1,11 @@
-<div project-data-display-table
-  attributes="project.as.getProjectAttributes('description')"
-  header="'Description Attributes'"
-  mode="'view'"
-  relationship="'many'"
-  table="'description'"></div>
+<div ng-include="'static/project/templates/description.html'"></div>
+<div ng-include="'static/project/templates/portfolio.html'"></div>
 
-<div project-data-display-table
-  attributes="project.as.getProjectAttributes('portfolio')"
-  header="'Portfolio Attributes'"
-  mode="'view'"
-  relationship="'one'"
-  table="'portfolio'"></div>
+<h4 class="col-sm-12">Disposition History</h4>
 
 <dl class="dl-horizontal" 
   ng-repeat="disp in project.as.getRawAttributes('disposition')">
+  
   <dt>
     <label ng-bind="disp['disposedInFY'].desc"></label>
     <label ng-bind="disp['disposedInQ'].desc"></label>
@@ -45,24 +37,5 @@
   </dd>
 </dl>
 
-<div project-data-display-table
-  attributes="project.as.getProjectAttributes('project')"
-  header="'Project Management Attributes'"
-  mode="'view'"
-  relationship="'one'"
-  table="'project'"></div>
-
-<h4 class="col-sm-12">Comments</h4>
-
-<dl class="dl-horizontal"
-  ng-repeat="comment in project.as.getRawAttributes('comment')">
-  <dt>
-    <label ng-bind="comment['commentAuthor']"></label><br/>
-  </dt>
-  <dd>
-    <span ng-bind="comment['comment']"></span><br/>
-    Entered <span ng-bind="comment['commentAuthored.printValue']"></span>
-    <span ng-show="comment['commentEditor']"><br/>Last edited by <span ng-bind="comment['commentEditor']"></span> on <span ng-bind="comment['commentEdited.printValue']"></span></span>
-  </dd>
-</dl>
-
+<div ng-include="'static/project/templates/projectMan.html'"></div>
+<div ng-include="'static/project/templates/comment.html'"></div>

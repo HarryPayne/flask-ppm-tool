@@ -43,6 +43,7 @@ Data attributes:
       getAttribute: getAttribute,
       getAllAttributes: getAllAttributes,
       getFormData: getFormData,
+      getKeys: getKeys,
       getProjectAttributes: getProjectAttributes,
       getRawAttributes: getRawAttributes,
       getSelectedChoices:getSelectedChoices,
@@ -88,7 +89,7 @@ Data attributes:
           });
         }
         if (attr.child) {
-          if (!_.isArray(attr.child.value)) {
+          if (attr.child.value && !_.isArray(attr.child.value)) {
             this[attr.child.name] = attr.child.value.id;
           }
           else {
@@ -96,7 +97,16 @@ Data attributes:
           }
         }
       }
-      else if (attr.format == "date" || _.contains(["commentAuthored", "commentEdited"], attr.name)) { // list of computed attributes rendered as string 
+      else if (attr.format == "date") {
+        if (attr.computed) return;
+        if (attr.value) {
+          this[attr.name] = new Date(attr.value).toString("yyyy-MM-dd");
+        }
+        else {
+          this[attr.name] = null;
+        }
+      }
+      else if (_.contains(["commentAuthored", "commentEdited"], attr.name)) { // list of computed attributes rendered as string 
         if (attr.computed) return;
         if (attr.value) {
           this[attr.name] = new Date(attr.value).toString("yyyy-MM-ddTHH:mm:ss");
@@ -105,7 +115,7 @@ Data attributes:
           this[attr.name] = null;
         }
       }
-       else if (attr.format.substring(0, "child_for_".length) != "child_for_") {
+      else if (attr.format.substring(0, "child_for_".length) != "child_for_") {
         this[attr.name] = attr.value;
       }      
     }
@@ -166,12 +176,21 @@ Data attributes:
       return formData;
     };
 
+    /**
+     *  @name getKeys
+     *  @desc Return the primary key objects used to select the currently 
+     *        selected one-to-many table entries (comment or disposition)
+     */
+    function getKeys() {
+      return "keys" in service.currentState ? service.currentState.keys : [];
+    }
+
     function getProjectAttributes(tableName, flag) {
       try {
         return _.sortBy(service.projectAttributes[tableName], "attributeID");
       }
       catch(e) {
-        //
+        //alert(e);
       }
     };
 
@@ -199,6 +218,17 @@ Data attributes:
         return _.where(merged.choices, {id: merged.value})[0];
       }
     };
+    
+    function getValueFromKey(key) {
+      var value;
+      if ("id" in key) {value = key.id;}
+      else if ("value" in key) {
+        if (typeof key.value == "number") {value = key.value}
+        else if (typeof key.value == "string") {value = parseInt(key.value);}
+        else if ("id" in key.value) {value = key.value.id}
+      }
+      return value;
+    }
     
     function hasAValue(attr) {
       if ((typeof attr.value != "undefined" && attr.value != null && attr.value != "" && attr.value != []) ||
@@ -289,9 +319,10 @@ Data attributes:
       if (typeof filtered_items == "undefined") filtered_items = [];
       var selected;
       _.each(keys, function(key) {
+        var value = getValueFromKey(key);
         filtered_items = _.filter(filtered_items, function(item) {
-          if ((typeof item[key.name].id == "undefined" && item[key.name] == key.id)
-              || (item[key.name].id == key.id)) {
+          if ((typeof item[key.name].id == "undefined" && item[key.name] == value)
+              || (typeof item[key.name].id != "undefined" && item[key.name].id == value)) {
             service.currentState.keys.push(key);
             return true;
           }
@@ -326,6 +357,9 @@ Data attributes:
       }
       else {
         var tableAttrs = _.where(service.allAttributes, {table: tableName});
+        if (typeof service.projectAttributes == "undefined") {
+          service.projectAttributes = new Object;
+        }
         service.projectAttributes[tableName] = [];
         _.each(tableAttrs, function(attr) {
           if (attr.computed) return;
@@ -348,12 +382,10 @@ Data attributes:
 
     function updateErrors(errors) {
       if (typeof errors == "undefined") return;
-      _.each(errors, function(error) {
-        _.each(Object.keys(error), function(key) {
-          var attr = service.getAttribute(key);
-          attr.server_errors = this[key];
-        }, error);
-      });
+      _.each(Object.keys(errors), function(key) {
+        var attr = service.getAttribute(key);
+        attr.errors = errors[key];
+       });
     };
     
     function updateProjectAttributes(result, params) {
@@ -369,9 +401,10 @@ Data attributes:
         _.each(result.data.formData, updateProjectAttributesFromForm);
       }
       if (typeof params != "undefined" && ("disposedInFY" in params || "disposedInQ" in params)) {
-        updateProjAttrsFromRawItem("disposition", 
-                                   [{name: 'disposedInFY', id: service.allAttributes['disposedInFY'].value['id']}, 
-                                    {name: 'disposedInQ', id: service.allAttributes['disposedInQ'].value['id']}]);
+        updateProjAttrsFromRawItem("disposition", [
+                                    {name: 'disposedInFY', value: {id: service.allAttributes.disposedInFY.value.id}}, 
+                                    {name: 'disposedInQ', value: {id: service.allAttributes.disposedInQ.value.id}}
+                                   ]);
       }
       else if (typeof params != "undefined" && "commentID" in params) {
         updateProjAttrsFromRawItem("comment", 

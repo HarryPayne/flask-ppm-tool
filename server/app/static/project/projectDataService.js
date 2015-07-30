@@ -44,6 +44,7 @@
       changeMode: changeMode,
       createProject: createProject,
       currentMode: currentMode,
+      currentSubtab: currentSubtab,
       editMode: editMode,
       getProjectData: getProjectData,
       getProjectAttributes: attributesService.getProjectAttributes,
@@ -80,7 +81,7 @@
       if (_.first(state_from_location.name.split(".")) == "project") {
 
           /** project id from state params */
-          var state_projectID = $stateParams.projectID;
+          var state_projectID = parseInt($stateParams.projectID);
 
           /** projectID saved in the project list service */
           var saved_projectID = projectListService.getProjectID();
@@ -88,12 +89,12 @@
           if (state_projectID && saved_projectID != state_projectID 
               && state_projectID > -1){
             /** the data we want is not what we have, so ... */
-            service.getProjectData({projectID: state_projectID});
+            service.getProjectData(state_from_location.params);
           }
           else if (saved_projectID && saved_projectID == state_projectID
                    &&  typeof service.getProjectAttributes() == "undefined") {
             /** should be good to go but there are no saved data, so ... */
-            service.getProjectData({projectID: state_projectID});
+            service.getProjectData(state_from_location.params);
           }
       }
     });
@@ -175,7 +176,22 @@
       if ($state.current.name == "project.detail") {
         return "view";
       }
-      return $state.current.name.substring(8);
+      var state_path = $state.current.name.split(".");
+      state_path.shift();
+      state_path.shift();
+      return state_path.join(".");
+    }
+    
+    /**
+     *  @name currentSubtab
+     *  @desc return the current project edit subtab
+     *  @returns {string} "view" if state name is "project.detail" else state 
+     *        name
+     */
+    function currentSubtab() {
+      var state_path = $state.current.name.split(".");
+      state_path.shift();
+      return state_path.shift();
     }
     
     /**
@@ -204,6 +220,21 @@
         $http.get("getProjectAttributes/" + params.projectID)
           .then(function(response) {
             service.setProjectData(response, params);
+            /** get the details right */
+            if ("commentID" in params) {
+              var commentID = attributesService.getAttribute("commentID");
+              commentID.value = params.commentID;
+              var keys = [commentID];
+              attributesService.updateProjAttrsFromRawItem("comment", keys);
+            }
+            else if ("disposedInFY" in params || "disposedInQ" in params) {
+              var disposedInFY = attributesService.getAttribute("disposedInFY");
+              disposedInFY.value.id = params.disposedInFY;
+              var disposedInQ = attributesService.getAttribute("disposedInQ");
+              disposedInQ.value.id = params.disposedInQ;
+              var keys = [disposedInFY, disposedInQ];
+              attributesService.updateProjAttrsFromRawItem("disposition", keys);
+            }
         });
       }
     }
@@ -274,13 +305,13 @@
           && location_projectID != saved_projectID) {
         /** If the location tells us what we need, and know we have something 
             else ... This is the bookmarked report case. */
-        service.getProjectData({projectID: location_projectID});
+        service.getProjectData(state_from_location.params);
       }
       else if (location_projectID && location_projectID > -1 
                && location_projectID == saved_projectID
                && typeof service.getProjectAttributes() == "undefined") {
         /** should be good to go but there are no saved data, so ... */
-        service.getProjectData({projectID: location_projectID});
+        service.getProjectData(state_from_location.params);
       }
     }
 
@@ -293,7 +324,7 @@
       if (_.contains(["comment"], tableName)) {
         $state.go("project." + tableName + ".edit", {projectID: $state.params.projectID});
       }
-      $state.go("project.add." + tableName, {projectID: $state.params.projectID});
+      $state.go("project." + tableName + ".add", {projectID: $state.params.projectID});
     };
 
     function jumpToNewProject(result) {
@@ -327,21 +358,29 @@
       $http(request)
         .then(service.setProjectData);
       service.noCheck = true;
-      $state.go("project." + tableName + ".edit", {projectID: $state.params.projectID, noCheck: true});
+      var stateName = tableName;
+      if (tableName == "project") {
+        stateName = "projectMan";
+      }
+      $state.go("project." + stateName + ".edit", {projectID: $state.params.projectID, noCheck: true});
     };
 
     function SaveState() {
-      sessionStorage.projectDataServiceAttributes = angular.toJson($stateParams);
+      var params = stateLocationService.getStateFromLocation().params;
+      sessionStorage.projectDataServiceAttributes = angular.toJson(params);
     };
       
     function setProjectData(result, params) {
       //return;
-      attributesService.updateProjectAttributes(result, params);
       projectListService.setProjectID(result.data.projectID);
       service.projectID = projectListService.getProjectID();
+      attributesService.updateProjectAttributes(result, params);
       service.success = result.data.success;
       service.SaveState();
       attributesService.SaveState();
+      /** mark the form as $pristine. Only the controller can do that so give
+          it a ping. */
+      $rootScope.$broadcast("setProjectFormPristine");
     }
 
     function showDetails(tableName, keys) {
@@ -352,7 +391,8 @@
       }
       if (tableName == 'disposition') {
         $state.go("project.disposition.edit.detail", 
-                  {projectID: service.projectID, disposedInFY: selected.disposedInFY.id,
+                  {projectID: projectListService.getProjectID(), 
+                   disposedInFY: selected.disposedInFY.id,
                    disposedInQ: selected.disposedInQ.id});
       }
     }

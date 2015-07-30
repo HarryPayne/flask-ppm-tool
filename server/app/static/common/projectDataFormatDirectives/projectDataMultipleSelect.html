@@ -6,19 +6,19 @@
     <span ng-bind="attr.printValue"></span>
   </span>
 </span>
-<span ng-if="ctrl.mode=='edit'">
+<span ng-if="ctrl.mode=='edit' || ctrl.mode=='edit.detail' || ctrl.mode == 'add'">
   <span ng-if="attr.multi">
     <select multiple size="8" name="{{attr.name}}"
       style="float:left; width: 25%;"
       class="form-control"
-      ng-viewEditModel="attr.value"
+      ng-model="attr.value"
       ng-options="item.desc for item in attr.choices track by item.id"></select>
   </span>
   <span ng-if="!attr.multi">
     <select name="{{attr.name}}"
       style="float:left; width: 25%;"
       class="select form-control" 
-      ng-viewEditModel="attr.value"
+      ng-model="attr.value"
       ng-options="item.desc for item in attr.choices track by item.id"></select>
   </span>
   <span class="col-sm-12" style="float: left; width: 75%; padding-top: 7px;">

@@ -1,4 +1,23 @@
-<h4 ng-show="project.currentMode() == 'comment.add'" class="col-sm-12">Add a Comment</h4>
+<div project-data-display
+  datasource="project.as.getRawAttributes('comment')"
+  detail-datasource="project.as.getProjectAttributes('comment')"
+  error="project.ds.error"
+  header="'Comments'"
+  hide="project.ds.hideDetails"
+  keys="project.as.getKeys()"
+  mode="project.ds.currentMode()"
+  on-save-click="project.ds.saveProject"
+  show="project.ds.showDetails"
+  show-success="project.ds.showEditSuccess()"
+  success="project.ds.success"
+  table="'comment'"
+  ></div>  
+
+
+
+
+
+<!-- h4 ng-show="project.currentMode() == 'comment.add'" class="col-sm-12">Add a Comment</h4>
 
 <div
   ng-show="project.currentMode() == 'comment.add'">
@@ -79,4 +98,4 @@
       <span ng-show="project.ds.showEditSuccess()" ng-bind="project.ds.success" class="alert alert-success" role="alert"></span>
     </div>
   </div>
-</div>
+</div -->

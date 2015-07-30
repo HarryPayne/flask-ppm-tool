@@ -10,7 +10,7 @@
     
     return {
       restrict: "EA",
-      templateUrl: "static/common/projectDataDisplayTable/projectDataFormatDirectives/projectDataDate.html" 
+      templateUrl: "static/common/projectDataFormatDirectives/projectDataDate.html" 
     };
     
   }

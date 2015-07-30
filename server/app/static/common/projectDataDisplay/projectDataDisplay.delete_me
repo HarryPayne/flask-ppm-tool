@@ -1,0 +1,7 @@
+<div ng-if="dataModel == 'one'" one-to-one-data-model 
+  datasource="ctrl.datasource"
+  error="ctrl.error"
+  header="ctrl.header"
+  mode="ctrl.mode"
+  on-save-click="ctrl.onSaveClick"
+  success="ctrl.success"></div>

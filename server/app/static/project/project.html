@@ -4,25 +4,25 @@
   <body>
     <div class="container">
       <ul class="list-inline text-right clearfix">
-        <li ng-show="project.ds.currentMode() == 'view' && project.log_s.canEditProjects()">
+        <li ng-show="(project.ds.currentMode() == 'view' || ctrl.ds.currentMode() == 'comment.add') && project.log_s.canEditProjects()">
           <a ui-sref="project.description.edit({projectID:project.ds.projectID})" ng-click="project.changeMode('project.description.edit');">Edit this project</a>
         </li>
-        <li ng-show="project.ds.currentMode() != 'view' && project.log_s.canEditProjects()">
+        <li ng-show="(project.ds.currentMode() != 'view' && ctrl.ds.currentMode() != 'comment.add') && project.log_s.canEditProjects()">
           <a ui-sref="project.detail({projectID:project.ds.projectID})" ng-click="project.changeMode('project.detail');">View this project</a>
         </li>
         <li ng-show="project.ds.currentMode() != 'comment.add' && project.log_s.canAddComments()">
           <a ui-sref="project.comment.add({projectID:project.ds.projectID})" ng-click="project.jumpToAddForm('comment', 
-                                                        [{name: 'commentID', id: 0}]);">Add a Comment</a>
+                                                        [{name: 'commentID', id: 0}]);">Add a comment</a>
         </li>
         <li ng-show="project.ds.currentMode() == 'comment.add' && project.log_s.canEditProjects()">
-          Add a Comment
+          Add a comment
         </li>
         <li ng-show="project.ds.currentMode() != 'disposition.add' && project.log_s.canEditProjects()">
-          <a ui-sref="project.disposition.add({projectID:project.ds.projectID})" ng-click="project.jumpToAddForm('disposition', 
-                                                        [{name: 'disposedInFY', id: 0}, {name: 'disposedInQ', id: 0}]);">Add a Disposition</a>
+          <a ui-sref="project.disposition.add({projectID:project.ds.projectID})" onclick="return false;" ng-click="project.jumpToAddForm('disposition', 
+                                                        [{name: 'disposedInFY', value: {id: 0}}, {name: 'disposedInQ', value: {id: 0}}]);">Add a disposition</a>
         </li>
         <li ng-show="project.ds.currentMode() == 'disposition.add' && project.log_s.canEditProjects()">
-          Add a Disposition
+          Add a disposition
         </li>
         <li ng-show="project.ds.currentMode() != 'attach' && project.log_s.canEditProjects()">
           <a ui-sref="project.attach({projectID:project.ds.projectID})" ng-click="project.jumpToAtachFile();">Attach a File</a>
@@ -37,12 +37,12 @@
     <div  class="container">
       <h3>{{ project.masterList().projectID}}: {{project.masterList().projectName}}</h3>
       <ul class="nav navbar-default nav-tabs col-lg-12" ng-show="project.ds.editMode()">
-        <li role="presentation" ng-class="{active:project.currentMode() == 'description.edit'}"><a ui-sref="project.description.edit({projectID:project.ds.projectID})">Description</a></li>
-        <li role="presentation" ng-class="{active:project.currentMode() == 'portfolio.edit'}"><a ui-sref="project.portfolio.edit({projectID:project.ds.projectID})">Portfolio</a></li>
-        <li role="presentation" ng-class="{active:project.currentMode().substring(0, 'disposition.edit'.length) == 'disposition.edit'}"><a ui-sref="project.disposition.edit({projectID:project.ds.projectID})">Dispositions</a></li>
-        <li role="presentation" ng-class="{active:project.currentMode() == 'projectMan.edit'}"><a ui-sref="project.projectMan.edit({projectID:project.ds.projectID})">Project Management</a></li>
-        <li role="presentation" ng-class="{active:project.currentMode().substring(0,12) == 'comment.edit'}"><a ui-sref="project.comment.edit({projectID:project.ds.projectID})">Comments</a></li>
-        <li role="presentation" ng-class="{active:project.currentMode() == 'attach.edit'}"><a ui-sref="project.attach.edit({projectID:project.ds.projectID})">Attach a File</a></li>
+        <li role="presentation" ng-class="{active:project.ds.currentSubtab() == 'description'}"><a ui-sref="project.description.edit({projectID:project.ds.projectID})">Description</a></li>
+        <li role="presentation" ng-class="{active:project.ds.currentSubtab() == 'portfolio'}"><a ui-sref="project.portfolio.edit({projectID:project.ds.projectID})">Portfolio</a></li>
+        <li role="presentation" ng-class="{active:project.ds.currentSubtab() == 'disposition'}"><a ui-sref="project.disposition.edit({projectID:project.ds.projectID})">Dispositions</a></li>
+        <li role="presentation" ng-class="{active:project.ds.currentSubtab() == 'projectMan'}"><a ui-sref="project.projectMan.edit({projectID:project.ds.projectID})">Project Management</a></li>
+        <li role="presentation" ng-class="{active:project.ds.currentSubtab() == 'comment'}"><a ui-sref="project.comment.edit({projectID:project.ds.projectID})">Comments</a></li>
+        <li role="presentation" ng-class="{active:project.ds.currentSubtab() == 'attach'}"><a ui-sref="project.attach.edit({projectID:project.ds.projectID})">Attach a File</a></li>
       </ul>
                 
       <div class="clearfix">

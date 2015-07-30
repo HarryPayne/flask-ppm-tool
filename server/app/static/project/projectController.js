@@ -32,6 +32,10 @@
     this.masterList = this.ls.getMasterList;
     this.viewUrl = projectDataService.viewUrl;
 
+    $scope.$on("setProjectFormPristine", function() {
+      $scope.projectForm.$setPristine(true);
+    });
+    
     $scope.$on(["$stateChangeStart"], unsavedDataPopup);
     
     /**
@@ -72,7 +76,12 @@
          *  and shows Continue and Cancel buttons for making a response. The
          *  promised response is passed to a callback function.
          */
-        modalConfirmService.showModal({}, modalOptions).then(unsavedChangesConfirmed);
+        modalConfirmService.showModal({}, modalOptions).then(function (response) {
+          $scope.projectForm.$setPristine(true);
+          var target = toParams.projectID ? toParams.projectID : fromParams.projectID;
+          projectDataService.getProjectData(target, toParams); // forced discard
+          $state.go(toState, toParams);
+        });
       }
     }
     

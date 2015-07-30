@@ -719,6 +719,12 @@ def getProjectAttributes(projectID, tableName=None):
             "formData": formData}
         
 def getAttributeValuesFromForm(form, allAttrsFromDB):
+    """ Take a rendered form, inspect the widgets, and pull out their values
+        and choices (vocabularies).  Different widgets have values in different 
+        places. Make parent/child combinations. Compute printValues that will
+        just be printed in view mode.
+    """
+    
     token = ""
     attributes = []
 
@@ -731,6 +737,8 @@ def getAttributeValuesFromForm(form, allAttrsFromDB):
         value = field.data
         printValue = ""
         if "In" in field.name:
+            # One of the in year fields, hence parent, or quarter or month,
+            # and so a child. Only parents are in the allAttrs list.
             if allAttrsFromDB.has_key(field.name):
                 dbattr = allAttrsFromDB[field.name]
             else:
@@ -791,6 +799,7 @@ def getAttributeValuesFromForm(form, allAttrsFromDB):
     return {"tableName": tableName, "attributes": attributes}
     
 def getTableNameFromForm(form):
+    """ compare form with prototype instances to find the match """
     if isinstance(form, forms.Description):
         tableName = "description"
     

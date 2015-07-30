@@ -145,6 +145,7 @@ class Comment(ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(Comment, self).__init__(*args, **kwargs)
+        read_only(self.commentID)
         read_only(self.commentAuthor)
         read_only(self.commentAuthored)
         read_only(self.commentEditor)

@@ -1,6 +1,6 @@
 <h4 class="col-sm-12" ng-bind="ctrl.header"></h4>
 
-<div class="form-group" ng-repeat="attr in ctrl.attributes()" ng-if="ctrl.hasAValue(attr)">
+<div class="form-group" ng-repeat="attr in ctrl.datasource()" ng-if="!(ctrl.mode=='view' && !ctrl.hasAValue(attr))">
   <div>
     <label for="{{attr.name}}" ng-bind="attr.label" class="col-sm-2 control-label text-capitalize"></label>
     <div ng-switch="attr.format" class="col-sm-10" style="padding-top: 7px;">
@@ -16,6 +16,9 @@
 </div>
 
 <div ng-if="ctrl.mode=='edit'" class="col-sm-offset-2 col-sm-10">
-  <button type="button" ng-click="submit()"> Save </button>
-  <span ng-bind="ctlr.success" class="alert alert-success" role="alert"></span>
+  <span ng-show="ctrl.success" class="col-sm-12 alert alert-success alert-dismissible">
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close" aria-hidden="true">×</button>
+    <span ng-bind="ctrl.success"></span>
+  </span>
+  <button type="button" ng-click="ctrl.save(ctrl.table)" class="col-sm-1"> Save </button>
 </div>
