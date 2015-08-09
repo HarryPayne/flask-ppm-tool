@@ -8,7 +8,7 @@
   <span ng-show="comment['commentEditor']"><br/>Last edited by <span ng-bind="comment['commentEditor']"></span> on <span ng-bind="comment['commentEdited.printValue']"></span></span>
   <button type="button" 
     ng-show="ctrl.mode == 'edit'"
-    ng-click="ctrl.showDetails('comment', [{name: 'commentID', id: comment['commentID']}])"> Edit </button>
+    ng-click="ctrl.showDetails('comment', [{name: 'commentID', value: {id: comment['commentID']}}])"> Edit </button>
 </div>
 
 

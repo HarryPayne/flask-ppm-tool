@@ -21,7 +21,10 @@
 </div>
 
 <div style="background-color: #f8f8f8; border-color: #e7e7e7;">
-  <div ng-repeat="attr in ctrl.details()" ng-if="attr.name != 'commentID'">
+  <div class="form-group" 
+    ng-repeat="attr in ctrl.details()" 
+    ng-if="attr.name != 'commentID'"
+    ng-class="{required: attr.required}">
     <label for="{{attr.name}}" ng-bind="attr.label" class="col-sm-2 control-label text-capitalize"></label>
     <div ng-switch="attr.format" class="col-sm-10" style="padding-top: 7px;">
       <span ng-show="attr.errors" ng-bind="attr.errors" class="alert alert-danger" role="alert"></span>
@@ -35,11 +38,11 @@
   </div>
 </div>
 
-<div class="col-sm-offset-2 col-sm-10">
-  <div ng-hide="ctrl.mode == 'add' || ctrl.mode == 'edit.detail'">
+<div class="col-sm-offset-2">
+  <div ng-hide="ctrl.mode == 'add' || ctrl.mode == 'edit.detail'" class="col-sm-4">
     Entered <span ng-bind="comment['commentAuthored.printValue']"></span>
     <span ng-show="comment['commentEditor']"><br/>Last edited by <span ng-bind="comment['commentEditor']"></span> on <span ng-bind="comment['commentEdited.printValue']"></span></span><br/>
-  </div>
+  </div class="col-sm-4">
   <button type="button" ng-click="ctrl.save('comment', [{name: 'commentID', value: {id: comment['commentID']}}])"> Save </button>
   <button type="button" ng-click="ctrl.hideDetails('comment', [{name: 'commentID', id: comment['commentID']}])"> Cancel </button>
 </div>

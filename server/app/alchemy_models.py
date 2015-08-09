@@ -396,7 +396,7 @@ class Description(Base):
     __tablename__ = "description"
         
     projectID = Column(SmallInteger, primary_key=True, nullable=True, autoincrement=True)
-    name = Column(String(100), nullable=True, index=True, server_default=text("''"),
+    name = Column(String(100), nullable=False, index=True, server_default=text("''"),
                   info={"attributeID": 20,
                         "help": "A concise (<50 characters), descriptive, and unique identifying name for the proposed work (not containing the word 'project')."})
     description = Column(Text, nullable=True, index=True,
@@ -504,7 +504,7 @@ class Comment(Base):
                              "help": ""})
     projectID = Column(Integer, ForeignKey("description.projectID"), nullable=False, index=True, server_default=text("'0'"),
                        info={"help": ""})
-    comment = Column(Text, nullable=True,
+    comment = Column(Text, nullable=False,
                      info={"attributeID": 440,
                            "help": "Comment text goes here."})
     commentAuthor = Column(String(100), 

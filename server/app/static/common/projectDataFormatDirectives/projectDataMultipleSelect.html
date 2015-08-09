@@ -19,6 +19,7 @@
       style="float:left; width: 25%;"
       class="select form-control" 
       ng-model="attr.value"
+      ng-required="attr.required"
       ng-options="item.desc for item in attr.choices track by item.id"></select>
   </span>
   <span class="col-sm-12" style="float: left; width: 75%; padding-top: 7px;">

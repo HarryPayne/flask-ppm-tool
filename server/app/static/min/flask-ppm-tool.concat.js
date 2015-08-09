@@ -37,7 +37,7 @@
   PPTConfig.$inject = ["$urlRouterProvider"];
   
   function PPTConfig($urlRouterProvider) {
-    $urlRouterProvider.otherwise('/select');
+    $urlRouterProvider.otherwise('/select/home');
   };
   
 }());
@@ -150,6 +150,7 @@ Data attributes:
       getAttribute: getAttribute,
       getAllAttributes: getAllAttributes,
       getFormData: getFormData,
+      getKeys: getKeys,
       getProjectAttributes: getProjectAttributes,
       getRawAttributes: getRawAttributes,
       getSelectedChoices:getSelectedChoices,
@@ -203,7 +204,16 @@ Data attributes:
           }
         }
       }
-      else if (attr.format == "date" || _.contains(["commentAuthored", "commentEdited"], attr.name)) { // list of computed attributes rendered as string 
+      else if (attr.format == "date") {
+        if (attr.computed) return;
+        if (attr.value) {
+          this[attr.name] = new Date(attr.value).toString("yyyy-MM-dd");
+        }
+        else {
+          this[attr.name] = null;
+        }
+      }
+      else if (_.contains(["commentAuthored", "commentEdited"], attr.name)) { // list of computed attributes rendered as string 
         if (attr.computed) return;
         if (attr.value) {
           this[attr.name] = new Date(attr.value).toString("yyyy-MM-ddTHH:mm:ss");
@@ -212,7 +222,7 @@ Data attributes:
           this[attr.name] = null;
         }
       }
-       else if (attr.format.substring(0, "child_for_".length) != "child_for_") {
+      else if (attr.format.substring(0, "child_for_".length) != "child_for_") {
         this[attr.name] = attr.value;
       }      
     }
@@ -273,12 +283,24 @@ Data attributes:
       return formData;
     };
 
+    /**
+     *  @name getKeys
+     *  @desc Return the primary key objects used to select the currently 
+     *        selected one-to-many table entries (comment or disposition)
+     */
+    function getKeys() {
+      if (!"keys" in service.currentState) {
+        service.currentState.keys = [];
+      }
+      return service.currentState.keys;
+    }
+
     function getProjectAttributes(tableName, flag) {
       try {
         return _.sortBy(service.projectAttributes[tableName], "attributeID");
       }
       catch(e) {
-        //
+        //alert(e);
       }
     };
 
@@ -306,6 +328,17 @@ Data attributes:
         return _.where(merged.choices, {id: merged.value})[0];
       }
     };
+    
+    function getValueFromKey(key) {
+      var value;
+      if ("id" in key) {value = key.id;}
+      else if ("value" in key) {
+        if (typeof key.value == "number") {value = key.value}
+        else if (typeof key.value == "string") {value = parseInt(key.value);}
+        else if ("id" in key.value) {value = key.value.id}
+      }
+      return value;
+    }
     
     function hasAValue(attr) {
       if ((typeof attr.value != "undefined" && attr.value != null && attr.value != "" && attr.value != []) ||
@@ -350,6 +383,9 @@ Data attributes:
     
     function newProjectAttributes() {
       _.each(["description", "portfolio", "project"], function(tableName) {
+          if (typeof service.projectAttributes == "undefined") {
+            service.projectAttributes = new Object;
+          }
           service.projectAttributes[tableName] = [];
           updateProjAttrsFromRawItem(tableName, []);
       });
@@ -390,15 +426,19 @@ Data attributes:
      *  signature of the selected state, if there is one.
      */
     function updateProjAttrsFromRawItem(tableName, keys) {
+      if (typeof service.currentState == "undefined") {
+        service.currentState = new Object;
+      }
       service.currentState.keys = [];
       var raw_items = getRawAttributes(tableName);
       var filtered_items = raw_items;
       if (typeof filtered_items == "undefined") filtered_items = [];
       var selected;
       _.each(keys, function(key) {
+        var value = getValueFromKey(key);
         filtered_items = _.filter(filtered_items, function(item) {
-          if ((typeof item[key.name].id == "undefined" && item[key.name] == key.id)
-              || (item[key.name].id == key.id)) {
+          if ((typeof item[key.name].id == "undefined" && item[key.name] == value)
+              || (typeof item[key.name].id != "undefined" && item[key.name].id == value)) {
             service.currentState.keys.push(key);
             return true;
           }
@@ -433,6 +473,9 @@ Data attributes:
       }
       else {
         var tableAttrs = _.where(service.allAttributes, {table: tableName});
+        if (typeof service.projectAttributes == "undefined") {
+          service.projectAttributes = new Object;
+        }
         service.projectAttributes[tableName] = [];
         _.each(tableAttrs, function(attr) {
           if (attr.computed) return;
@@ -455,12 +498,10 @@ Data attributes:
 
     function updateErrors(errors) {
       if (typeof errors == "undefined") return;
-      _.each(errors, function(error) {
-        _.each(Object.keys(error), function(key) {
-          var attr = service.getAttribute(key);
-          attr.server_errors = this[key];
-        }, error);
-      });
+      _.each(Object.keys(errors), function(key) {
+        var attr = service.getAttribute(key);
+        attr.errors = errors[key];
+       });
     };
     
     function updateProjectAttributes(result, params) {
@@ -476,13 +517,14 @@ Data attributes:
         _.each(result.data.formData, updateProjectAttributesFromForm);
       }
       if (typeof params != "undefined" && ("disposedInFY" in params || "disposedInQ" in params)) {
-        updateProjAttrsFromRawItem("disposition", 
-                                   [{name: 'disposedInFY', id: service.allAttributes['disposedInFY'].value['id']}, 
-                                    {name: 'disposedInQ', id: service.allAttributes['disposedInQ'].value['id']}]);
+        updateProjAttrsFromRawItem("disposition", [
+                                    {name: 'disposedInFY', value: {id: params.disposedInFY}}, 
+                                    {name: 'disposedInQ', value: {id: params.disposedInQ}}
+                                   ]);
       }
       else if (typeof params != "undefined" && "commentID" in params) {
         updateProjAttrsFromRawItem("comment", 
-                                   [{name: 'commentID', id: service.allAttributes["commentID"].value}]);
+                                   [{name: 'commentID', value: {id: params.commentID}}]);
       }
       return;
     };
@@ -742,55 +784,42 @@ Data attributes:
    *        in view mode. This is the top of a pyramid of nested directives,
    *        and basically decides which data model to use, based on the table
    *        name passed in. Other attributes are passed down to data model
-   *        specific directives.
+   *        specific directives. 
+   *
+   *        Call this directive from inside a form. The form elements are not
+   *        rendered here. 
    * 
    *  The attributes for this directive are:
    * 
-   *    datasource - a list of data items to be displayed:
-   *      In the "one" dataModel (next attribute) it will be a list of
-   *      attribute objects for a single project -- basically one row from
-   *      the specified database table/data category.
+   *    datasource - a reference to an external function that supplies a list
+   *      of items to be rendered. In the case of the tables that are one-to-
+   *      one with projectID, these items will be attributes of the project
+   *      under consideration. In the case of the one-to-many tables, this will
+   *      be the list of items (comments or dispositions) to be listed.
    * 
-   *      In the "comments" dataModel it will be a list of comments. It could
-   *      be all the comments for one project or a list constructed some other
-   *      way (all the comments for a given user, given planning cycle, ...)
-   * 
-   *      In the "dispositions" dataModel it will be a list of dispositions,
-   *      such as all of the dispositions for one project.
-   * 
-   *    dataModel - "one" or "comments" or "dispositions". 
-   *      Use "one" for the data tables that are one-to-one with project ID 
-   *      (description, portfolio, project). In that model that table will 
-   *      contain a list of attributes in order of the attributeID metadata 
-   *      on the column. In view mode string representations of the data
-   *      are shown. In edit mode, there will be edit widgets a Save button.
-   * 
-   *      Use "comments" for a listing of comments. You may pass in a list 
-   *      of all comments for a project or a different list. View and edit 
-   *      modes format the data for one comment into a row in the table. Edit 
-   *      mode has a button on each row to open the edit.detail functionality 
-   *      below the row. Edit.detail mode shows a the list of attributes for a 
-   *      comment with edit widgets, a Save button, and a Cancel button.
-   * 
-   *      Use "dispositions" for a listing of dispositions. View and edit modes 
-   *      format the data for one disposition into a row in the table. Edit 
-   *      mode has a button on each row to open the edit.detail functionality 
-   *      below the row. Edit.detail mode shows a the list of attributes for a 
-   *      disposition with edit widgets, a Save button, and a Cancel button.
+   *    detailDatasource - a reference to an external function that supplies
+   *      a list of attributes for the detail item to be edited. 
+   *    detailIsSelected - a reference to a function that returns true when
+   *      looping over the one-to-many items and landing on the one the user
+   *      has selected.
    *    error - an object with error messages to be shown
    *    header - text for a header for the list of output rows
    *    hide - a reference to the external function to be run to exit from
    *      edit.detail mode back to edit mode.
    *    keys - a list of primary key attributes, used to identify the comment 
    *      or disposition to be edited in edit.detail mode
-   *    mode - "view", "edit", or "edit.detail". Passed to the inner directive to control 
-   *      the display of each row. In display mode pre-computed display values 
-   *      are shown. In edit mode input "widgets" specific to the format of 
-   *      each attribute are shown.
+   *    mode - "view", "edit", or "edit.detail". Passed to the inner directive 
+   *      to control the display of each row. In display mode pre-computed 
+   *      display values are shown. In edit mode input "widgets" specific to 
+   *      the format of each attribute are shown.
+   *    onCancelClick - a reference to the external function to be run when the
+   *      Cancel button is pressed.
    *    onSaveClick - a reference to the external function to be run when 
-   *      a Save button is pressed.
-   *    show - a reference to the external function to be run to edit and item
+   *      the form  button is pressed.
+   *    show - a reference to the external function to be run to edit an item
    *      in edit.detail mode.
+   *    showSuccess - a reference to the external function to be run to decide
+   *      whether a success message should be displayed.
    *    success - an object with success messages to be shown
    *    table - database table/project data category name
    */
@@ -801,19 +830,20 @@ Data attributes:
     .module("app.common")
     .directive("projectDataDisplay", ProjectDataDisplay);
   
-  ProjectDataDisplay.$inject = ["$state", "$stateParams", "attributesService",
-                                "projectDataService"];
-
-  function ProjectDataDisplay($state, $stateParams, attributesService,
-                              projectDataService) {
+  function ProjectDataDisplay() {
     
-    function controller($state) {
-      this.as = attributesService;
-      this.dataModel = getDataModelFromTable(this.table);
-      this.ds = projectDataService;
-      this.stateParams = $stateParams;
+    function controller() {
+      //this.dataModel = getDataModelFromTable(this.table);
+      this.cancel = cancel;
+      this.details = details;
+      this.detailsObj = detailsObj;
       this.hasAValue = hasAValue;
+      this.hasCancel = hasCancel;
+      this.hideDetails = hideDetails;
+      this.isSelected = isSelected;
       this.save = save;
+      this.saveDetails = saveDetails;
+      //this.selectedKeys = typeof keys == "function" ? keys() : [];
       this.showDetails = showDetails;
     }
     
@@ -821,13 +851,17 @@ Data attributes:
       restrict: "EA",
       scope: {
         datasource: "&",
+        detailDatasource: "&",
+        detailIsSelected: "&",
         error: "=",
         header: "=",
         hide: "&",
         keys: "=",
         mode: "=",
+        onCancelClick: "&",
         onSaveClick: "&",
         show: "&",
+        showSuccess: "&",
         success: "=",
         table: "="
       },
@@ -839,6 +873,61 @@ Data attributes:
       },
       templateUrl: getTemplateForDataModel
     };
+
+    /**
+     * @name cancel
+     * @desc Call the function referred to by the onCancelClick attribute
+     *        function, which is expected to navigate away to another state.
+     */
+    function cancel() {
+      this.onCancelClick()();
+    }
+
+    /**
+     *  @name details
+     *  @desc Return the results from the detailDatasource attribute function
+     *        as a list of attributes.
+     *  @returns {Object[]}
+     */
+    function details() {
+      if (typeof this.attributes == "undefined" || this.attributes.length == 0) {
+        var attributes = [];
+        _.each(this.detailDatasource(), function(attr) {
+          if (attr.computed) {
+            return;
+          }
+          if (attr.format.substring(0, "child_for_".length) == "child_for_") {
+            return;
+          }
+          if (attr.name == "commentID") {
+            return;
+          };
+          attributes.push(attr);
+        });
+        this.attributes = attributes;
+      }
+      return this.attributes;
+    }
+
+    /**
+     *  @name detailsObj
+     *  @desc Return the results from the detailDatasource attribute function
+     *        as an object with attribute name as the key, and attributes as
+     *        the values.
+     * @returns {Object}
+     */
+    function detailsObj(name) {
+      if (typeof this.attributesObj == "undefined" || Object.keys(this.attributesObj).length == 0) {
+        var attributesObj = new Object;
+        _.each(this.detailDatasource(), function(attr) {
+          attributesObj[attr.name] = attr;
+        });
+        this.attributesObj = attributesObj;
+      }
+      if (name in this.attributesObj) {
+        return this.attributesObj[name].value;
+      }
+    }
 
     /**
      *  @name getDataModelFromTable
@@ -861,6 +950,12 @@ Data attributes:
       }
     }
 
+    /**
+     * @name getTemplateForDataModel
+     * @desc Return the templateUrl appropriate for the table specified by the
+     *       table attribute. 
+     * @param 
+     */
     function getTemplateForDataModel(element, attributes) {
       var model = getDataModelFromTable(attributes.table);
       if (model == "one") {
@@ -872,6 +967,25 @@ Data attributes:
       else if (model == "dispositions") {
         return "static/common/projectDataDisplay/dispositionsDataModel.html";
       }
+    }
+
+    function getValueFromKey(key) {
+      var value;
+      if ("id" in key) {
+        value = key.id;
+      }
+      else if ("value" in key) {
+        if (typeof key.value == "number") {
+          value = key.value;
+        }
+        else if (typeof key.value == "string") {
+          value = parseInt(key.value);
+        }
+        else if ("id" in key.value) {
+          value = key.value.id;
+        }
+      }
+      return value;
     }
     
     /**
@@ -908,54 +1022,73 @@ Data attributes:
     }
 
     /**
-     *  @name hideDetails
-     *  @desc a function for canceling out of Add a Comment or Add a Disposition
-     *        by navigating away to the project edit Comments or Dispositions
-     *        sub-tab, respectively. Add a Comment users may not have a role
-     *        that gives them access to the edit view, in which case they are
-     *        taken back to view mode/state project.detail.
-     * @param {string} tableName - "comment" for Add a Comment, "disposition" 
-     *        for Add a Disposition.
-     * @param {Object[]} keys - 
+     * @name cancel
+     * @desc Return the truth of the statement "this directive has a value for
+     *        the onCancelClick attribute function."
      */
-    function hideDetails(tableName, keys) {
-      var selected = attributesService.updateProjAttrsFromRawItem(tableName, keys);
-      if (loginStateService.canEditProjects()) {
-        $state.go("project." + tableName + ".edit", {projectID: $state.params.projectID});
+    function hasCancel() {
+      return (typeof this.onCancelClick() != "undefined");
+    }
+
+    /**
+     *  @name hideDetails
+     *  @desc Call the function set in the directive "hide" option, which hides
+     *        the edit.details view (and clears the form).
+     * @param {string} table - the name of the table being updated
+     * @param (Object[]) keys - a list of primary key attribute objects, sent
+     *        to identify the database entry to be updated
+     */
+    function hideDetails(table, keys) {
+      this.hide()(table, keys)
+    }
+
+    /**
+     * @name isSelected
+     * @desc Return the truth of the statement "this is the item you want to 
+     *        work on." The primary key values of the item are compared with
+     *        the primary key values specified by the keys attribute.
+     */
+    function isSelected(item) {
+      if (typeof item == "undefined" || typeof this.keys == "undefined" || this.keys.length == 0 ) {
+        return false;
       }
-      else {
-        $state.go("project.detail", {projectID: $state.params.projectID});
-      }
+      var selected = false;
+      _.each(this.keys, function(key){
+        var value = getValueFromKey(key);
+        if ((typeof item[key.name].id == "undefined" && item[key.name] == value)
+            || (typeof item[key.name].id != "undefined" && item[key.name].id == value)) {
+          selected =  true;
+        }
+        else {
+          selected = false;
+        }
+      });
+      return selected;
     }
 
     /**
      *  @name save
-     *  @desc When the form inside the directive is submitted, call the function 
-     *        specified by the onSaveClick parameter
+     *  @desc When the form wrapping the directive is submitted, call the 
+     *        function specified by the onSaveClick parameter
      */
-    function save() {
-      this.ctrl.onSaveClick({table: this.ctrl.table});
+    function save(table, keys) {
+      this.onSaveClick()(table, keys);
+    }
+
+    function saveDetails(table, keys) {
+      this.onSaveClick()(table, keys);
     }
 
     /**
-    function showDetails(key) {
-      this.ctrl.show()({table: this.ctrl.table}, {key: key});
-    }
-    */
-
-    /**
-    */
-    function showDetails(tableName, keys) {
-      var selected = attributesService.updateProjAttrsFromRawItem(tableName, keys);
-      if (tableName == 'comment') {
-        $state.go("project.comment.edit.detail", 
-                  {projectID: $stateParams.projectID, commentID: selected.commentID});
-      }
-      if (tableName == 'disposition') {
-        $state.go("project.disposition.edit.detail", 
-                  {projectID: service.projectID, disposedInFY: selected.disposedInFY.id,
-                   disposedInQ: selected.disposedInQ.id});
-      }
+     *  @name showDetails
+     *  @desc Call the function set in the directive "show" option, which shows
+     *        the edit.details view.
+     * @param {string} table - the name of the table being updated
+     * @param (Object[]) keys - a list of primary key attribute objects, sent
+     *        to identify the database entry to be updated
+     */
+    function showDetails(table, keys) {
+      this.show()(table, keys);
     }
 
   }
@@ -972,9 +1105,18 @@ Data attributes:
   
   function ProjectDataCommentDetail() {
     
+    function controller() {
+      var vm = this;
+    }
+
     return {
+      controller: controller,
+      controllerAs: "detailCtrl",
       restrict: "EA",
-      templateUrl: "static/common/projectDataFormatDirectives/projectDataCommentDetail.html" 
+      templateUrl: "static/common/projectDataFormatDirectives/projectDataCommentDetail.html",
+      link: function(scope, element, attributes, ctrl) {
+        console.log("");
+      },
     };
     
   }
@@ -991,20 +1133,9 @@ Data attributes:
   
   function ProjectDataComment() {
     
-    function controller() {
-      var vm = this;
-    }
-
     return {
-      controller: controller,
-      controllerAs: "commentCtrl",
-      bindToController: true,
       restrict: "EA",
-      templateUrl: "static/common/projectDataFormatDirectives/projectDataComment.html",
-      link: function(scope, element, attributes, ctrl) {
-        scope.submit = ctrl.save;
-        scope.commentCtrl.ctrl = scope.$parent.ctrl
-      },
+      templateUrl: "static/common/projectDataFormatDirectives/projectDataComment.html"
     };
     
   }
@@ -1049,6 +1180,47 @@ Data attributes:
   
 }());
 
+(function() {
+  
+  "use strict";
+  
+  angular
+    .module("app.common")
+    .directive("projectDataDispositionDetail", ProjectDataDispositionDetail);
+  
+  function ProjectDataDispositionDetail() {
+    
+    function controller() {
+      var vm = this;
+    }
+
+    return {
+      restrict: "EA",
+      templateUrl: "static/common/projectDataFormatDirectives/projectDataDispositionDetail.html"
+    };
+    
+  }
+  
+}());
+
+(function() {
+  
+  "use strict";
+  
+  angular
+    .module("app.common")
+    .directive("projectDataDisposition", ProjectDataDisposition);
+  
+  function ProjectDataDisposition() {
+    
+    return {
+      restrict: "EA",
+      templateUrl: "static/common/projectDataFormatDirectives/projectDataDisposition.html"
+    };
+    
+  }
+  
+}());
 
 (function() {
   
@@ -1122,172 +1294,6 @@ Data attributes:
       templateUrl: "static/common/projectDataFormatDirectives/projectDataTextArea.html" 
     };
     
-  }
-  
-}());
-
-(function() {
-  
-  /**
-   *  @name projectDataModelDisplayDirective
-   *  @desc Render a list of comments as in Bootstrap form-horizontal layout.
-   *        Used for display and editing.
-   * 
-   *  Parameters:
-   * 
-   *    comments - a list of comment objects from the database
-   *    error - an object with error messages to be shown
-   *    header - text for a header for the list of output rows
-   *    mode - "view", "edit", or "edit.detail". View and edit modes format the
-   *      data for one comment into a row in the table. Edit mode has a button
-   *      on each row to open the edit.detail functionality below the row.
-   *      Edit.detail mode shows a the list of attributes for a comment with
-   *      edit widgets, a Save button, and a Cancel button.
-   *    onSaveClick - a reference to the external function to be run when a 
-   *      Save button is pressed
-   *    success - an object with a success message to be shown
-   */
-  
-  "use strict";
-  
-  angular
-    .module("app.common")
-    .directive("projectDataModelDisplay", ProjectDirectModelDisplay);
-  
-  function ProjectDirectModelDisplay() {
-    
-    function controller() {
-      this.save = save;
-    }
-    
-    return {
-      restrict: "EA",
-      scope: {
-        comments: "&",
-        error: "=",
-        header: "=",
-        mode: "=",
-        onSaveClick: "=",
-        success: "="
-      },
-      controller: controller,
-      controllerAs: "ctrl",
-      bindToController: true,
-      templateUrl: "static/common/projectCommentDisplay/projectCommentDisplay.html",
-      link: function(scope, element, attributes, ctrl) {
-        scope.submit = ctrl.save;
-      }
-    };
-
-    /**
-     *  @name save
-     *  @desc When the form inside the directive is submitted, call the function 
-     *        specified by the onSaveClick parameter
-     */
-    function save() {
-      this.ctrl.onSaveClick({table: this.ctrl.table});
-    }
-
-  }
-}());
-
-
-(function() {
-  
-  /**
-   *  @name oneToOneDataModel
-   *  @desc Render project data for a single database table. A header is 
-   *        followed by rows in Bootstrap form-horizontal layout, even
-   *        in view mode. This is the top of a pyramid of nested directives,
-   *        and basically decides which data model to use, based on the table
-   *        name passed in. Other attributes are passed down to data model
-   *        specific directives.
-   * 
-   *  The attributes for this directive are:
-   * 
-   *    datasource - the list of attribute objects with values for a project.
-   *    error - an object with error messages to be shown
-   *    header - text for a header for the list of output rows
-   *    mode - "view", "edit", or "edit.detail". Passed to the inner directive to control 
-   *      the display of each row. In display mode pre-computed display values 
-   *      are shown. In edit mode input "widgets" specific to the format of 
-   *      each attribute are shown.
-   *    onSaveClick - a reference to the external function to be run when 
-   *      a Save button is pressed.
-   *    success - an object with success messages to be shown
-   *    table - database table/project data category name
-   */
-
-  "use strict";
-  
-  angular
-    .module("app.common")
-    .directive("oneToOneDataModel", OneToOneDataModel);
-  
-  function OneToOneDataModel() {
-    
-    function controller() {
-      this.save = save;
-      this.hasAValue = hasAValue;
-    }
-    
-    return {
-      restrict: "EA",
-      scope: {
-        datasource: "&",
-        error: "=",
-        header: "=",
-        mode: "=",
-        onSaveClick: "&",
-        success: "=",
-        table: "="
-      },
-      controller: controller,
-      controllerAs: "ctrl",
-      bindToController: true,
-      templateUrl: "static/common/projectDataModelDisplayDirectives/oneToOneDataModel.html",
-      link: function(scope, element, attributes, ctrl) {
-        scope.submit = ctrl.save;
-      }
-    };
-
-    /**
-     *  @name save
-     *  @desc When the form inside the directive is submitted, call the function 
-     *        specified by the onSaveClick parameter
-     */
-    function save() {
-      this.ctrl.onSaveClick({table: this.ctrl.table});
-    }
-
-    /**
-     *  @name hasAValue
-     *  @desc Call this function to determine whether the attribute has a value.
-     *        In view mode, only project attributes that have a value are listed.
-     */
-    function hasAValue(attr) {
-      if (attr.name == "childID") {
-        var comment;
-      }
-      if ("value" in attr) {
-        if (typeof attr.value == "string" && attr.value != "") {
-          return true;
-        }
-        else if (typeof attr.value != "string" && Boolean(attr.value) && "id" in attr.value) {
-          if (Boolean(attr.value.desc) && attr.value.id != null  && attr.value != "" && attr.value != []) {
-            return true;
-          }
-          else {
-            return false;
-          }
-        }
-        else if (attr.value != null && attr.value != "" && attr.value != []) {
-          return true;
-        }
-      }
-      return false;
-    }
-
   }
   
 }());
@@ -1644,7 +1650,7 @@ Data attributes:
             },
             function () {
               if (fromState.name == "") {
-                return $state.go("select");
+                return $state.go("select.home");
               }
             }
           );
@@ -1691,6 +1697,12 @@ Data attributes:
 }());
 (function() {
   
+  /**
+   *  @name loginStateService
+   *  @desc A factory for a service that provides information about the user's
+   *        login status and roles.
+   */
+
   "use strict";
   
   angular
@@ -1703,7 +1715,9 @@ Data attributes:
   function loginStateService($rootScope, $http, store, jwtHelper, loginService) {
     var service = {
       can_edit_roles: ["Curator", "Manager"],
+      can_add_project_roles: ["Curator"],
       canAddComments: canAddComments,
+      canAddProjects: canAddProjects,
       canEditProjects: canEditProjects,
       hasRole: hasRole,
       loggedIn: loggedIn,
@@ -1721,6 +1735,16 @@ Data attributes:
       }
       return false;
     }
+
+    function canAddProjects() {
+      if (service.loggedIn()) {
+        if (_.intersection($rootScope.currentUser.roles, service.can_add_project_roles)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
     function canEditProjects() {
       if (service.loggedIn()) {
         if (_.intersection($rootScope.currentUser.roles, service.can_edit_roles)) {
@@ -1811,7 +1835,7 @@ Data attributes:
             deferred.resolve( $http(rejection.config) );
           },
           function () {
-            $state.go("select");
+            $state.go("select.home");
             deferred.reject(rejection);
           }
         );
@@ -1982,9 +2006,8 @@ Data attributes:
           requiresLogin: false,
           viewUrl: "/static/project/project.html"
         },
-        /** service initialization */
         onEnter: ["projectDataService", 
-          function(projectDataService) {
+          function(projectDataService){
             projectDataService.initService();
           }
         ]
@@ -2188,6 +2211,10 @@ Data attributes:
     this.masterList = this.ls.getMasterList;
     this.viewUrl = projectDataService.viewUrl;
 
+    $scope.$on("setProjectFormPristine", function() {
+      $scope.projectForm.$setPristine(true);
+    });
+    
     $scope.$on(["$stateChangeStart"], unsavedDataPopup);
     
     /**
@@ -2228,7 +2255,12 @@ Data attributes:
          *  and shows Continue and Cancel buttons for making a response. The
          *  promised response is passed to a callback function.
          */
-        modalConfirmService.showModal({}, modalOptions).then(unsavedChangesConfirmed);
+        modalConfirmService.showModal({}, modalOptions).then(function (response) {
+          $scope.projectForm.$setPristine(true);
+          var target = toParams.projectID ? toParams.projectID : fromParams.projectID;
+          projectDataService.getProjectData(target, toParams); // forced discard
+          $state.go(toState, toParams);
+        });
       }
     }
     
@@ -2282,11 +2314,11 @@ Data attributes:
     .factory("projectDataService", projectDataService);
   
   projectDataService.$inject = ["$rootScope", "$http", "$state", "$stateParams", 
-                                "$location", "attributesService", "loginStateService", 
+                                "$location", "$timeout", "attributesService", "loginStateService", 
                                 "projectListService", "stateLocationService"];
   
   function projectDataService($rootScope, $http, $state, $stateParams, 
-                              $location, attributesService, loginStateService,
+                              $location, $timeout, attributesService, loginStateService,
                               projectListService, stateLocationService) {
     
     /** service to be returned by this factory */
@@ -2296,6 +2328,7 @@ Data attributes:
       changeMode: changeMode,
       createProject: createProject,
       currentMode: currentMode,
+      currentSubtab: currentSubtab,
       editMode: editMode,
       getProjectData: getProjectData,
       getProjectAttributes: attributesService.getProjectAttributes,
@@ -2332,7 +2365,7 @@ Data attributes:
       if (_.first(state_from_location.name.split(".")) == "project") {
 
           /** project id from state params */
-          var state_projectID = $stateParams.projectID;
+          var state_projectID = parseInt($stateParams.projectID);
 
           /** projectID saved in the project list service */
           var saved_projectID = projectListService.getProjectID();
@@ -2340,12 +2373,24 @@ Data attributes:
           if (state_projectID && saved_projectID != state_projectID 
               && state_projectID > -1){
             /** the data we want is not what we have, so ... */
-            service.getProjectData({projectID: state_projectID});
+            $timeout(function() {
+              service.getProjectData(state_from_location.params);
+            });
           }
           else if (saved_projectID && saved_projectID == state_projectID
                    &&  typeof service.getProjectAttributes() == "undefined") {
             /** should be good to go but there are no saved data, so ... */
-            service.getProjectData({projectID: state_projectID});
+            $timeout(function() {
+              service.getProjectData(state_from_location.params);
+            });
+          }
+          else if (saved_projectID && saved_projectID == state_projectID
+                   &&  attributesService.getAttribute("name").value == "") {
+            /** data was wiped out. Perhaps just came from the Add project tab, 
+                so ... */
+            $timeout(function() {
+              service.getProjectData(state_from_location.params);
+            });
           }
       }
     });
@@ -2359,7 +2404,7 @@ Data attributes:
      *        navigating back to the select state
      */
     function cancelAddProject() {
-      $state.go("select");
+      $state.go("select.home");
     }
 
     /**
@@ -2434,6 +2479,18 @@ Data attributes:
     }
     
     /**
+     *  @name currentSubtab
+     *  @desc return the current project edit subtab
+     *  @returns {string} "view" if state name is "project.detail" else state 
+     *        name
+     */
+    function currentSubtab() {
+      var state_path = $state.current.name.split(".");
+      state_path.shift();
+      return state_path.shift();
+    }
+    
+    /**
      *  @name editMode
      *  @desc return the answer to the question "am I in edit mode?"
      *  @returns {Boolean}
@@ -2459,6 +2516,21 @@ Data attributes:
         $http.get("getProjectAttributes/" + params.projectID)
           .then(function(response) {
             service.setProjectData(response, params);
+            /** get the details right */
+            if ("commentID" in params) {
+              var commentID = attributesService.getAttribute("commentID");
+              commentID.value = params.commentID;
+              var keys = [commentID];
+              attributesService.updateProjAttrsFromRawItem("comment", keys);
+            }
+            else if ("disposedInFY" in params || "disposedInQ" in params) {
+              var disposedInFY = attributesService.getAttribute("disposedInFY");
+              disposedInFY.value.id = params.disposedInFY;
+              var disposedInQ = attributesService.getAttribute("disposedInQ");
+              disposedInQ.value.id = params.disposedInQ;
+              var keys = [disposedInFY, disposedInQ];
+              attributesService.updateProjAttrsFromRawItem("disposition", keys);
+            }
         });
       }
     }
@@ -2529,13 +2601,17 @@ Data attributes:
           && location_projectID != saved_projectID) {
         /** If the location tells us what we need, and know we have something 
             else ... This is the bookmarked report case. */
-        service.getProjectData({projectID: location_projectID});
+        $timeout(function() {
+          service.getProjectData(state_from_location.params);
+        });
       }
       else if (location_projectID && location_projectID > -1 
                && location_projectID == saved_projectID
-               && typeof service.getProjectAttributes() == "undefined") {
+               && typeof attributesService.getProjectAttributes('description') == "undefined") {
         /** should be good to go but there are no saved data, so ... */
-        service.getProjectData({projectID: location_projectID});
+        $timeout(function() {
+          service.getProjectData(state_from_location.params);
+        });
       }
     }
 
@@ -2543,12 +2619,20 @@ Data attributes:
       $state.go("project.attach", {projectID: service.projectID});
     };
     
+    /**
+     *  @name jumpToAddForm
+     *  @desc Prepare for adding a comment or disposition by nulling out the
+     *        project attribute values for the corresponding table. To make
+     *        that work, the keys parameter values must have id=0, which
+     *        cannot be true for primary key columns. After clearing out the
+     *        data, 
+     */
     function jumpToAddForm(tableName, keys) {
       attributesService.updateProjAttrsFromRawItem(tableName, keys);
-      if (_.contains(["comment"], tableName)) {
+      if (_.contains(["comment", "disposition"], tableName)) {
         $state.go("project." + tableName + ".edit", {projectID: $state.params.projectID});
       }
-      $state.go("project.add." + tableName, {projectID: $state.params.projectID});
+      $state.go("project." + tableName + ".add", {projectID: $state.params.projectID});
     };
 
     function jumpToNewProject(result) {
@@ -2582,21 +2666,29 @@ Data attributes:
       $http(request)
         .then(service.setProjectData);
       service.noCheck = true;
-      $state.go("project." + tableName + ".edit", {projectID: $state.params.projectID, noCheck: true});
+      var stateName = tableName;
+      if (tableName == "project") {
+        stateName = "projectMan";
+      }
+      $state.go("project." + stateName + ".edit", {projectID: $state.params.projectID, noCheck: true});
     };
 
     function SaveState() {
-      sessionStorage.projectDataServiceAttributes = angular.toJson($stateParams);
+      var params = stateLocationService.getStateFromLocation().params;
+      sessionStorage.projectDataServiceAttributes = angular.toJson(params);
     };
       
     function setProjectData(result, params) {
       //return;
-      attributesService.updateProjectAttributes(result, params);
       projectListService.setProjectID(result.data.projectID);
       service.projectID = projectListService.getProjectID();
+      attributesService.updateProjectAttributes(result, params);
       service.success = result.data.success;
       service.SaveState();
       attributesService.SaveState();
+      /** mark the form as $pristine. Only the controller can do that so give
+          it a ping. */
+      $rootScope.$broadcast("setProjectFormPristine");
     }
 
     function showDetails(tableName, keys) {
@@ -2607,7 +2699,8 @@ Data attributes:
       }
       if (tableName == 'disposition') {
         $state.go("project.disposition.edit.detail", 
-                  {projectID: service.projectID, disposedInFY: selected.disposedInFY.id,
+                  {projectID: projectListService.getProjectID(), 
+                   disposedInFY: selected.disposedInFY.id,
                    disposedInQ: selected.disposedInQ.id});
       }
     }
@@ -3048,6 +3141,26 @@ Data attributes:
 }());
 
 (function() {
+  
+  /**
+   *  @name projectSubHeadings
+   *  @desc Render project-specific subheading items
+   */
+  
+  angular
+    .module("app.project")
+    .directive("projectSubHeadings", ProjectSubHeadings);
+  
+  function ProjectSubHeadings() {
+    return {
+      restrict: "EA",
+      templateUrl: "/static/project/templates/subHeadings.html",
+    };
+  }
+  
+}());
+
+(function() {
 
   /**
    *  @module app.report
@@ -3406,6 +3519,40 @@ Data attributes:
       
 }());
 (function() {
+
+  /**
+   *  @name reportTableSubHeadings
+   *  @desc Render report-specific subheadings from a template
+   */
+
+  "use strict";
+
+  angular
+    .module("app.report")
+    .directive("reportTableSubHeadings", ReportTableSubHeadings);
+
+  function ReportTableSubHeadings() {
+
+    function controller() {
+      var vm = this;
+    }
+
+    return {
+      bindToController: true,
+      controller: controller,
+      controllerAs: "ctrl",
+      link: function(scope, element, attributes, ctrl) {
+        console.log("reportTableSubHeadings");
+      },
+      scope: {
+        report: "="
+      },
+      templateUrl: "static/report/templates/subHeadings.html"
+    };
+  }
+
+}());
+(function() {
   
   angular
     .module("app.select", [
@@ -3428,6 +3575,7 @@ Data attributes:
   function selectConfig($stateProvider) {
     $stateProvider
       .state("select", {
+        /** virtual root of Select tab states */
         url: "/select",
         controller: "Select",
         controllerAs: "select",
@@ -3441,13 +3589,22 @@ Data attributes:
           }
         ]
       })
+      .state("select.home", {
+        url: "/home",
+        templateUrl: "/static/select/templates/home.html"
+      })
       .state("select.addProject", {
         url: "/addProject",
-        controller: "Select",
-        controllerAs: "select",
+        templateUrl: "/static/select/templates/addProject.html",
         data: {
           requiresLogin: true
-        }
+        },
+        onEnter: ["attributesService",
+          /** wipe out the project attributes data to make a clean slate for
+           *  adding a project */
+          function (attributesService) {
+            attributesService.newProjectAttributes();
+          }]
       });
   };
   
@@ -3455,20 +3612,38 @@ Data attributes:
 
 (function() {
   
+  /**
+   *  @name Select
+   *  @desc Controller for the Select tab states
+   * @requires ui-router
+   * @requires attributesService
+   * @requires loginStateService
+   * @requires modalConfirmService
+   * @requires projectDataService
+   * @requires projectListService
+   * @requires selectStateService
+   */
+
   "use strict";
   
   angular
     .module("app.select")
     .controller("Select", Select);
   
-  Select.$inject = ["$scope", "$state", "projectListService", "selectStateService", 
-                    "projectDataService", "modalConfirmService"];
+  Select.$inject = ["$scope", "$state", "attributesService", "loginStateService", 
+                    "modalConfirmService", "projectDataService", "projectListService", 
+                    "selectStateService"];
   
-  function Select($scope, $state, projectListService, selectStateService, 
-                  projectDataService, modalConfirmService) {
+  function Select($scope, $state, attributesService, loginStateService, 
+                  modalConfirmService, projectDataService, projectListService, 
+                  selectStateService) {
     
     this.state = $state;
     
+    this.as = attributesService;
+    this.ds = projectDataService;
+    this.logss = loginStateService;
+
     this.ls = projectListService;
     this.masterList = this.ls.getMasterList;
     this.jumpToProject = this.ls.jumpToProject;
@@ -3476,11 +3651,17 @@ Data attributes:
     this.ss = selectStateService;
     this.selectState = selectStateService.getMasterList;
     
-    this.ds = projectDataService;
+    $scope.$on("$stateChangeStart", checkForDirtyAddProjectForm);
 
-    $scope.$on("$stateChangeStart", function(event, toState, toParams, fromState, fromParams) {
+    /**
+     *  @name checkForDirtyAddProjectForm
+     *  @desc A listener for $stateChangeStart to prompt for unsaved changes on
+     *        the add project form. Parameters are standard for listeners to
+     *        this event.
+     */
+    function checkForDirtyAddProjectForm(event, toState, toParams, fromState, fromParams) {
       projectDataService.success = "";
-      if ($scope.addProject.$dirty) {
+      if (fromState.name == "state.addProject" && $scope.addProject.$dirty) {
         event.preventDefault();
 
         var modalOptions = {
@@ -3496,7 +3677,7 @@ Data attributes:
           $state.go(toState, toParams);
         });
       }
-    });
+    }
   };
   
 }());
@@ -3675,7 +3856,36 @@ Data attributes:
   
 }());
 
+(function() {
+  
+/**
+ *  @name selectSubHeadings
+ *  @desc Render Select tab subheadings from a template
+ */  
+
+  "use strict";
+  
+  angular
+    .module("app.select")
+    .directive("selectSubHeadings", SelectSubHeadings);
+  
+  function SelectSubHeadings() {    
+    return {
+      restrict: "EA",
+      templateUrl: "/static/select/templates/subHeadings.html"
+    };
+  };
+
+}());
+
 (function(){
+
+/**
+ *  @name app.stateLocation
+ *  @desc Manage the relationship between $state and $location, to allow a
+ *        a change of state to update the location and vice versa.
+ *  @requires ui-router
+ */
 
   angular
     .module("app.stateLocation", ["ui.router"]);
@@ -3684,6 +3894,12 @@ Data attributes:
 
 (function() {
   
+/**
+ *  @name sessionService
+ *  @desc Provide brower sessionStorage for state history entities as JSON. 
+ *        Easily extensible to other accessors.
+ */
+   
   "use strict";
   
   angular
@@ -3738,14 +3954,16 @@ Data attributes:
 
 (function() {
 
-  /**
-   *  @name stateHistoryService
-   *  @desc A factory for the service that saves the most recent state and
-   *        parameters, keyed by location. It allows the app to look at the
-   *        current location and decide whether or not it indicates a state
-   *        change. Client session storage is used.
-   */ 
-    
+/**
+ *  @name stateHistoryService
+ *  @desc A factory for the service that saves the most recent state and
+ *        parameters, keyed by location. It allows the app to look at the
+ *        current location and decide whether or not it indicates a state
+ *        change. Storage management is handled by the sessionService
+ *        service.
+ *  @requires app.stateLocation.sessionService
+ */ 
+
   "use strict";
   
   angular
@@ -3779,6 +3997,14 @@ Data attributes:
 
 (function() {
   
+/**
+ *  @name stateLocationRun
+ *  @desc Set up event listeners for $stateChangeSucess and 
+ *        $locationChangeSuccess. These listeners are intended to ensure that
+ *        a state change can change the location without having that trigger
+ *        another state change, and vice versa.
+ */
+
   "use strict";
   
   angular
@@ -3800,7 +4026,17 @@ Data attributes:
 }());
 
 (function() {
-  
+
+/**
+ *  @name stateLocationService
+ *  @desc A factory for a service to manage the relationship between $state and
+ *        $location, to allow one to invoke the other without causing the first
+ *        to run again.
+ * @requires ui-router
+
+ *
+ *  The event bindings are in the stateLocation.stateLocationRun module.
+ */  
   "use strict";
   
   angular
@@ -3808,10 +4044,10 @@ Data attributes:
     .factory("stateLocationService", stateLocationService);
   
   stateLocationService.$inject = ["$rootScope", "$location", "$state", "$stateParams", 
-                                  "$urlMatcherFactory", "stateHistoryService", "projectListService"];
+                                  "stateHistoryService", "projectListService"];
  
   function stateLocationService($rootScope, $location, $state, $stateParams, 
-                                $urlMatcherFactory, stateHistoryService, projectListService){
+                                stateHistoryService, projectListService){
     var service = {
       preventCall: [],
       locationChange: locationChange,
@@ -3830,34 +4066,57 @@ Data attributes:
   
     return service;
     
+    /**
+     *  @name getCurrentState
+     *  @desc restore state and parameters from sessionStorage
+     */
     function getCurrentState() {
       return angular.fromJson(sessionStorage.currentState);
     }
     
+    /**
+     *  @name locationChange
+     *  @desc Event listener for $locationChangeSuccess. Figure out which state
+     *        is implied by the new location and go there, with the appropriate
+     *        parameters. Leave a marker to prevent another state change after
+     *        that. Similarly, ignore making a state change, if we just came
+     *        from one.
+     */
     function locationChange() {
       //if (service.preventCall.pop('locationChange') != null) {
-      if (service.preventCall.pop() == "locationChange") {
+      var ignore_next = service.preventCall.pop();
+      if (ignore_next == "locationChange") {
         return;
+      }
+      else if (typeof ignore_next != "undefined") {
+        /** if we got something, put it back where it came from */
+        service.preventCall.push(ignore_next);
       }
       var location = $location.url();
       var entry = stateHistoryService.get(location);
       if (entry == null) {
-        var entry = service.getStateFromLocation();
+        return; //var entry = service.getStateFromLocation();
       }
-      if ("projectID" in entry.params) {
-        projectListService.setProjectID(entry.params.projectID);
-      }
-      service.preventCall = ["stateChange"];
-      //service.preventCall.push("stateChange");
+      //if ("projectID" in entry.params) {
+      //  projectListService.setProjectID(entry.params.projectID);
+      //}
+      //service.preventCall = ["stateChange"];
+      service.preventCall.push("stateChange");
       $state.go(entry.name, entry.params, {location: false});
     };
     
+    /**
+     *  @name getStateFromLocation
+     *  @desc Get the name and parameters of the state that corresponds to the
+     *        current state.
+     */
     function getStateFromLocation() {
       var state = new Object;
       state.params = new Object;
       var path = $location.path().split("/").reverse();
       path.pop();
       var base = path.pop();
+
       if (base == "project") {
         var projectID;
         var commentID;
@@ -3871,8 +4130,8 @@ Data attributes:
         else if (_.last(path) == "disposition" && path[2] == "detail") {
           state.name = "project.disposition.edit.detail";
           state.params.projectID = parseInt(path[3]);
-          state.params.disposedInFY = parseInt(path(1));
-          state.params.disposedInQ = parseInt(path(0));
+          state.params.disposedInFY = parseInt(path[1]);
+          state.params.disposedInQ = parseInt(path[0]);
         }
         else if (path.length == 1) {
           state.name = "project.detail";
@@ -3883,11 +4142,12 @@ Data attributes:
           state.params.projectID = parseInt(path[0]);
         }
       }
+
       else if (base == "filter") {
         if (path[1] == "attributes") {
           state.name = "filter.builder.attributes";
-          state.params.query_string = path[2]
-          state.params.attribute_list = path[0]
+          state.params.query_string = path[2];
+          state.params.attribute_list = path[0];
         }
         else {
           state.name = "filter.builder";
@@ -3897,7 +4157,7 @@ Data attributes:
       else if (base == "report") {
         if (path[1] == "columns") {
           state.name = "report.columns";
-          state.params.query_string = path[0]
+          state.params.query_string = path[0];
         }
         else {
           state.name = "report.table";
@@ -3910,10 +4170,24 @@ Data attributes:
       return state;
     }
     
+    /**
+     *  @name stateChange
+     *  @desc Event listener for $stateChangeSuccess. Figure out the url that
+     *        corresponds to the new state and then call $location to put
+     *        that url in the location bar. Leave a marker to prevent that
+     *        change from causing another state change. Similarly, ignore
+     *        changing the location if the state change waw triggered by a
+     *        location change.
+     */
     function stateChange() {
-      if (service.preventCall.pop("stateChange") != null){
-      //if (service.preventCall.pop() == "stateChange"){
+      //if (service.preventCall.pop("stateChange") != null){
+      var ignore_next = service.preventCall.pop();
+      if (ignore_next == "stateChange"){
         return;
+      }
+      else if (typeof ignore_next != "undefined") {
+        /** if we got something, put it back where it came from */
+        service.preventCall.push(ignore_next);
       }
       if (!$state.current.name) {
         return;
@@ -3924,11 +4198,17 @@ Data attributes:
         "params": $stateParams
       };
       stateHistoryService.set(url, entry);
-      //service.preventCall.push('locationChange');
-      service.preventCall = ["locationChange"];
+      service.preventCall.push('locationChange');
+      //service.preventCall = ["locationChange"];
       $location.url(url);
     }
     
+    /**
+     *  @name getUrlFromState
+     *  @desc get the url from the current state. Inspect the url to see which
+     *        tab the state is under. Depending on the answer, add a hash to
+     *        the end of the url for browser history.
+     */
     function getUrlFromState() {
       var url = $state.href($state.current, $state.params);
       if (url[0] == "#") {

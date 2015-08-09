@@ -29,16 +29,17 @@
     .module("app.project")
     .factory("projectDataService", projectDataService);
   
-  projectDataService.$inject = ["$rootScope", "$http", "$state", "$stateParams", 
-                                "$location", "attributesService", "loginStateService", 
+  projectDataService.$inject = ["$rootScope", "$http", "$state", "$stateParams", "$q",
+                                "$location", "$timeout", "attributesService", "loginStateService", 
                                 "projectListService", "stateLocationService"];
   
-  function projectDataService($rootScope, $http, $state, $stateParams, 
-                              $location, attributesService, loginStateService,
+  function projectDataService($rootScope, $http, $state, $stateParams, $q,
+                              $location, $timeout, attributesService, loginStateService,
                               projectListService, stateLocationService) {
     
     /** service to be returned by this factory */
     var service = {
+      addProject: addProject,
       attributes: attributesService.getAllAttributes,
       cancelAddProject: cancelAddProject,
       changeMode: changeMode,
@@ -54,7 +55,6 @@
       jumpToAtachFile: jumpToAtachFile,
       jumpToAddForm: jumpToAddForm,
       jumpToNewProject: jumpToNewProject,
-      newProject: newProject,
       printValue: attributesService.printValue,
       RestoreState: RestoreState,
       saveProject: saveProject,
@@ -73,29 +73,19 @@
     
     $rootScope.$on("savestate", service.SaveState);
     $rootScope.$on("restorestate", service.RestoreState);
-    $rootScope.$on("$stateChangeSuccess", function() {
-
-      var state_from_location = stateLocationService.getStateFromLocation();
+    $rootScope.$on("$locationChangeSuccess", function() {
 
       /** if we landed under the Project tab ... */
-      if (_.first(state_from_location.name.split(".")) == "project") {
+      if (_.first($state.current.name.split(".")) == "project") {
 
-          /** project id from state params */
-          var state_projectID = parseInt($stateParams.projectID);
-
-          /** projectID saved in the project list service */
-          var saved_projectID = projectListService.getProjectID();
-
-          if (state_projectID && saved_projectID != state_projectID 
-              && state_projectID > -1){
-            /** the data we want is not what we have, so ... */
-            service.getProjectData(state_from_location.params);
-          }
-          else if (saved_projectID && saved_projectID == state_projectID
-                   &&  typeof service.getProjectAttributes() == "undefined") {
-            /** should be good to go but there are no saved data, so ... */
-            service.getProjectData(state_from_location.params);
-          }
+        if (!projectListService.hasProjects()) {
+          /** then the list of project brief descriptions is empty. Get it */
+          projectListService.updateAllProjects()
+            .then(service.initService);
+        }
+        else {
+          service.initService();
+        }
       }
     });
 
@@ -103,12 +93,33 @@
     return service;
     
     /**
+     * @name addProject
+     * @desc Start the process of creating a new project by collecting the 
+     *        attributes of the new project and making a call to the server
+     *        for a fresh csrf token.
+     */
+    function addProject() {
+      /** Gather all of the form data values by pulling them from the 
+       *  attributes in memory that are marked as associated with the
+       *  description table. We don't look at the form -- we use it mostly
+       *  for validation (if there were any required fields) and the unsaved
+       *  data check. 
+       *  */
+      var formData = attributesService.getFormData('description', []);
+      /* start with a fresh csrf token */
+      $http.get("getProjectAttributes/0")
+        .then(function(response) {
+          createProject(response, formData);
+        });
+    }
+    
+    /**
      *  @name cancelAddProject
      *  @desc Cancel out of the Add a Project screen (under the Select tab) by
      *        navigating back to the select state
      */
     function cancelAddProject() {
-      $state.go("select");
+      $state.go("select.home");
     }
 
     /**
@@ -137,32 +148,30 @@
      *        once the project has been created.
      *  @callback jumpToNewProject
      */
-    function createProject() {
+    function createProject(response, formData) {
+      /** save the new csrf token */
+      formData.csrf_token = response.data.csrf_token;
 
-      /** Gather all of the form data values by pulling them from the 
-       *  attributes in memory that are marked as associated with the
-       *  description table. We don't look at the form -- we use it mostly
-       *  for validation (if there were any required fields) and the unsaved
-       *  data check. 
-       *  */
-      var formData = attributesService.getFormData('description', []);
-      /* null out project attributes and get a fresh csrf token */
-      $http.get("getProjectAttributes/0")
-        .then(function(result) {
-          service.setProjectData(result);
-          delete formData.projectID;
-          var request = {
-            method: "POST",
-            url: "/projectCreate",
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
-            },
-            /** We use jQuery.param to serialize the data -- Python, or
-             *  at least Flask, has a problem with the angularjs serializer. */
-            data: jQuery.param(formData, true)
-          };
-          $http(request)
-            .then(service.jumpToNewProject);
+      delete formData.projectID;
+      var request = {
+        method: "POST",
+        url: "/projectCreate",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+        },
+        /** We use jQuery.param to serialize the data -- Python, or
+         *  at least Flask, has a problem with the angularjs serializer. */
+        data: jQuery.param(formData, true)
+      };
+      var create_response;
+      $http(request)
+        .then(function(create_response) {
+          service.setProjectData(create_response, {projectID: create_response.data.projectID});
+          var new_projectID = projectListService.updateAllProjects(create_response.data.projectID);
+          return new_projectID;
+        })
+        .then(function(new_projectID) {
+          service.jumpToNewProject(new_projectID);
         });
     };
 
@@ -214,8 +223,11 @@
      *  @param {Object} params - a $stateParams object or a custom object
      *        with the same attributes, passed to the callback function.
      *  @callback setProjectData
+	 * @returns {Object} - a promise that is resolved once the response 
+     *        from the back end has been saved.
      */
     function getProjectData(params) {
+      var deferred = $q.defer();
       if (parseInt(params.projectID) > -1) {
         $http.get("getProjectAttributes/" + params.projectID)
           .then(function(response) {
@@ -235,8 +247,10 @@
               var keys = [disposedInFY, disposedInQ];
               attributesService.updateProjAttrsFromRawItem("disposition", keys);
             }
+            deferred.resolve(params);
         });
       }
+      return deferred.promise;
     }
     
     /**
@@ -281,69 +295,94 @@
      *  @name initService
      *  @desc called onEnter from projectConfig.js to ensure that data for the
      *        report from the backend are already in hand (or promised).
+     * @returns {Object} promise - a promise that is resolved after project 
+     *        have been received and saved.
      */
     function initService() {
-      /** if the list of all project brief descriptions is empty, then get it */
-      if (!projectListService.hasProjects()) {
-        projectListService.updateAllProjects();
-      }
+      
+      var deferred = $q.defer();
 
-      /** query from location bar */
-      var state_from_location = stateLocationService.getStateFromLocation();
-      var location_projectID = state_from_location.params.projectID;
+      /** project id from state params */
+      var state_projectID = parseInt($stateParams.projectID);
 
       /** projectID saved in the project list service */
       var saved_projectID = projectListService.getProjectID();
 
-      //if (typeof location_projectID == "undefined") {
-        /** If the state derived from the location bar has no location_projectID
-            parameter... This is the case using the Break Down functionality 
-            on the Select tab, where the location indicates a Select tab state. */
-      //  service.getProjectData({projectID: saved_projectID});
-      //}
-      if (location_projectID && location_projectID > -1
-          && location_projectID != saved_projectID) {
-        /** If the location tells us what we need, and know we have something 
-            else ... This is the bookmarked report case. */
-        service.getProjectData(state_from_location.params);
+      projectListService.setProjectID(state_projectID);
+      if (state_projectID && state_projectID > -1 
+          && saved_projectID != state_projectID){
+        /** then the data we want is not what we have, so ... */
+        service.getProjectData($stateParams);
       }
-      else if (location_projectID && location_projectID > -1 
-               && location_projectID == saved_projectID
-               && typeof service.getProjectAttributes() == "undefined") {
-        /** should be good to go but there are no saved data, so ... */
-        service.getProjectData(state_from_location.params);
+      else if (saved_projectID && saved_projectID == state_projectID
+               &&  typeof service.getProjectAttributes('description') == "undefined") {
+        /** we should be good to go but there are no saved data, 
+         *  so ... */
+        $timeout(function() {
+          service.getProjectData($stateParams)
+            .then(deferred.resolve());
+        });
       }
+      else if (saved_projectID && saved_projectID == state_projectID
+               &&  attributesService.getAttribute("name").value == "") {
+        /** data were wiped out. Perhaps just came from the Add project tab, 
+            so ... */
+        $timeout(function() {
+          service.getProjectData($stateParams)
+            .then(deferred.resolve());
+        });
+      }
+      else {
+        deferred.resolve();
+      }
+      return deferred.promise;
     }
 
     function jumpToAtachFile() {
       $state.go("project.attach", {projectID: service.projectID});
     };
     
+    /**
+     *  @name jumpToAddForm
+     *  @desc Prepare for adding a comment or disposition by nulling out the
+     *        project attribute values for the corresponding table. To make
+     *        that work, the keys parameter values must have id=0, which
+     *        cannot be true for primary key columns. After clearing out the
+     *        data, 
+     */
     function jumpToAddForm(tableName, keys) {
       attributesService.updateProjAttrsFromRawItem(tableName, keys);
-      if (_.contains(["comment"], tableName)) {
+      if (_.contains(["comment", "disposition"], tableName)) {
         $state.go("project." + tableName + ".edit", {projectID: $state.params.projectID});
       }
       $state.go("project." + tableName + ".add", {projectID: $state.params.projectID});
     };
 
-    function jumpToNewProject(result) {
-      service.setProjectData(result);
-      projectListService.updateAllProjects(result.data.projectID);
-      $state.go("project.description.edit", {projectID: result.data.projectID});
+    /**
+     * @name jumpToNewProject
+     * @desc After a new project has been created, jump to the edit view of 
+     *        that project
+     */
+    function jumpToNewProject(projectID) {
+      projectListService.updateAllProjects(projectID);
+      $state.go("project.description.edit", {projectID: projectID});
     }
 
-    function newProject() {
-      attributesService.newProjectAttributes();
-      $state.go("select.addProject");
-    }
-    
     function RestoreState() {
       if (typeof sessionStorage.projectDataServiceAttributes != "undefined") {
         service.restoredParams = angular.fromJson(sessionStorage.projectDataServiceAttributes);
       }
     };
 
+    /**
+     * @name saveProject
+     * @desc Save edits made to the specified table by sending data back to the
+     *        server. Revised data for that table (and a fresh csrf token) are
+     *        returned, along with success or error messages.
+     * @param {string} tableName - the name of the table being updated.
+     * @param {Object[]} keys - list of primary key values used to identify the
+     *        record of interest if the table is one-to-many with projectID.
+     */
     function saveProject(tableName, keys) {
       var formData = attributesService.getFormData(tableName, keys);
       var projectID = $state.params.projectID ? $state.params.projectID : "";
@@ -356,13 +395,15 @@
         data: jQuery.param(formData, true)
       };
       $http(request)
-        .then(service.setProjectData);
-      service.noCheck = true;
-      var stateName = tableName;
-      if (tableName == "project") {
-        stateName = "projectMan";
-      }
-      $state.go("project." + stateName + ".edit", {projectID: $state.params.projectID, noCheck: true});
+        .then(function (request) {
+          service.setProjectData(request, keys);
+          service.noCheck = true;
+          var stateName = tableName;
+          if (tableName == "project") {
+            stateName = "projectMan";
+          }
+          $state.go("project." + stateName + ".edit", {projectID: $state.params.projectID, noCheck: true});
+        });
     };
 
     function SaveState() {
@@ -370,12 +411,19 @@
       sessionStorage.projectDataServiceAttributes = angular.toJson(params);
     };
       
+    /**
+     * @name setProjectData
+     * @desc Save project data sent from the back end. Make the project sent 
+     *        back be the current project, update project attributes values,
+     *        and handle success/error messages.
+     */
     function setProjectData(result, params) {
       //return;
-      projectListService.setProjectID(result.data.projectID);
       service.projectID = projectListService.getProjectID();
+      projectListService.setProjectID(result.data.projectID);
       attributesService.updateProjectAttributes(result, params);
       service.success = result.data.success;
+      service.error = attributesService.server_error;
       service.SaveState();
       attributesService.SaveState();
       /** mark the form as $pristine. Only the controller can do that so give
@@ -383,6 +431,18 @@
       $rootScope.$broadcast("setProjectFormPristine");
     }
 
+    /**
+     * @name showDetails
+     * @desc The edit view for tables that are one-to-many with projectID 
+     *        consist of a list of all the rows in the table for the current
+     *        project. Each row has an Edit button to open a showDetails
+     *        state with an edit form for that row. This method is the action
+     *        linked to those edit buttons. The data for the selected item is
+     *        copied into the project attributes for this project and then
+     *        handled like a table that is one-to-one with projectID.
+     * @param {string} tableName
+     * @param {Object} keys
+     */
     function showDetails(tableName, keys) {
       var selected = attributesService.updateProjAttrsFromRawItem(tableName, keys);
       if (tableName == 'comment') {
@@ -397,6 +457,13 @@
       }
     }
 
+    /**
+     * @name showEditSuccess
+     * @desc Return the truth of the statement "I have a success message that I
+     *        I should be showing right now." Returns true if there is a 
+     *        success message and the form is in its pristine state.
+     * @returns {Boolean} 
+     */
     function showEditSuccess() {
       return Boolean(_.contains(projectForm.classList, "ng-pristine") && service.success);
     }

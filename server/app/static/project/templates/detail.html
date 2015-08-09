@@ -1,41 +1,5 @@
 <div ng-include="'static/project/templates/description.html'"></div>
 <div ng-include="'static/project/templates/portfolio.html'"></div>
-
-<h4 class="col-sm-12">Disposition History</h4>
-
-<dl class="dl-horizontal" 
-  ng-repeat="disp in project.as.getRawAttributes('disposition')">
-  
-  <dt>
-    <label ng-bind="disp['disposedInFY'].desc"></label>
-    <label ng-bind="disp['disposedInQ'].desc"></label>
-  </dt>
-  <dd>
-    <p>
-    <span ng-bind="disp['dispositionID'].desc" class="text-capitalize"></span>.
-
-    <span ng-show="disp['reconsiderInQ'].desc || disp['reconsiderInFY'].desc">
-      Reconsider in <span ng-bind="disp['reconsiderInFY'].desc"></span>
-      <span ng-bind="disp['reconsiderInQ'].desc"></span>.
-    </span>
-
-    <span ng-show="disp['startInY'].desc || disp['startInM'].desc">
-      Start in <span ng-bind="disp['startInM'].desc"></span>
-      <span ng-bind="disp['startInY'].desc"></span>.
-    </span>
-
-    <span ng-show="disp['finishInY'].desc || disp['finishInM'].desc">
-      Finish in <span ng-bind="disp['finishInM'].desc"></span>
-      <span ng-bind="disp['finishInY'].desc"></span>.
-    </span>
-    
-    <!-- span>
-    Last modified by <span ng-bind="disp['lastModifiedBy']"></span> on <span ng-bind="disp['lastModified.printValue']"></span>
-    </span-->
-    
-    </p>
-  </dd>
-</dl>
-
+<div ng-include="'static/project/templates/disposition.html'"></div>
 <div ng-include="'static/project/templates/projectMan.html'"></div>
 <div ng-include="'static/project/templates/comment.html'"></div>

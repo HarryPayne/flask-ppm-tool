@@ -2,37 +2,7 @@
 <html>
   <head></head>
   <body>
-    <div class="container">
-      <ul class="list-inline text-right clearfix">
-        <li ng-show="(project.ds.currentMode() == 'view' || ctrl.ds.currentMode() == 'comment.add') && project.log_s.canEditProjects()">
-          <a ui-sref="project.description.edit({projectID:project.ds.projectID})" ng-click="project.changeMode('project.description.edit');">Edit this project</a>
-        </li>
-        <li ng-show="(project.ds.currentMode() != 'view' && ctrl.ds.currentMode() != 'comment.add') && project.log_s.canEditProjects()">
-          <a ui-sref="project.detail({projectID:project.ds.projectID})" ng-click="project.changeMode('project.detail');">View this project</a>
-        </li>
-        <li ng-show="project.ds.currentMode() != 'comment.add' && project.log_s.canAddComments()">
-          <a ui-sref="project.comment.add({projectID:project.ds.projectID})" ng-click="project.jumpToAddForm('comment', 
-                                                        [{name: 'commentID', id: 0}]);">Add a comment</a>
-        </li>
-        <li ng-show="project.ds.currentMode() == 'comment.add' && project.log_s.canEditProjects()">
-          Add a comment
-        </li>
-        <li ng-show="project.ds.currentMode() != 'disposition.add' && project.log_s.canEditProjects()">
-          <a ui-sref="project.disposition.add({projectID:project.ds.projectID})" onclick="return false;" ng-click="project.jumpToAddForm('disposition', 
-                                                        [{name: 'disposedInFY', value: {id: 0}}, {name: 'disposedInQ', value: {id: 0}}]);">Add a disposition</a>
-        </li>
-        <li ng-show="project.ds.currentMode() == 'disposition.add' && project.log_s.canEditProjects()">
-          Add a disposition
-        </li>
-        <li ng-show="project.ds.currentMode() != 'attach' && project.log_s.canEditProjects()">
-          <a ui-sref="project.attach({projectID:project.ds.projectID})" ng-click="project.jumpToAtachFile();">Attach a File</a>
-        </li>
-        <li ng-show="project.ds.currentMode() == 'attach' && project.log_s.canEditProjects()">
-          Attach a File
-        </li>
-      </ul>
-    </div>
-  
+    <div class="container" project-sub-headings></div>
     
     <div  class="container">
       <h3>{{ project.masterList().projectID}}: {{project.masterList().projectName}}</h3>
@@ -52,7 +22,7 @@
   
         </form>
 
-      <div ng-show="project.editMode()">
+      <div ng-show="project.ds.editMode()">
         <div ng-show="project.as.errors" ng-repeat="error in project.as.errors">
           <span ng-bind="error"></span>
         </div>

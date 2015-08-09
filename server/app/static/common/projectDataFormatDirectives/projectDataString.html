@@ -9,6 +9,8 @@
   <span ng-if="!attr.computed">
     <input type="text" name="{{attr.name}}"
       class="form-control"
-      ng-model="attr.value"/>
+      ng-model="attr.value"
+      ng-required="attr.required"
+      />
   </span>
 </span>

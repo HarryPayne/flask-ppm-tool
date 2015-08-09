@@ -70,6 +70,22 @@
     
     $rootScope.$on("savestate", service.SaveState);
     $rootScope.$on("restorestate", service.RestoreState);
+    $rootScope.$on("$locationChangeSuccess", function() {
+      /** if we landed under the Report tab ... */
+      if (_.first($state.current.name.split(".")) == "report") {
+
+        if (!projectListService.hasProjects()) {
+          /** then the list of project brief descriptions is empty. Get it */
+          projectListService.updateAllProjects()
+            .then(service.initService);
+        }
+        else {
+          service.initService();
+        }
+      }
+    });
+      
+
     
     return service;
 
@@ -128,9 +144,7 @@
      *        report from the backend are already in hand (or promised).
      */
     function initService() {
-      if (!projectListService.hasProjects()) {
-        projectListService.updateAllProjects();
-      }
+
       /** query from location bar */
       var state_from_location = stateLocationService.getStateFromLocation();
       var location_query = state_from_location.params.query_string;

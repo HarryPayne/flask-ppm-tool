@@ -7,7 +7,10 @@
    *        in view mode. This is the top of a pyramid of nested directives,
    *        and basically decides which data model to use, based on the table
    *        name passed in. Other attributes are passed down to data model
-   *        specific directives.
+   *        specific directives. 
+   *
+   *        Call this directive from inside a form. The form elements are not
+   *        rendered here. 
    * 
    *  The attributes for this directive are:
    * 
@@ -28,12 +31,14 @@
    *      edit.detail mode back to edit mode.
    *    keys - a list of primary key attributes, used to identify the comment 
    *      or disposition to be edited in edit.detail mode
-   *    mode - "view", "edit", or "edit.detail". Passed to the inner directive to control 
-   *      the display of each row. In display mode pre-computed display values 
-   *      are shown. In edit mode input "widgets" specific to the format of 
-   *      each attribute are shown.
+   *    mode - "view", "edit", or "edit.detail". Passed to the inner directive 
+   *      to control the display of each row. In display mode pre-computed 
+   *      display values are shown. In edit mode input "widgets" specific to 
+   *      the format of each attribute are shown.
+   *    onCancelClick - a reference to the external function to be run when the
+   *      Cancel button is pressed.
    *    onSaveClick - a reference to the external function to be run when 
-   *      a Save button is pressed.
+   *      the form  button is pressed.
    *    show - a reference to the external function to be run to edit an item
    *      in edit.detail mode.
    *    showSuccess - a reference to the external function to be run to decide
@@ -52,14 +57,16 @@
     
     function controller() {
       //this.dataModel = getDataModelFromTable(this.table);
+      this.cancel = cancel;
       this.details = details;
       this.detailsObj = detailsObj;
       this.hasAValue = hasAValue;
+      this.hasCancel = hasCancel;
       this.hideDetails = hideDetails;
       this.isSelected = isSelected;
       this.save = save;
       this.saveDetails = saveDetails;
-      this.selectedKeys = typeof keys == "function" ? keys() : [];
+      //this.selectedKeys = typeof keys == "function" ? keys() : [];
       this.showDetails = showDetails;
     }
     
@@ -74,6 +81,7 @@
         hide: "&",
         keys: "=",
         mode: "=",
+        onCancelClick: "&",
         onSaveClick: "&",
         show: "&",
         showSuccess: "&",
@@ -90,18 +98,33 @@
     };
 
     /**
-     *  @name details
-     *  @desc 
+     * @name cancel
+     * @desc Call the function referred to by the onCancelClick attribute
+     *        function, which is expected to navigate away to another state.
      */
+    function cancel() {
+      this.onCancelClick()();
+    }
 
+    /**
+     *  @name details
+     *  @desc Return the results from the detailDatasource attribute function
+     *        as a list of attributes.
+     *  @returns {Object[]}
+     */
     function details() {
-      if (typeof this.attributes == "undefined") {
+      if (typeof this.attributes == "undefined" || this.attributes.length == 0) {
         var attributes = [];
         _.each(this.detailDatasource(), function(attr) {
           if (attr.computed) {
             return;
           }
-          if (attr.name == "commentID");
+          if (attr.format.substring(0, "child_for_".length) == "child_for_") {
+            return;
+          }
+          if (attr.name == "commentID") {
+            return;
+          };
           attributes.push(attr);
         });
         this.attributes = attributes;
@@ -109,14 +132,18 @@
       return this.attributes;
     }
 
+    /**
+     *  @name detailsObj
+     *  @desc Return the results from the detailDatasource attribute function
+     *        as an object with attribute name as the key, and attributes as
+     *        the values.
+     * @returns {Object}
+     */
     function detailsObj(name) {
-      if (typeof this.attributesObj == "undefined" || this.attributes == []) {
+      if (typeof this.attributesObj == "undefined" || Object.keys(this.attributesObj).length == 0) {
         var attributesObj = new Object;
         _.each(this.detailDatasource(), function(attr) {
           attributesObj[attr.name] = attr;
-          if ("child" in attr) {
-            attributesObj[attr.child.name] = attr.child;
-          }
         });
         this.attributesObj = attributesObj;
       }
@@ -146,6 +173,12 @@
       }
     }
 
+    /**
+     * @name getTemplateForDataModel
+     * @desc Return the templateUrl appropriate for the table specified by the
+     *       table attribute. 
+     * @param 
+     */
     function getTemplateForDataModel(element, attributes) {
       var model = getDataModelFromTable(attributes.table);
       if (model == "one") {
@@ -212,6 +245,15 @@
     }
 
     /**
+     * @name cancel
+     * @desc Return the truth of the statement "this directive has a value for
+     *        the onCancelClick attribute function."
+     */
+    function hasCancel() {
+      return (typeof this.onCancelClick() != "undefined");
+    }
+
+    /**
      *  @name hideDetails
      *  @desc Call the function set in the directive "hide" option, which hides
      *        the edit.details view (and clears the form).
@@ -223,6 +265,12 @@
       this.hide()(table, keys)
     }
 
+    /**
+     * @name isSelected
+     * @desc Return the truth of the statement "this is the item you want to 
+     *        work on." The primary key values of the item are compared with
+     *        the primary key values specified by the keys attribute.
+     */
     function isSelected(item) {
       if (typeof item == "undefined" || typeof this.keys == "undefined" || this.keys.length == 0 ) {
         return false;
@@ -243,8 +291,8 @@
 
     /**
      *  @name save
-     *  @desc When the form inside the directive is submitted, call the function 
-     *        specified by the onSaveClick parameter
+     *  @desc When the form wrapping the directive is submitted, call the 
+     *        function specified by the onSaveClick parameter
      */
     function save(table, keys) {
       this.onSaveClick()(table, keys);

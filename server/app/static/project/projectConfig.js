@@ -24,13 +24,7 @@
         data: {
           requiresLogin: false,
           viewUrl: "/static/project/project.html"
-        },
-        /** service initialization */
-        onEnter: ["projectDataService", 
-          function(projectDataService) {
-            projectDataService.initService();
-          }
-        ]
+        }
       }) 
       .state("project.add",  {
         /** state for adding a project */
@@ -76,7 +70,22 @@
         url: "/add/:projectID",
         controller: function ($stateParams) {
           console.log($stateParams, projectID);
-        }
+        },
+        onEnter: ["attributesService", "projectListService",
+          function(attributesService, projectListService) {
+            if (!attributesService.getAllAttributes()) {
+              /** then the list of attributes is empty. Get it */
+              attributesService.updateAllAttributes()
+                .then(function() {
+                  attributesService.updateProjAttrsFromRawItem('comment', 
+                    [{name: 'commentID', value: {id: 0}}]);
+                });
+            } else {
+              attributesService.updateProjAttrsFromRawItem('comment', 
+                [{name: 'commentID', value: {id: 0}}]);
+            }
+          }
+        ]
       })
       .state("project.comment.edit", {
         /** state for the project editing Comment sub-tab */
@@ -96,8 +105,7 @@
         controller: function ($stateParams, projectID) {
           $stateParams.projectID = projectID;
           console.log($stateParams, projectID);
-        },
-        templateUrl: "/static/project/templates/commentDetail.html"
+        }
       })
       .state("project.description", {
         /** virtual root for project.description views */
@@ -141,7 +149,25 @@
         url: "/add/:projectID",
         controller: function($stateParams) {
           console.log($stateParams);
-        }
+        },
+        onEnter: ["attributesService",
+          function(attributesService) {
+            if (!attributesService.getAllAttributes()) {
+              /** then the list of project brief descriptions is empty. Get it */
+              attributesService.updateAllAttributes()
+                .then(function() {
+                  attributesService.updateProjAttrsFromRawItem('disposition', 
+                    [{name: 'disposedInFY', value: {id: 0}}, 
+                     {name: 'disposedInQ', value: {id: 0}}]);
+                });
+            } else {
+              attributesService.updateProjAttrsFromRawItem('disposition', 
+                [{name: 'disposedInFY', value: {id: 0}}, 
+                 {name: 'disposedInQ', value: {id: 0}}]);
+            }
+          }
+        ]
+
       })
       .state("project.disposition.edit", {
         /** state for project editing Disposition tab */

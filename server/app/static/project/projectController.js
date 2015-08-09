@@ -27,9 +27,11 @@
     this.changeMode = projectDataService.changeMode;
     this.currentMode = projectDataService.currentMode;
     this.dateOptions = {changeYear: true, changeMonth: true};
+    this.error = this.ds.server;
     this.jumpToAtachFile = projectDataService.jumpToAtachFile;
     this.jumpToAddForm = projectDataService.jumpToAddForm;
     this.masterList = this.ls.getMasterList;
+    this.success = this.ds.success;
     this.viewUrl = projectDataService.viewUrl;
 
     $scope.$on("setProjectFormPristine", function() {

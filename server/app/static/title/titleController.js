@@ -6,34 +6,36 @@
     .module("app.title")
     .controller("Title", Title);
   
-  Title.$inject = ["$scope", "$state", "projectListService"];
+  Title.$inject = ["$rootScope", "$state", "projectListService", "stateLocationService"];
   
-  function Title($scope, $state, projectListService){
+  function Title($rootScope, $state, projectListService, stateLocationService){
     var vm = this;
     
     this.masterList = projectListService.getMasterList;
     this.pageTitle = "PPT: Select";
     
-    $scope.$on("$stateChangeSuccess", function(e, toState){
-      if (toState.name.split(".")[0] == "select") {
+    $rootScope.$on("$locationChangeSuccess", function(e, toState){
+      var state = stateLocationService.getStateFromLocation();
+      var tab = _.first(state.name.split("."));
+      if (tab == "select") {
         vm.pageTitle = "PPT: Select";
       }
-      else if (toState.name.split(".")[0] == "filter") {
+      else if (tab == "filter") {
         vm.pageTitle = "PPT: Filter Builder";
       }
-      else if (toState.name.split(".")[0] == "report") {
+      else if (tab == "report") {
         vm.pageTitle = "PPT: Report";
       }
-      else if (toState.name.split(".")[0] == "project") {
-        vm.pageTitle = vm.masterList().projectID + ". " + vm.masterList().projectName;
+      else if (tab == "project") {
+        vm.pageTitle = state.params.projectID + ". " + vm.masterList().projectName;
       }  
-      else if (toState.name.split(".")[0] == "comment") {
+      else if (tab == "comment") {
         vm.pageTitle = "PPT: Comments";
       }
-      else if (toState.name.split(".")[0] == "curate") {
+      else if (tab == "curate") {
         vm.pageTitle = "PPT: Curate";
       }
-      else if (toState.name.split(".")[0] == "manage") {
+      else if (tab == "manage") {
         vm.pageTitle = "PPT: Manage";
       }
       else {

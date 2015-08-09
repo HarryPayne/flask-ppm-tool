@@ -30,7 +30,7 @@
             },
             function () {
               if (fromState.name == "") {
-                return $state.go("select");
+                return $state.go("select.home");
               }
             }
           );

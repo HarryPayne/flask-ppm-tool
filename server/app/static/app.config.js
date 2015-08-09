@@ -9,7 +9,7 @@
   PPTConfig.$inject = ["$urlRouterProvider"];
   
   function PPTConfig($urlRouterProvider) {
-    $urlRouterProvider.otherwise('/select');
+    $urlRouterProvider.otherwise('/select/home');
   };
   
 }());

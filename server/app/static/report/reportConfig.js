@@ -39,13 +39,7 @@
         templateUrl: "/static/report/templates/table.html",
         controller: function ($stateParams) {
           console.log($stateParams);
-        },
-        /** service initialization */
-        onEnter: ["reportTableService", 
-          function(reportTableService) {
-            reportTableService.initService();
-          }
-        ]
+        }
       });
   }
   

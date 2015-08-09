@@ -148,7 +148,8 @@ def getAllAttributesJSON():
     return dumps(getAllAttributes())
 
 def getAllAttributes():
-    """ Return value-less attribute objects for all project atributes"""
+    """ Return value-less attribute objects for all project atributes, grouped
+        by table"""
     attributes = {}
     attributes["csrf_token"] = {"name": "csrf_token",
                                 "format": "hidden"}
@@ -181,6 +182,8 @@ def getAllAttributes():
     return attributes
         
 def getAttributesFromForm(form):
+    """ Given a form model, gather field properties from the form widgets and 
+        the data model, and return a list of attribute objects."""
     tableName = getTableNameFromForm(form)
 
     attributes = {}
@@ -194,7 +197,7 @@ def getAttributesFromForm(form):
         attr = {"attributeID": getattr(field.meta.model, field.name).info["attributeID"],
                 "choices": getChoicesFromField(field, required),
                 "computed": getReadOnlyFromField(field), 
-                "format": getFormatFromField(field), #dbattr.format,
+                "format": getFormatFromField(field), 
                 "help": getattr(field.meta.model, field.name).info["help"],
                 "label": field.label.text,
                 "multi": getMultiFromField(field),
@@ -279,6 +282,12 @@ def getChoicesFromField(field, required):
                 if not zeroIndex == 0:
                     del choices[zeroIndex]
                     choices.insert(0, {"id": 0, "desc": "none"})
+        if required:
+            zeroChoice = [choice for choice in choices if str(choice["id"]) == "0"]
+            if zeroChoice:
+                # delete it
+                zeroIndex = choices.index(zeroChoice[0])
+                del choices[zeroIndex]
         return choices
     elif field.type == "SelectField" and field.name[-4:] == "InFY" \
       or field.type == "SelectField" and field.name[-3:] == "InY" \
@@ -952,7 +961,7 @@ def projectEdit(projectID, tableName):
 
         elif tableName == "comment":
             c_errors = []
-            commentID = request.form.get("commentID")
+            commentID = int(request.form.get("commentID"))
             
             if commentID:
                 c = alch.Comment.query.filter_by(projectID = projectID)\
@@ -989,11 +998,6 @@ def projectEdit(projectID, tableName):
 
         return dumps(response)
 
-# Add a project. First create an entry in the description table and get the
-# new projectID. The request should only contain data that goes in the 
-# description table. Then create emplty entries in the portfolio and project
-# (project management) tables.
-#
 # Check the jwt, csrf token, and the user's roles before doing anything.
 #
 # The data returned are the same as those from getProjectAttributes plus:
@@ -1001,7 +1005,7 @@ def projectEdit(projectID, tableName):
 #    errors    error messages if an error occurred, else nothing
 #    success   specific success message if no error occurred, else nothing
  
-@app.route("/projectCreate")   
+@app.route("/projectCreate", methods=["POST"])   
 @cross_origin(headers=['Content-Type', 'Authorization'])
 @jwt_required()
 def projectCreate():
@@ -1010,7 +1014,7 @@ def projectCreate():
     if 'Curator' not in current_user.groups:
         # Must be a Curator to edit project metadata
         abort(401)
-
+    
     description_errors = []
     
     p = alch.Description(created = datetime.today().strftime("%Y-%m-%d"),
@@ -1058,6 +1062,7 @@ def projectCreate():
         response["errors"] = description_errors
     else:
         response["success"] = "Created new project"            
+        response["projectID"] = projectID
 
     return dumps(response)
          

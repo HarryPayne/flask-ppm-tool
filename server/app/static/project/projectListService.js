@@ -49,9 +49,11 @@
     .module("app.project")
     .factory("projectListService", ProjectListService);
     
-  ProjectListService.$inject = ["$rootScope", "$http", "$state", "$stateParams", "$location"];
+  ProjectListService.$inject = ["$rootScope", "$http", "$state", "$stateParams", 
+                                "$location", "$q"];
   
-  function ProjectListService($rootScope, $http, $state, $stateParams, $location) {
+  function ProjectListService($rootScope, $http, $state, $stateParams, 
+                              $location, $q) {
 
     /** service to be returned by this factory */
     var service = {
@@ -254,10 +256,11 @@
      *        without forgetting which is the current project.
      */
     function resetList() {
-      service.updateAllProjects();
-      service.setProjectID(service.getProjectID(), service.getIDListFromAllProjects());
-      service.setDescription("none");
-      service.setSql("");
+      service.updateAllProjects(service.getProjectID())
+        .then(function(projectID) {
+          service.setDescription("none");
+          service.setSql("");
+        });
     }
 
     /**
@@ -298,7 +301,7 @@
      *  The idea is that the list of available projects be loaded at the start 
      *  of a session an then re-used. But you, or some other user, might have
      *  added a new project that you want to work on. So you need to be able to
-     *  update the list with out disrupting you workflow, which means not 
+     *  update the list with out disrupting your workflow, which means not 
      *  changing the list of selected projects or the current project.
      */
     function setAllProjectResults(response, projectID) {
@@ -344,6 +347,10 @@
         var projectID = selectedIds[0];
         service.setProjectID(projectID, selectedIds);
       }
+      
+      service.masterList.selectedProjects = _.filter(service.masterList.allProjects, function(project) {
+        return _.contains(service.masterList.selectedIds, project.projectID);
+      });
     }
 
     /**
@@ -358,27 +365,37 @@
     function setProjectID(projectID, selectedIds) {
       if (projectID) {
         projectID = parseInt(projectID);
-        if (typeof selectedIds == "undefined") {
-          selectedIds = service.masterList.selectedIds;
-        }
         service.masterList.projectID = projectID;
-        var index = selectedIds.indexOf(projectID);
+
+        /** do we recognize this project? */
+        var index = service.masterList.selectedIds.indexOf(projectID);
+        if (projectID > 0 && index == -1) {
+
+          /** then maybe this projectID is a mistake, but maybe we just added a 
+           *  new project. Better check. */
+          service.updateAllProjects(projectID)
+            .then(function(projectID) {
+              if (typeof selectedIds != "undefined") {
+                service.masterList.selectedIds = selectedIds;
+              }
+              index = service.masterList.selectedIds.indexOf(projectID);
+            }); 
+        }
+
+        //var index = selectedIds.indexOf(projectID);
         if (index > -1) {
           service.masterList.index = index;
           if (index > 0) {
-            service.masterList.previous = selectedIds[index-1];
+            service.masterList.previous = service.masterList.selectedIds[index-1];
           } 
           else {
             service.masterList.previous = -1;
           }
-          if (index < selectedIds.length) {
-            service.masterList.next = selectedIds[index+1];
+          if (index < service.masterList.selectedIds.length) {
+            service.masterList.next = service.masterList.selectedIds[index+1];
           }
           else {
             service.masterList.next = -1;
-          }
-          if (typeof(service.masterList.selectedIds[0]) == "undefined") { /* ?? */
-            service.masterList.selectedIds = selectedIds;
           }
         }
         _.each(service.masterList.allProjects, function(proj){
@@ -416,10 +433,13 @@
      *        needs to be aware that it might be absent.
      */
     function updateAllProjects(projectID) {
+      var deferred = $q.defer();
       $http.post('/getBriefDescriptions')
         .then(function(response) {
           service.setAllProjectResults(response, projectID);
+          deferred.resolve(projectID);
         });
+      return deferred.promise;
     };
     
   }

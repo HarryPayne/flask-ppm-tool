@@ -38,7 +38,7 @@
             deferred.resolve( $http(rejection.config) );
           },
           function () {
-            $state.go("select");
+            $state.go("select.home");
             deferred.reject(rejection);
           }
         );

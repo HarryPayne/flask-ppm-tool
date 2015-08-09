@@ -33,9 +33,9 @@ Data attributes:
     .module("app.attributes")
     .factory("attributesService", attributesService);
   
-  attributesService.$inject = ["$rootScope", "$http", "projectListService"];
+  attributesService.$inject = ["$rootScope", "$http", "$q", "projectListService"];
   
-  function attributesService($rootScope, $http, projectListService) {
+  function attributesService($rootScope, $http, $q, projectListService) {
     var service = {
       addAttrToDataObj: addAttrToDataObj,
       addUniqueAttrToDataObj: addUniqueAttrToDataObj,
@@ -47,6 +47,7 @@ Data attributes:
       getProjectAttributes: getProjectAttributes,
       getRawAttributes: getRawAttributes,
       getSelectedChoices:getSelectedChoices,
+      getServerError: getServerError,
       getToken: getToken, 
       hasAValue: hasAValue,
       makeProjectLink: makeProjectLink,
@@ -73,6 +74,12 @@ Data attributes:
 
     return service;
     
+    /**
+     * @name addAttrToDataObj
+     * @desc Build up a project data object of attribute values, with attribute
+     *        name as key. Used to save retrieved values from server for those
+     *        tables that are one-to-one with projectID. 
+     */
     function addAttrToDataObj(attr) {
       /*
       if (attr.name == "csrf_token" || attr.name == "projectID") {
@@ -127,35 +134,53 @@ Data attributes:
       addAttrToDataObj(attr);
     }
 
+    /**
+     * @name clearAllErrors
+     * @desc Delete "errors" attributes from all data attribute objects.
+     */
     function clearAllErrors() {
       _.each(service.allAttributes, function(attr) {
-        delete attr.errors;
+        if ("errors" in attr) {
+          delete attr.errors;
+        };
       });
+      delete service.server_error;
       return;
-      if (service.projectAttributes["disposition"].length) {
-        _.each(service.projectAttributes["disposition"], function(disposition) {
-          _.each(disposition, function(attr) {
-            attr.errors = [];
-          });
-        });
-      }
-      if (service.projectAttributes["comment"].length) {
-        _.each(service.projectAttributes["comment"], function(comment) {
-          _.each(comment, function(attr) {
-            attr.errors = [];
-          });
-        });
-      }
     }
 
+    /**
+     * @name getAttribute
+     * @desc Retrieve a data attribute object by name
+     * @param {string} name - name of object to be retrieved
+     * @returns {Object} data attribute object
+     */
     function getAttribute(name) {
       return service.allAttributes[name];
     }
     
+    /** 
+     * @name getAllAttributes
+     * @desc Retrieve the list of all data attribute objects
+     * @returns {Object[]} list of data attribute objects
+     */
     function getAllAttributes() {
       return service.allAttributes;
     };
     
+    /**
+     * @name getFormData
+     * @desc Return an object with data from the edit form for the specified
+     *        table. This object is suitable for being serialized and sent back
+     *        to the server to update the table.
+     * @param {string} tableName - the name of the table being edited/inserted
+     * @param {Object[]} keys - a list of {name, value} objects used to 
+     *        identify the entity of interest in tables that are many-to-one
+     *        with projectID.
+     * @returns {Object} formData - an object where keys are attribute names
+     *        and values are :
+     *          {value: {id: number}} if attr.value has an "id" attribute, or
+     *          {value: string||number||date||datetime} if it does not.
+     */
     function getFormData(tableName, keys) {
       var formData = new Object;
       formData.csrf_token = service.csrf_token;
@@ -182,10 +207,24 @@ Data attributes:
      *        selected one-to-many table entries (comment or disposition)
      */
     function getKeys() {
-      return "keys" in service.currentState ? service.currentState.keys : [];
+      if (typeof service.currentState == "undefined") {
+        return;
+      }
+      if (!"keys" in service.currentState) {
+        service.currentState.keys = [];
+      }
+      return service.currentState.keys;
     }
 
-    function getProjectAttributes(tableName, flag) {
+    /**
+     * @name getProjectAttributes
+     * @desc Return the list of project data attributes for the given table.
+     *        Project data attribute objects have a value and are associated
+     *        with a particular project. They hold the project model displayed
+     *        in Project tab views
+     * @param {string} tableName - the name of the db table of interest
+     */
+    function getProjectAttributes(tableName) {
       try {
         return _.sortBy(service.projectAttributes[tableName], "attributeID");
       }
@@ -194,6 +233,14 @@ Data attributes:
       }
     };
 
+    /**
+     * @name getRawAttributes
+     * @desc Return all project data in one of the one-to-many database tables.
+     * @param {string} tableName - name of table of interest ("comment" or
+     *        "disposition")
+     * @returns {Object[]} - a list of choice objects of form 
+     *        {id: number: desc: string}
+     */
     function getRawAttributes(tableName) {
       try {
         return service.rawAttributes[tableName];
@@ -203,6 +250,13 @@ Data attributes:
       }
     }
     
+    /**
+     * @name getSelectedChoices
+     * @desc For both single and multiple select fields, compare field
+     *        choices (vocabulary) with database values and return selected
+     *        choices.
+     * @returns {Object[]} - list of select widget choices 
+     */
     function getSelectedChoices(merged) {
       if (merged.multi) {
         return _.filter(merged.choices, function(choice){
@@ -218,18 +272,47 @@ Data attributes:
         return _.where(merged.choices, {id: merged.value})[0];
       }
     };
+
+    /**
+     * @name getServerError
+     * @desc Return the server error from the most recent http request to the
+     *        back end. These are for requests that fail, not those that were
+     *        successful but reported form validation or database errors.
+     * @returns {string}
+     */
+    function getServerError() {
+      return service.server_error;
+    }
     
+    /**
+     * @name getValueFromKey
+     * @desc Return the value from keys with a variety of structures.
+     */
     function getValueFromKey(key) {
       var value;
-      if ("id" in key) {value = key.id;}
+      if ("id" in key) {
+        value = key.id;
+      }
       else if ("value" in key) {
-        if (typeof key.value == "number") {value = key.value}
-        else if (typeof key.value == "string") {value = parseInt(key.value);}
-        else if ("id" in key.value) {value = key.value.id}
+        if (typeof key.value == "number") {
+          value = key.value;
+        }
+        else if (typeof key.value == "string") {
+          value = parseInt(key.value);
+        }
+        else if ("id" in key.value) {
+          value = key.value.id;
+        }
       }
       return value;
     }
     
+    /**
+     * @name hasAValue
+     * @desc Decide whether a given project attribute has a value, so that the
+     *        project view screen can show only attributes that have a value.
+     * @returns {Boolean}
+     */
     function hasAValue(attr) {
       if ((typeof attr.value != "undefined" && attr.value != null && attr.value != "" && attr.value != []) ||
           (typeof attr.value != "undefined" && attr.value != null && typeof attr.value.id != "undefined" && attr.value.id != null  && attr.value != "" && attr.value != [])) {
@@ -260,7 +343,12 @@ Data attributes:
         return;
       }
       var merged = service.allAttributes[attr.name];
-      merged.value = attr.value;
+      if (merged.format == "multipleSelect" && !merged.multi && attr.value == null) {
+        merged.value = merged.choices[0];
+      }
+      else {
+         merged.value = attr.value;
+      }
       if (attr.printValue) merged.printValue = attr.printValue;
       if (merged.format.substring(0, "child_for_".length) == "child_for_") {
         return;
@@ -271,11 +359,21 @@ Data attributes:
       service.projectAttributes[this].push(merged);
     }
     
+    /**
+     * @name newProjectAttributes
+     * @desc Null out the project attributes for the tables that are one-to-one
+     *        with projectID, to prepare for the form on the "Add a project" 
+     *        view.
+     */
     function newProjectAttributes() {
       _.each(["description", "portfolio", "project"], function(tableName) {
+          if (typeof service.projectAttributes == "undefined") {
+            service.projectAttributes = new Object;
+          }
           service.projectAttributes[tableName] = [];
           updateProjAttrsFromRawItem(tableName, []);
       });
+      service.clearAllErrors();
     }
 
     function RestoreState() {
@@ -293,6 +391,12 @@ Data attributes:
       sessionStorage.attributesService = angular.toJson(data);
     };
     
+    /**
+     * @name setAllAttributes
+     * @desc Save the server response to a server request made by the
+     *        updateAllAttributes method. Set up parent/child attribute 
+     *        relationships.
+     */
     function setAllAttributes(response) {
       service.allAttributes = response.data;
       var parents = _.filter(response.data, function(attr) {
@@ -313,6 +417,9 @@ Data attributes:
      *  signature of the selected state, if there is one.
      */
     function updateProjAttrsFromRawItem(tableName, keys) {
+      if (typeof service.currentState == "undefined") {
+        service.currentState = new Object;
+      }
       service.currentState.keys = [];
       var raw_items = getRawAttributes(tableName);
       var filtered_items = raw_items;
@@ -356,13 +463,20 @@ Data attributes:
         return selected;
       }
       else {
+        /* we must be adding a raw item. Set primary key values to 0 to tell
+         * the back end to insert instead of update. */
         var tableAttrs = _.where(service.allAttributes, {table: tableName});
         if (typeof service.projectAttributes == "undefined") {
           service.projectAttributes = new Object;
         }
         service.projectAttributes[tableName] = [];
         _.each(tableAttrs, function(attr) {
-          if (attr.computed) return;
+          if (attr.name == 'commentID') {
+            attr.value = 0;
+          }
+          else if (attr.computed) {
+            return;
+          }
           else if (_.contains(["multipleSelect", "dateRangeSelect"], attr.format)) {
             attr.value = [];
           }
@@ -375,19 +489,54 @@ Data attributes:
       SaveState();
     }
     
+    /**
+     * @name updateAllAttributes
+     * @desc Request the full list of attribute objects from the server. Each 
+     *        object has all of the information required to render an input
+     *        field for a particular project attribute, except for a value.
+     * @returns {Object} - promise resolved after data have been received and
+     *        saved
+     */
     function updateAllAttributes() {
+      var deferred = $q.defer();
       $http.get("/getAllAttributes")
-        .then(service.setAllAttributes);
+        .then(function(response) {
+          service.setAllAttributes(response);
+          deferred.resolve();
+        });
+      return deferred.promise;
     };
 
-    function updateErrors(errors) {
-      if (typeof errors == "undefined") return;
+    /**
+     * @name updateErrors
+     * @desc Set data from an updateProjectAttributes call response to be used
+     *        to display server errors and and form errors reported by the 
+     *        server
+     * @param {Object} response - JSON server response to the request for a
+     *        project update.
+     */
+    function updateErrors(response) {
+      if (response.status == 400 && response.data.description == "Token is expired") {
+        service.server_error = "Your session has expired. Please log out and login again.";
+      } 
+      else if (response.status != 200) {
+        service.server_error = response.statusText;
+      }
+      if (typeof response.data.errors == "undefined") {
+        /* no validation errors */
+        return;
+      }
+      var errors = response.data.errors;
       _.each(Object.keys(errors), function(key) {
         var attr = service.getAttribute(key);
         attr.errors = errors[key];
        });
     };
     
+    /**
+     * @name updateProjectAttributes
+     * @desc Save the response to a 
+     */
     function updateProjectAttributes(result, params) {
       service.currentState = new Object;
       service.currentState.keys = [];
@@ -396,19 +545,19 @@ Data attributes:
       service.errors = result.data.errors;
       service.clearAllErrors();
       delete service.success;
-      service.updateErrors(result.data.errors);
+      service.updateErrors(result);
       if (result.statusText == "OK") {
         _.each(result.data.formData, updateProjectAttributesFromForm);
       }
       if (typeof params != "undefined" && ("disposedInFY" in params || "disposedInQ" in params)) {
         updateProjAttrsFromRawItem("disposition", [
-                                    {name: 'disposedInFY', value: {id: service.allAttributes.disposedInFY.value.id}}, 
-                                    {name: 'disposedInQ', value: {id: service.allAttributes.disposedInQ.value.id}}
+                                    {name: 'disposedInFY', value: {id: params.disposedInFY}}, 
+                                    {name: 'disposedInQ', value: {id: params.disposedInQ}}
                                    ]);
       }
       else if (typeof params != "undefined" && "commentID" in params) {
         updateProjAttrsFromRawItem("comment", 
-                                   [{name: 'commentID', id: service.allAttributes["commentID"].value}]);
+                                   [{name: 'commentID', value: {id: params.commentID}}]);
       }
       return;
     };
@@ -451,6 +600,7 @@ Data attributes:
         _.each(form.attributes, mergeAttributeWithValue,
           tableData.tableName);
       }
+      return;
     }
   }
   

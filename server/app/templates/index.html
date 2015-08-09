@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html ng-app="PPT" ng-controller="PPTCtrl as app">
+<html ng-app="PPT" ng-controller="PPTCtrl as app" lang="en">
   <head ng-controller="Title as title">
     <title ng-bind="title.pageTitle"> PPT: Loading... </title>
-    <meta name="viewport" content="initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
       @-ms-viewport{
           width: extend-to-zoom;
@@ -18,6 +18,8 @@
     <link href="/static/vendor/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" media="screen">
     <link href="/static/vendor/angular-datatables/dist/plugins/bootstrap/datatables.bootstrap.min.css" rel="stylesheet" media="screen">
     <link href="/static/vendor/angular-readmore-master/css/style.css" rel="stylesheet" media="screen">
+
+    <link href="/static/common/projectDataDisplay/projectDataDisplay.css" rel="stylesheet" media="screen">
     <link href="/static/login/login.css" rel="stylesheet" media="screen">
     <link href="/static/report/report.css" rel="stylesheet" media="screen">
     <link href="/static/select/select.css" rel="stylesheet" media="screen">
@@ -58,11 +60,11 @@
           {% endraw %}
           <div role="presentation">
             <ul class="nav nav-tabs">
-              <li role="presentation" ng-class="{active:header.isActive('select')}"><a ui-sref="select">Select</a></li>
+              <li role="presentation" ng-class="{active:header.isActive('select')}"><a ui-sref="select.home">Select</a></li>
               <li role="presentation" ng-class="{active:header.isActive('filter')}"><a ui-sref="filter.builder({query_string: header.getSql()})">Filter Builder</a></li>
               <li role="presentation" ng-class="{active:header.isActive('report')}"><a ui-sref="report.table({query_string: header.getSql()})">Report</a></li>
               <li role="presentation" ng-class="{active:header.isActive('project')}"><a ui-sref="project.detail({projectID: header.getProjectID()})">Project</a></li>
-              <li role="presentation" ng-class="{active:header.hasPrevious()}"><a ui-sref="project.detail({projectID: header.getPreviousID()})" ng-click="header.jumpToPreviousProject()" ng-show="header.hasPreviousID()">Previous</a><a class="disabled ng-hide" ng-hide="header.hasPreviousID()">Previous</a></li>
+              <li role="presentation" ng-class="{active:header.hasPrevious()}"><a ui-sref="project.detail({projectID: header.getPreviousID()})" ng-click="header.jumpToPreviousProject" ng-show="header.hasPreviousID()">Previous</a><a class="disabled ng-hide" ng-hide="header.hasPreviousID()">Previous</a></li>
               <li role="presentation" ng-class="{active:header.hasNext()}"><a ui-sref="project.detail({projectID: header.getNextID()})" ng-click="header.jumpToNextProject" ng-show="header.hasNext()">Next</a><a class="disabled ng-hide" ng-hide="header.hasNext()">Next</a></li>
               <li role="presentation" ng-class="{active:header.isActive('comment')}" 
                 ng-show="currentUser.roles.indexOf('ContentProvider') > -1 || currentUser.roles.indexOf('Curator') > -1">
@@ -171,17 +173,20 @@
     <script type="text/javascript" src="/static/project/projectController.js"></script>
     <script type="text/javascript" src="/static/project/projectDataService.js"></script>
     <script type="text/javascript" src="/static/project/projectListService.js"></script>
+    <script type="text/javascript" src="/static/project/projectSubHeadingsDirective.js"></script>
     
     <script type="text/javascript" src="/static/report/app.report.js"></script>
     <script type="text/javascript" src="/static/report/reportConfig.js"></script>
     <script type="text/javascript" src="/static/report/reportController.js"></script>
     <script type="text/javascript" src="/static/report/reportTableService.js"></script>
+    <script type="text/javascript" src="/static/report/reportTableSubHeadingsDirective.js"></script>
     
     <script type="text/javascript" src="/static/select/app.select.js"></script>
     <script type="text/javascript" src="/static/select/selectConfig.js"></script>
     <script type="text/javascript" src="/static/select/selectController.js"></script>
     <script type="text/javascript" src="/static/select/selectNameSearchFilter.js"></script>
     <script type="text/javascript" src="/static/select/selectStateService.js"></script>
+    <script type="text/javascript" src="/static/select/selectSubHeadingsDirective.js"></script>
 
     <script type="text/javascript" src="/static/stateLocation/app.stateLocation.js"></script>
     <script type="text/javascript" src="/static/stateLocation/stateLocationRun.js"></script>

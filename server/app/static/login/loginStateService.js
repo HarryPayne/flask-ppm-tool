@@ -1,5 +1,11 @@
 (function() {
   
+  /**
+   *  @name loginStateService
+   *  @desc A factory for a service that provides information about the user's
+   *        login status and roles.
+   */
+
   "use strict";
   
   angular
@@ -12,7 +18,9 @@
   function loginStateService($rootScope, $http, store, jwtHelper, loginService) {
     var service = {
       can_edit_roles: ["Curator", "Manager"],
+      can_add_project_roles: ["Curator"],
       canAddComments: canAddComments,
+      canAddProjects: canAddProjects,
       canEditProjects: canEditProjects,
       hasRole: hasRole,
       loggedIn: loggedIn,
@@ -30,6 +38,16 @@
       }
       return false;
     }
+
+    function canAddProjects() {
+      if (service.loggedIn()) {
+        if (_.intersection($rootScope.currentUser.roles, service.can_add_project_roles)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
     function canEditProjects() {
       if (service.loggedIn()) {
         if (_.intersection($rootScope.currentUser.roles, service.can_edit_roles)) {
