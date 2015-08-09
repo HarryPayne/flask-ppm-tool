@@ -1,0 +1,101 @@
+<div project-data-display
+  datasource="project.as.getRawAttributes('comment')"
+  detail-datasource="project.as.getProjectAttributes('comment')"
+  error="project.ds.error"
+  header="'Comments'"
+  hide="project.ds.hideDetails"
+  keys="project.as.getKeys('comment')"
+  mode="project.ds.currentMode()"
+  on-save-click="project.ds.saveProject"
+  show="project.ds.showDetails"
+  show-success="project.ds.showEditSuccess()"
+  success="project.ds.success"
+  table="'comment'"
+  ></div>  
+
+
+
+
+
+<!-- h4 ng-show="project.currentMode() == 'comment.add'" class="col-sm-12">Add a Comment</h4>
+
+<div
+  ng-show="project.currentMode() == 'comment.add'">
+
+  <div class="form-group">
+    <label for="comment" class="control-label col-sm-2"
+      ng-bind="project.as.getAttribute('comment').label"></label>
+    <div class="col-sm-10" style="padding-top: 7px;">
+      <textarea name="comment"
+        rows="8" cols="80"
+        class="form-control col-sm-4"
+        ng-model="project.as.getAttribute('comment').value"
+        ng-bind="project.as.getAttribute('comment').value"></textarea>
+    </div>    
+  </div>
+  
+  <div class="col-sm-offset-2 col-sm-10">
+    <button type="button" 
+      ng-click="project.ds.saveProject('comment', 
+                  [project.as.getAttribute('commentID')])"> Save </button>
+    <button type="button" 
+      ng-click="project.ds.hideDetails('comment', 
+                  [project.as.getAttribute('commentID')])"> Cancel </button>
+  </div>
+</div>
+
+<h4 ng-show="project.currentMode() == 'comment.add'"
+  class="col-sm-12">Previous Comments</h4>
+
+<h4 ng-show="project.currentMode() == 'view' || project.currentMode().substring(0,'comment.edit'.length) == 'comment.edit'"
+  class="col-sm-12">Comments</h4>
+
+<dl class="dl-horizontal"
+  ng-show="project.currentMode() == 'view' || project.currentMode() == 'comment.add' || project.currentMode() == 'comment.edit'"
+  ng-repeat="comment in project.as.getRawAttributes('comment')">
+  <dt>
+    <label ng-bind="comment['commentAuthor']"></label><br/>
+  </dt>
+  <dd>
+    <span ng-bind="comment['comment']"></span><br/>
+    Entered <span ng-bind="comment['commentAuthored.printValue']"></span>
+    <span ng-show="comment['commentEditor']"><br/>Last edited by <span ng-bind="comment['commentEditor']"></span> on <span ng-bind="comment['commentEdited.printValue']"></span></span>
+    <button type="button" 
+      ng-show="project.currentMode() == 'comment.edit'"
+      ng-click="project.ds.showDetails('comment', 
+                  [{name: 'commentID', id: comment['commentID']}])"> Edit </button>
+  </dd>
+</dl>
+
+<div ng-show="project.currentMode() == 'comment.edit.detail'"
+  ng-repeat="comment in project.as.getRawAttributes('comment')">
+  <div class="form-group"
+    ng-hide="comment['commentID'] == project.ds.stateParams.commentID">
+    <label for="comment" class="control-label col-sm-2"
+      ng-bind="comment['commentAuthor']"></label>
+    <div class="col-sm-10" style="padding-top: 7px;">
+      <span ng-bind="comment['comment']"></span><br/>
+      Entered <span ng-bind="comment['commentAuthored.printValue']"></span>
+      <span ng-show="comment['commentEditor']"><br/>Last edited by <span ng-bind="comment['commentEditor']"></span> on <span ng-bind="comment['commentEdited.printValue']"></span></span>
+    </div>
+  </div>
+
+  <div class="form-group"
+    ng-show="comment['commentID'] == project.ds.stateParams.commentID">
+    <label for="comment"  class="control-label col-sm-2"
+      ng-bind="comment['commentAuthor']"></label>
+    <div class="col-sm-10" style="padding-top: 7px;">
+      <textarea name="comment"
+        rows="8" cols="80"
+        class="form-control col-lg-4"
+        ng-model="project.as.getAttribute('comment').value"
+        ng-bind="project.as.getAttribute('comment').value"></textarea>
+      Entered <span ng-bind="comment['commentAuthored.printValue']"></span>
+      <span ng-show="comment['commentEditor']"><br/>Last edited by <span ng-bind="comment['commentEditor']"></span> on <span ng-bind="comment['commentEdited.printValue']"></span></span><br/>
+      <button type="button" ng-click="project.ds.saveProject('comment', [project.as.getAttribute('commentID')])"> Save </button>
+      <button type="button" ng-click="project.ds.hideDetails('comment', 
+                    [{name: 'commentID', id: comment['commentID']}])"> Cancel </button>
+      <span ng-show="project.ds.showEditSuccess()" ng-bind="project.ds.success" class="alert alert-success" role="alert"></span>
+    </div>
+  </div>
+</div -->

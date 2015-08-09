@@ -15,9 +15,10 @@
   
     function login(username, password) {
       return $http({
-        url: 'http://localhost:5000/auth',
-        method: 'POST',
-        data: {"username": username, "password": password}
+        url: "/auth",
+        method: "POST",
+        data: {"username": username, 
+               "password": password}
       });
     };
   };

@@ -11,7 +11,6 @@
   function curateConfig($stateProvider) {
     $stateProvider
       .state("curate", {
-        name: "curate",
         url: "/curate",
         templateUrl: "/static/curate/curate.html",
         controller: "Curate",

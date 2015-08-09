@@ -1,5 +1,11 @@
 (function() {
   
+/**
+ *  @name sessionService
+ *  @desc Provide brower sessionStorage for state history entities as JSON. 
+ *        Easily extensible to other accessors.
+ */
+   
   "use strict";
   
   angular
@@ -8,11 +14,11 @@
   
   function SessionService() {
     var service = {
-      "setStorage": setStorage,
-      "getStorage": getStorage,
-      "clear": clear,
-      "stateHistory": stateHistory,
-      "accessor": accessor
+      setStorage: setStorage,
+      getStorage: getStorage,
+      clear: clear,
+      stateHistory: stateHistory,
+      accessor: accessor
     };
     
     return service;

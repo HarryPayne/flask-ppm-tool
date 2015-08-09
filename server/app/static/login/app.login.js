@@ -2,9 +2,9 @@
   
   angular
     .module("app.login", [
-      'ui.bootstrap',
-      'angular-storage',
-      'angular-jwt'
+      "ui.bootstrap",
+      "angular-storage",
+      "angular-jwt"
     ]);
   
 }());

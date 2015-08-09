@@ -11,10 +11,10 @@
   function manageConfig($stateProvider) {
     $stateProvider
       .state("manage", {
-        name: "manage",
         url: "/manage",
         templateUrl: "/static/manage/manage.html",
         controller: "Manage",
+        controllerAs: "manage",
         data: {
           requiresLogin: true
         }

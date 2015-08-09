@@ -1,6 +1,7 @@
 from wtforms_alchemy import ModelForm, ModelFormField, ModelFieldList
 from wtforms import (StringField, BooleanField, TextAreaField, SelectField, 
                      TextField, PasswordField, validators, FormField)
+from wtforms_components import read_only
 from wtforms.ext.sqlalchemy.fields import QuerySelectField, QuerySelectMultipleField
 from wtforms.validators import DataRequired, Length
 import alchemy_models as alch
@@ -13,6 +14,7 @@ from wtforms_alchemy import model_form_factory
 from app import db
 from widgets import ChoicesSelect
 
+
 BaseModelForm = model_form_factory(Form)
 
 class ModelForm(BaseModelForm):
@@ -21,24 +23,24 @@ class ModelForm(BaseModelForm):
         return db.session
 
 # Forms for select field choices
-class ChildForm(ModelForm):
+class CalendaryearForm(ModelForm):
     class Meta:
-        model = alch.Child
- 
+        model = alch.Calendaryear
+        only= ["calendaryearID", "calendaryearDesc"]
+        
 class DriverlistForm(ModelForm): 
     class Meta:
         model= alch.Driverlist
               
-class DriverForm(ModelForm):
-    class Meta:
-        model = alch.Driver
-    
-    driverlist = ModelFormField(DriverlistForm)
-        
 class FinallistForm(ModelForm):
     class Meta:
         model = alch.Finallist
         only = ["finalID", "finalDesc"]
+        
+class FiscalyearForm(ModelForm):
+    class Meta:
+        model = alch.Fiscalyear
+        only = ["fiscalyearID", "fiscalyearDesc"]
         
 class FundingsourcelistForm(ModelForm):
     class Meta:
@@ -66,12 +68,6 @@ class StakeholderlistForm(ModelForm):
     class Meta:
         model = alch.Stakeholderlist
         
-class StakeholderForm(ModelForm):
-    class Meta:
-        model = alch.Stakeholder
-    
-    stakeholderlist = ModelFormField(StakeholderlistForm)
-        
 class TechnologylistForm(ModelForm):
     class Meta:
         model = alch.Technologylist
@@ -81,8 +77,17 @@ class TypelistForm(ModelForm):
     class Meta:
         model = alch.Typelist
 
-def maturity_choices():
-    return alch.Maturitylist.query.all()
+def child_choices():
+    return alch.Description.query
+
+def driver_choices():
+    return alch.Driverlist.query
+
+def stakeholder_choices():
+    return alch.Stakeholderlist.query.order_by("stakeholderDesc")
+
+def strategy_choices():
+    return alch.Strategylist.query
 
 # Primary table forms
 class Description(ModelForm):
@@ -91,33 +96,74 @@ class Description(ModelForm):
         include_primary_keys = True
         only = ["projectID", "name", "description", "rationale", "businesscase", "dependencies", 
                 "maturityID", "proposer", "customer", "sponsorID", "fundingsourceID", "finalID",
-                "hostID", "technologyID", "typeID", "created", "ended" ]
-    
-#     maturity = ModelFormField(MaturitylistForm)
-#     maturity.info["choices"] = alch.MATURITY_CHOICES
-#     sponsor = ModelFormField(SponsorlistForm)
-#     host = ModelFormField(HostlistForm)
-#     host.field_class.widget = ChoicesSelect(choices=alch.HOST_CHOICES)
-#     technology = ModelFormField(TechnologylistForm)
-#     initiative = ModelFormField(InitiativelistForm)
-#     type = ModelFormField(TypelistForm)
-#     fundingsource = ModelFormField(FundingsourcelistForm)
-#     final = ModelFormField(FinallistForm)
+                "hostID", "technologyID", "typeID", "created", "ended"]
 
-#    maturity = QuerySelectField(query_factory=maturity_choices, allow_blank=True)
-    stakeholder = QuerySelectMultipleField(query_factory=alch.STAKEHOLDER_CHOICES, allow_blank=False)
-    #stakeholder.info["choices"] = stakeholder_choices()
-    #driver = ModelFieldList(FormField(DriverForm))
-    driver = QuerySelectMultipleField(query_factory=alch.DRIVER_CHOICES)
-    child = ModelFieldList(FormField(ChildForm))
-        
+    childID = QuerySelectMultipleField(query_factory=child_choices, label="children")
+    driverID = QuerySelectMultipleField(query_factory=driver_choices, label="drivers")
+    stakeholderID = QuerySelectMultipleField(query_factory=stakeholder_choices, allow_blank=False, label="stakeholders")
+    
+    def __init__(self, *args, **kwargs):
+        super(Description, self).__init__(*args, **kwargs)
+        read_only(self.created)
+        read_only(self.ended)
+    
+class Portfolio(ModelForm):
+    class Meta:
+        model = alch.Portfolio
+        include_primary_keys = True
+        only = ["flavorID", "initiativeID", "scopeID", "visibilityID", 
+                "complexityID", "risklevelID", "costlevelID", "rpu", "budgetInFY", "budgetInQ"]    
+
+    strategyID = QuerySelectMultipleField(query_factory=strategy_choices, allow_blank=False, label="strategies")
+
+class Project(ModelForm):
+    class Meta:
+        model = alch.Project
+        include_primary_keys = True
+        only = ["proj_manager", "tech_manager", "proj_visibilityID", 
+                "project_url", "progressID", "startedOn", "finishedOn"]
+
+class Disposition(ModelForm):
+    class Meta:
+        model = alch.Disposition
+        include_primary_keys = True
+        only = ["dispositionID", "explanation", "disposedInFY", "disposedInQ", 
+                "reconsiderInFY", "reconsiderInQ", "startInY", "startInM", 
+                "finishInY", "finishInM", "lastModified", "lastModifiedBy"]
+
+    def __init__(self, *args, **kwargs):
+        super(Disposition, self).__init__(*args, **kwargs)
+        read_only(self.lastModified)
+        read_only(self.lastModifiedBy)
+
+class Comment(ModelForm):
+    class Meta:
+        model = alch.Comment
+        include_primary_keys = True
+        only = ["commentID", "comment", "commentAuthor", "commentAuthored",
+                "commentEditor", "commentEdited"]
+
+    def __init__(self, *args, **kwargs):
+        super(Comment, self).__init__(*args, **kwargs)
+        read_only(self.commentID)
+        read_only(self.commentAuthor)
+        read_only(self.commentAuthored)
+        read_only(self.commentEditor)
+        read_only(self.commentEdited)
+    
+# class Upload(ModelForm):
+#     class Meta:
+#         model = alch.Upload
+#         include_primary_keys = True        
+
+# Other forms
 class SelectForm(Form):
     projectID = SelectField(u"Jump directly to project ", coerce=int)
 
 class LoginForm(Form): 
     username = TextField("Username", [validators.Length(min=2, max=25)])
-    password = PasswordField('Password', [validators.Required()])
-    remember_me = BooleanField('remember_me', default=False)
+    password = PasswordField("Password", [validators.Required()])
+    remember_me = BooleanField("remember_me", default=False)
 
 
 # class ProjectViewForm(Form):

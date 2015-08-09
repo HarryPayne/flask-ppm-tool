@@ -1,8 +1,13 @@
 (function(){
-  /*
-   * See http://stackoverflow.com/questions/22247294/how-do-i-get-the-back-button-to-work-with-an-angularjs-ui-router-state-machine
-   */
+
+/**
+ *  @name app.stateLocation
+ *  @desc Manage the relationship between $state and $location, to allow a
+ *        a change of state to update the location and vice versa.
+ *  @requires ui-router
+ */
+
   angular
-    .module("app.stateLocation", ['ui.router']);
+    .module("app.stateLocation", ["ui.router"]);
 
 }());

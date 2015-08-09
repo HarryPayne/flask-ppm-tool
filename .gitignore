@@ -81,3 +81,6 @@ bin/python2
 bin/python2.7
 bower_components
 server/app/static/vendor
+server/app/static/min
+server/.ppt.wsgi.swp
+server/app/static/min

@@ -6,14 +6,14 @@
     .module("app.filter")
     .controller("Filter", Filter);
   
-  Filter.$inject = ['$scope', '$http', 'store', 'jwtHelper', 
-                    'projectListService', 'selectStateService'];
+  Filter.$inject = ["projectListService", "selectStateService"];
   
-  function Filter($scope, $http, store, jwtHelper, projectListService, 
-                  selectStateService) {
+  function Filter(projectListService, selectStateService) {
     
     this.ls = projectListService;
-    this.projectList = projectListService.getModel;
+    this.masterList = projectListService.getMasterList;
+    this.jumpToProject = this.ls.jumpToProject;
+    
     this.selectState = selectStateService;
 
   };

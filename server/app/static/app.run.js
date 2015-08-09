@@ -4,50 +4,19 @@
   
   angular
     .module("PPT")
-    .run(initializeServices);
+    .run(initializeApp);
   
-  initializeServices.$inject = ["$rootScope", "projectListService", "projectDataService", 
-                               "stateLocationService"];
+  initializeApp.$inject = ["$rootScope"];
   
-  function initializeServices($rootScope, projectListService, projectDataService, stateLocationService) {
-    $rootScope.$on("$stateChangeSuccess", _initializeServices);
+  function initializeApp($rootScope) {
+    $rootScope.$on("$stateChangeStart", _initializeApp);
     
-    function _initializeServices(e, toState, toParams, fromState, fromParams){
-      if (toState.name =="select" || toState.name == "filter") {
-        projectListService.updateAllProjects();
-        projectListService.setList(projectListService.getIDListFromAllProjects());
-        projectListService.setDescription("none;");
-      }
-      if (toState.name.substring(0,7) == "project" && !projectListService.hasProjects()) {
-        projectListService.updateAllProjects();
-
-        var projectID;
-        var masterList = projectListService.getModel();
-        var list = masterList.list;
-        var oldProjectID = masterList.projectID;
-
-        if (!toParams.projectID) {
-          projectID = stateLocationService.getProjectIDFromLocation();
-          if (!projectID) {
-            if (projectListService.hasProjects()) {
-              projectID = masterList.index > -1 ? list[masterList.index] : list[0];
-            }
-          }
-        }
-        else {
-          projectID = parseInt(toParams.projectID);
-          list = [projectID];
-          projectListService.setList(list);
-          projectListService.setDescription("projectID = " + projectID + ";");
-        }
-        projectListService.updateProjectListProjectID(projectID, list);
-        //stateLocationService.stateChange();
-
-        if (!projectDataService.projectID || projectDataService.projectID != projectID) {
-          projectDataService.projectID = projectID;
-          projectDataService.getProjectData(projectID);
-        }
-      }
+    function _initializeApp(e, toState, toParams, fromState, fromParams){
+      window.onbeforeunload = function (event) {
+        // save state before navigating away from the application
+        $rootScope.$broadcast('savestate');
+      };
+      
     }   
   }
   

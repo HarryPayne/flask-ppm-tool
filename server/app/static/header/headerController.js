@@ -12,7 +12,13 @@
     var vm = this;
     
     this.currentUser = $rootScope.currentUser;
-    this.projectList = projectListService.getModel;
+    this.masterList = projectListService.getMasterList;
+    this.getSql = projectListService.getSql;
+    this.getNextID = projectListService.getNextID;
+    this.getPreviousID = projectListService.getPreviousID;
+    this.getProjectID = projectListService.getProjectID;
+    this.hasNextID = projectListService.hasNextID;
+    this.hasPreviousID = projectListService.hasPreviousID;
 
     this.loggedIn = loginStateService.loggedIn;
     this.login = loginStateService.login;
@@ -27,27 +33,27 @@
       vm.hasPrevious = hasPrevious;
 
       function isActive(name) {
-        return toState.name === name;
+        return toState.name.split(".")[0] === name;
       }; 
   
       function hasNext() {
-        return (vm.isActive("project.edit") || vm.isActive("project.detail")) && vm.projectList().next > -1;
+        return (vm.isActive("project") && vm.masterList().next > -1);
       };
   
       function hasPrevious() {
-        return (vm.isActive("project.edit") || vm.isActive("project.detail")) && vm.projectList().previous > -1;
+        return (vm.isActive("project") && vm.masterList().previous > -1);
       };
     });
     
     function jumpToNextProject() {
-      if (vm.projectList().next > -1) {
-         projectListService.jumpToProject(vm.projectList().next);
+      if (vm.masterList().next > -1) {
+         projectListService.jumpToProject(vm.masterList().next);
       }
     };
 
     function jumpToPreviousProject () {
-      if (vm.projectList().previous > -1) {
-         projectListService.jumpToProject(vm.projectList().previous);
+      if (vm.masterList().previous > -1) {
+         projectListService.jumpToProject(vm.masterList().previous);
       }
     };
   }

@@ -6,16 +6,10 @@
     .module("PPT")
     .config(PPTConfig);
   
-  PPTConfig.$inject = ["$urlRouterProvider", "jwtInterceptorProvider", "$httpProvider"];
+  PPTConfig.$inject = ["$urlRouterProvider"];
   
-  function PPTConfig($urlRouterProvider, jwtInterceptorProvider, $httpProvider) {
-    $urlRouterProvider.otherwise('/');
-
-    jwtInterceptorProvider.tokenGetter = function(store) {
-      return store.get('jwt');
-    };
-
-    $httpProvider.interceptors.push('jwtInterceptor');
+  function PPTConfig($urlRouterProvider) {
+    $urlRouterProvider.otherwise('/select/home');
   };
   
 }());

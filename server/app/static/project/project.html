@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head></head>
+  <body>
+    <div class="container" project-sub-headings></div>
+    
+    <div  class="container">
+      <h3>{{ project.masterList().projectID}}: {{project.masterList().projectName}}</h3>
+      <ul class="nav navbar-default nav-tabs col-lg-12" ng-show="project.ds.editMode()">
+        <li role="presentation" ng-class="{active:project.ds.currentSubtab() == 'description'}"><a ui-sref="project.description.edit({projectID:project.ds.projectID})">Description</a></li>
+        <li role="presentation" ng-class="{active:project.ds.currentSubtab() == 'portfolio'}"><a ui-sref="project.portfolio.edit({projectID:project.ds.projectID})">Portfolio</a></li>
+        <li role="presentation" ng-class="{active:project.ds.currentSubtab() == 'disposition'}"><a ui-sref="project.disposition.edit({projectID:project.ds.projectID})">Dispositions</a></li>
+        <li role="presentation" ng-class="{active:project.ds.currentSubtab() == 'projectMan'}"><a ui-sref="project.projectMan.edit({projectID:project.ds.projectID})">Project Management</a></li>
+        <li role="presentation" ng-class="{active:project.ds.currentSubtab() == 'comment'}"><a ui-sref="project.comment.edit({projectID:project.ds.projectID})">Comments</a></li>
+        <li role="presentation" ng-class="{active:project.ds.currentSubtab() == 'attach'}"><a ui-sref="project.attach.edit({projectID:project.ds.projectID})">Attach a File</a></li>
+      </ul>
+                
+      <div class="clearfix">
+        <form name="projectForm" novalidate class="form-horizontal">
+        
+        <div ui-view></div>
+  
+        </form>
+
+      <div ng-show="project.ds.editMode()">
+        <div ng-show="project.as.errors" ng-repeat="error in project.as.errors">
+          <span ng-bind="error"></span>
+        </div>
+      </div>
+  
+      </div>
+    </div>
+  </body>
+</html>
