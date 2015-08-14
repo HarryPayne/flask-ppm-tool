@@ -84,3 +84,8 @@ server/app/static/vendor
 server/app/static/min
 server/.ppt.wsgi.swp
 server/app/static/min
+server/app/static/min/flask-ppm-tool.annotated.js
+server/app/static/min/flask-ppm-tool.concat.css
+server/app/static/min/flask-ppm-tool.concat.js
+server/app/static/min/flask-ppm-tool.min.css
+server/app/static/min/flask-ppm-tool.min.js
