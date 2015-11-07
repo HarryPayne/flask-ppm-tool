@@ -96,7 +96,7 @@ t_edit_log = Table(
     Column("user", String(100), nullable=False, index=True, server_default=text("''")),
     Column("projectID", SmallInteger, ForeignKey("description.projectID"), nullable=False, index=True, server_default=text("'0'")),
     Column("action", String(100), nullable=False, server_default=text("''")),
-    Column("timestamp", DateTime, nullable=False, index=True, server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"))
+    Column("timestamp", DateTime, nullable=False, index=True, server_default=text("CURRENT_TIMESTAMP"))
 )
 
 
@@ -123,7 +123,7 @@ class Fundingsourcelist(Base):
     info = {"label": "funding source"}
 
     fundingsourceID = Column(Integer, primary_key=True, server_default=text("'0'"))
-    fundingsourceDesc = Column(String(100, u"latin1_bin"), nullable=False, server_default=text("''"))
+    fundingsourceDesc = Column(String(100), nullable=False, server_default=text("''"))
     fundingsourceText = Column(Text, nullable=False)
 
 
@@ -317,74 +317,164 @@ class Month(Base):
 
 # vocabularies for rendering IDs as a select dropdown.
 COMPLEXITY_CHOICES = []
-for row in Complexitylist.query.order_by("complexityID").all():
-    COMPLEXITY_CHOICES.append((row.complexityID, row.complexityDesc))
+try:
+    for row in Complexitylist.query.order_by("complexityID").all():
+        COMPLEXITY_CHOICES.append((row.complexityID, row.complexityDesc))
+except:
+    pass
+
+
 COST_CHOICES = []
-for row in Costlevellist.query.order_by("costlevelID").all():
-    COST_CHOICES.append((row.costlevelID, row.costlevelDesc))
+try:
+    for row in Costlevellist.query.order_by("costlevelID").all():
+        COST_CHOICES.append((row.costlevelID, row.costlevelDesc))
+except:
+    pass
 DISPOSITION_CHOICES = []
-for row in Dispositionlist.query.order_by("dispositionID").all():
-    DISPOSITION_CHOICES.append((row.dispositionID, row.dispositionDesc))
+try:
+    for row in Dispositionlist.query.order_by("dispositionID").all():
+        DISPOSITION_CHOICES.append((row.dispositionID, row.dispositionDesc))
+except:
+    pass
+
 DRIVER_CHOICES = []
-for row in Driverlist.query.order_by("driverDesc").all():
-    DRIVER_CHOICES.append((row.driverID, row.driverDesc))
+try:
+    for row in Driverlist.query.order_by("driverDesc").all():
+        DRIVER_CHOICES.append((row.driverID, row.driverDesc))
+except:
+    pass
+
 FINAL_CHOICES = []
-for row in Finallist.query.order_by("finalID").all():
-    FINAL_CHOICES.append((row.finalID, row.finalDesc))
+try:
+    for row in Finallist.query.order_by("finalID").all():
+        FINAL_CHOICES.append((row.finalID, row.finalDesc))
+except:
+    pass
+
 FLAVOR_CHOICES = []
-for row in Flavorlist.query.order_by("flavorID").all():
-    FLAVOR_CHOICES.append((row.flavorID, row.flavorDesc))
+try:
+    for row in Flavorlist.query.order_by("flavorID").all():
+        FLAVOR_CHOICES.append((row.flavorID, row.flavorDesc))
+except:
+    pass
+
 FUNDINGSOURCE_CHOICES = []
-for row in Fundingsourcelist.query.order_by("fundingsourceID").all():
-    FUNDINGSOURCE_CHOICES.append((row.fundingsourceID, row.fundingsourceDesc))
+try:
+    for row in Fundingsourcelist.query.order_by("fundingsourceID").all():
+        FUNDINGSOURCE_CHOICES.append((row.fundingsourceID, row.fundingsourceDesc))
+except:
+    pass
+
 FY_CHOICES = []
-for row in Fiscalyear.query.order_by(desc("fiscalyearID")).all():
-    FY_CHOICES.append((row.fiscalyearID, row.fiscalyearDesc))
+try:
+    for row in Fiscalyear.query.order_by(desc("fiscalyearID")).all():
+        FY_CHOICES.append((row.fiscalyearID, row.fiscalyearDesc))
+except:
+    pass
+
 HOST_CHOICES = []
-for row in Hostlist.query.order_by("hostDesc").all():
-   HOST_CHOICES.append((row.hostID, row.hostDesc))
+try:
+    for row in Hostlist.query.order_by("hostDesc").all():
+       HOST_CHOICES.append((row.hostID, row.hostDesc))
+except:
+    pass
+
 INITIATIVE_CHOICES = []
-for row in Initiativelist.query.order_by("initiativeDesc").all():
-    INITIATIVE_CHOICES.append((row.initiativeID, row.initiativeDesc))
+try:
+    for row in Initiativelist.query.order_by("initiativeDesc").all():
+        INITIATIVE_CHOICES.append((row.initiativeID, row.initiativeDesc))
+except:
+    pass
+
 M_CHOICES = []
-for row in Month.query.order_by("monthID").all():
-    M_CHOICES.append((row.monthID, row.monthDesc))
+try:
+    for row in Month.query.order_by("monthID").all():
+        M_CHOICES.append((row.monthID, row.monthDesc))
+except:
+    pass
+
 MATURITY_CHOICES = []
-for row in Maturitylist.query.order_by("maturityID").all():
-    MATURITY_CHOICES.append((row.maturityID, row.maturityDesc))
+try:
+    for row in Maturitylist.query.order_by("maturityID").all():
+        MATURITY_CHOICES.append((row.maturityID, row.maturityDesc))
+except:
+    pass
+
 PROJECT_CHOICES = []
-for row in Progresslist.query.order_by("progressID").all():
-    PROJECT_CHOICES.append((row.progressID, row.progressDesc))
+try:
+    for row in Progresslist.query.order_by("progressID").all():
+        PROJECT_CHOICES.append((row.progressID, row.progressDesc))
+except:
+    pass
+
 PROJ_VISIBILITY_CHOICES = []
-for row in Proj_visibilitylist.query.order_by("proj_visibilityID").all():
-    PROJ_VISIBILITY_CHOICES.append((row.proj_visibilityID, row.proj_visibilityDesc))
+try:
+    for row in Proj_visibilitylist.query.order_by("proj_visibilityID").all():
+        PROJ_VISIBILITY_CHOICES.append((row.proj_visibilityID, row.proj_visibilityDesc))
+except:
+    pass
+
 Q_CHOICES = []
-for row in Quarter.query.order_by("quarterID").all():
-    Q_CHOICES.append((row.quarterID, row.quarterDesc))
+try:
+    for row in Quarter.query.order_by("quarterID").all():
+        Q_CHOICES.append((row.quarterID, row.quarterDesc))
+except:
+    pass
+
 RISK_CHOICES = []
-for row in Risklevellist.query.order_by("risklevelID").all():
-    RISK_CHOICES.append((row.risklevelID, row.risklevelDesc))
+try:
+    for row in Risklevellist.query.order_by("risklevelID").all():
+        RISK_CHOICES.append((row.risklevelID, row.risklevelDesc))
+except:
+    pass
+
 SCOPE_CHOICES = []
-for row in Scopelist.query.order_by("scopeID").all():
-    SCOPE_CHOICES.append((row.scopeID, row.scopeDesc))
+try:
+    for row in Scopelist.query.order_by("scopeID").all():
+        SCOPE_CHOICES.append((row.scopeID, row.scopeDesc))
+except:
+    pass
+
 SPONSOR_CHOICES = []
-for row in Sponsorlist.query.order_by("sponsorDesc").all():
-    SPONSOR_CHOICES.append((row.sponsorID, row.sponsorDesc))
+try:
+    for row in Sponsorlist.query.order_by("sponsorDesc").all():
+        SPONSOR_CHOICES.append((row.sponsorID, row.sponsorDesc))
+except:
+    pass
+
 STAKEHOLDER_CHOICES = []
-for row in Stakeholderlist.query.order_by("stakeholderDesc").all():
-    STAKEHOLDER_CHOICES.append((row.stakeholderID, row.stakeholderDesc))
+try:
+    for row in Stakeholderlist.query.order_by("stakeholderDesc").all():
+        STAKEHOLDER_CHOICES.append((row.stakeholderID, row.stakeholderDesc))
+except:
+    pass
 TECHNOLOGY_CHOICES = []
-for row in Technologylist.query.order_by("technologyID").all():
-    TECHNOLOGY_CHOICES.append((row.technologyID, row.technologyDesc))
+try:
+    for row in Technologylist.query.order_by("technologyID").all():
+        TECHNOLOGY_CHOICES.append((row.technologyID, row.technologyDesc))
+except:
+    pass
+
 TYPE_CHOICES = []
-for row in Typelist.query.order_by("typeDesc").all():
-    TYPE_CHOICES.append((row.typeID, row.typeDesc))
+try:
+    for row in Typelist.query.order_by("typeDesc").all():
+        TYPE_CHOICES.append((row.typeID, row.typeDesc))
+except:
+    pass
+
 VISIBILITY_CHOICES = []
-for row in Visibilitylist.query.order_by("visibilityID").all():
-    VISIBILITY_CHOICES.append((row.visibilityID, row.visibilityDesc))
+try:
+    for row in Visibilitylist.query.order_by("visibilityID").all():
+        VISIBILITY_CHOICES.append((row.visibilityID, row.visibilityDesc))
+except:
+    pass
+
 Y_CHOICES = []
-for row in Calendaryear.query.order_by(desc("calendaryearID")).all():
-    Y_CHOICES.append((row.calendaryearID, row.calendaryearDesc))
+try:
+    for row in Calendaryear.query.order_by(desc("calendaryearID")).all():
+        Y_CHOICES.append((row.calendaryearID, row.calendaryearDesc))
+except:
+    pass
 
 t_child = Table(
     "child", metadata,
