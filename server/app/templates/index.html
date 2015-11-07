@@ -48,30 +48,49 @@
   <body>
     <div id="page">
       <header ng-controller="Header as header">
-        <div class="container nav navbar-default" id="menu">
+        <div class="container">
           <div id="logo" class="text-left;"><h2>Project Portfolio Tool</h2></div>
-          {% raw %}
-          <ul class="list-inline text-right">
-            <li ng-hide="currentUser">
-              <a href="#" ng-click="header.login();">Login</a></li>
-            <li ng-show="currentUser">Logged in as {{ currentUser.name }}</li>
-            <li ng-show="currentUser"><a href="#" ng-click="header.logout();">Logout</a></li>
-          </ul>
-          {% endraw %}
-          <div role="presentation">
-            <ul class="nav nav-tabs">
-              <li role="presentation" ng-class="{active:header.isActive('select')}"><a ui-sref="select.home">Select</a></li>
-              <li role="presentation" ng-class="{active:header.isActive('filter')}"><a ui-sref="filter.builder({query_string: header.getSql()})">Filter Builder</a></li>
-              <li role="presentation" ng-class="{active:header.isActive('report')}"><a ui-sref="report.table({query_string: header.getSql()})">Report</a></li>
-              <li role="presentation" ng-class="{active:header.isActive('project')}"><a ui-sref="project.detail({projectID: header.getProjectID()})">Project</a></li>
-              <li role="presentation" ng-class="{active:header.hasPrevious()}"><a ui-sref="project.detail({projectID: header.getPreviousID()})" ng-click="header.jumpToPreviousProject" ng-show="header.hasPreviousID()">Previous</a><a class="disabled ng-hide" ng-hide="header.hasPreviousID()">Previous</a></li>
-              <li role="presentation" ng-class="{active:header.hasNext()}"><a ui-sref="project.detail({projectID: header.getNextID()})" ng-click="header.jumpToNextProject" ng-show="header.hasNext()">Next</a><a class="disabled ng-hide" ng-hide="header.hasNext()">Next</a></li>
-              <li role="presentation" ng-class="{active:header.isActive('comment')}" 
-                ng-show="currentUser.roles.indexOf('ContentProvider') > -1 || currentUser.roles.indexOf('Curator') > -1">
-                <a ui-sref="comment">Comments</a></li>
-              <li role="presentation" ng-class="{active:header.isActive('curate')}" ng-show="currentUser.roles.indexOf('Curator') > -1"><a ui-sref="curate">Curate</a></li>
-              <li role="presentation" ng-class="{active:header.isActive('manage')}" ng-show="currentUser.roles.indexOf('Manager') > -1"><a ui-sref="manage">Manage</a></li>
-            </ul>
+        </div>
+        <div class="" id="menu" role="navigation">
+          <div class="container navbar navbar-inverse navbar-static-top">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".headerNavCollapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+            </div>
+            <div class="collapse navbar-collapse headerNavCollapse">
+                <ul class="nav navbar-nav">
+                  <li role="presentation" ng-class="{active:header.isActive('select')}">
+                    <a ui-sref="select.home">Select</a></li>
+                  <li role="presentation" ng-class="{active:header.isActive('filter')}">
+                    <a ui-sref="filter.builder({query_string: header.getSql()})">Filter Builder</a></li>
+                  <li role="presentation" ng-class="{active:header.isActive('report')}">
+                    <a ui-sref="report.table({query_string: header.getSql()})">Report</a></li>
+                  <li role="presentation" ng-class="{active:header.isActive('project')}">
+                    <a ui-sref="project.detail({projectID: header.getProjectID()})">Project</a></li>
+                  <li role="presentation" ng-class="{active:header.hasPrevious()}">
+                    <a ui-sref="project.detail({projectID: header.getPreviousID()})" ng-click="header.jumpToPreviousProject" ng-show="header.hasPreviousID()" data-toggle="tooltip" title="Go to previous project in list"><span class="glyphicon glyphicon-backward"></span></a>
+                    <a class="disabled ng-hide" ng-hide="header.hasPreviousID()"><span class="glyphicon glyphicon-backward"></span></a>
+                  </li>
+                  <li role="presentation" ng-class="{active:header.hasNext()}" data-toggle="tooltip" title="Go to next project in list">
+                    <a ui-sref="project.detail({projectID: header.getNextID()})" ng-click="header.jumpToNextProject" ng-show="header.hasNext()" data-toggle="tooltip" title="Go to next project in list"><span class="glyphicon glyphicon-forward"></span></a>
+                    <a class="disabled ng-hide" ng-hide="header.hasNext()"><span class="glyphicon glyphicon-forward"></span></a>
+                  </li>
+                  <li role="presentation" ng-class="{active:header.isActive('comment')}" 
+                    ng-show="currentUser.roles.indexOf('ContentProvider') > -1 || currentUser.roles.indexOf('Curator') > -1">
+                    <a ui-sref="comment">Comments</a></li>
+                  <li role="presentation" ng-class="{active:header.isActive('manage')}" ng-show="currentUser.roles.indexOf('Manager') > -1"><a ui-sref="manage">Manage</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                  {% raw %}
+                    <li ng-hide="currentUser">
+                      <a href="#" ng-click="header.login();"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
+                    <li ng-show="currentUser"><a href="#" ng-click="header.logout();"> <span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
+                   {% endraw %}
+                 </ul>
+            </div>
           </div>
           
         </div>
