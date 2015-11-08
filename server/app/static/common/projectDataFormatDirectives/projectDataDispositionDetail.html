@@ -1,21 +1,21 @@
 <div ng-hide="ctrl.mode == 'add'">
   <label for="dispositionID" class="col-sm-2 control-label">
-    <label ng-bind="ctrl.detailsObj('disposedInFY').desc"></label>
-    <label ng-bind="ctrl.detailsObj('disposedInQ').desc"></label>
+    <label ng-bind="ctrl.detailsObj('disposedInFY').value.desc"></label>
+    <label ng-bind="ctrl.detailsObj('disposedInFY').child.value.desc"></label>
   </label>
   <div class="col-sm-10" style="padding-top: 7px;">
-    <span ng-bind="ctrl.detailsObj('dispositionID').desc" class="text-capitalize"></span>.
-    <span ng-show="ctrl.detailsObj('reconsiderInQ').desc || ctrl.detailsObj('reconsiderInFY').desc">
-      Reconsider in <span ng-bind="ctrl.detailsObj('reconsiderInFY').desc"></span>
-      <span ng-bind="ctrl.detailsObj('reconsiderInQ').desc"></span>.
+    <span ng-bind="ctrl.detailsObj('dispositionID').value.desc" class="text-capitalize"></span>.
+    <span ng-show="ctrl.detailsObj('reconsiderInFY').value.desc || ctrl.detailsObj('reconsiderInFY').child.value.desc">
+      Reconsider in <span ng-bind="ctrl.detailsObj('reconsiderInFY').value.desc"></span>
+      <span ng-bind="ctrl.detailsObj('reconsiderInFY').child.value.desc"></span>.
     </span>
-    <span ng-show="ctrl.detailsObj('startInY').desc || ctrl.detailsObj('startInM').desc">
-      Start in <span ng-bind="ctrl.detailsObj('startInM').desc"></span>
-      <span ng-bind="ctrl.detailsObj('startInY').desc"></span>.
+    <span ng-show="ctrl.detailsObj('startInY').value.desc || ctrl.detailsObj('startInY').child.value.desc">
+      Start in <span ng-bind="ctrl.detailsObj('startInY').child.value.desc"></span>
+      <span ng-bind="ctrl.detailsObj('startInY').value.desc"></span>.
     </span>
-    <span ng-show="ctrl.detailsObj('finishInY').desc || ctrl.detailsObj('finishInM').desc">
-      Finish in <span ng-bind="ctrl.detailsObj('finishInM').desc"></span>
-      <span ng-bind="ctrl.detailsObj('finishInY').desc"></span>.
+    <span ng-show="ctrl.detailsObj('finishInY').value.desc || ctrl.detailsObj('finishInY').child.value.desc">
+      Finish in <span ng-bind="ctrl.detailsObj('finishInY').child.value.desc"></span>
+      <span ng-bind="ctrl.detailsObj('finishInY').value.desc"></span>.
     </span>
     <span>
       <br/>

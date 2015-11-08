@@ -23,6 +23,6 @@
       ng-options="item.desc for item in attr.choices track by item.id"></select>
   </span>
   <span class="col-sm-12" style="float: left; width: 75%; padding-top: 7px;">
-    <p ng-bind="attr.help"></p>        
+    <p ng-bind="attr.help" ng-show="attr.help"></p>        
   </span>
 </span>

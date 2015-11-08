@@ -385,6 +385,7 @@
      */
     function saveProject(tableName, keys) {
       var formData = attributesService.getFormData(tableName, keys);
+      formData.lastModifiedBy = $rootScope.currentUser.id;
       var projectID = $state.params.projectID ? $state.params.projectID : "";
       var request = {
         method: "POST",

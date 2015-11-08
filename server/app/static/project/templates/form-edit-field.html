@@ -2,7 +2,7 @@
   <span ng-switch-when="string">
     <label for="{{attr.name}}" ng-bind="attr.label" class="col-sm-2 control-label text-capitalize"></label>
     <div class="col-sm-10" style="padding-top: 7px;">
-      <p ng-bind="attr.help"></p>
+      <p ng-bind="attr.help" ng-show="attr.help"></p>
       <span ng-if="attr.computed">
         <span ng-bind="attr.value"></span>
       </span>
@@ -17,7 +17,7 @@
     <span ng-if="!attr.computed">
       <label for="{{attr.name}}" ng-bind="attr.label" class="col-sm-2 control-label text-capitalize"></label>
       <div class="col-sm-10" style="padding-top: 7px;">
-        <p ng-bind="attr.help"></p>
+        <p ng-bind="attr.help" ng-show="attr.help"></p>
         <input type="number" name="{{attr.name}}" size="12"
           class="form-control col-lg-4"
           ng-model="attr.value"/>
@@ -27,7 +27,7 @@
   <span ng-switch-when="textArea">
     <label for="{{attr.name}}" ng-bind="attr.label" class="col-sm-2 control-label text-capitalize"></label>
     <div class="col-sm-10" style="padding-top: 7px;">
-      <p ng-bind="attr.help"></p>
+      <p ng-bind="attr.help" ng-show="attr.help"></p>
       <textarea rows="8" cols="80" name="{{attr.name}}"
         class="form-control col-lg-4"
         ng-model="attr.value"
@@ -52,14 +52,14 @@
           ng-options="item.desc for item in attr.choices track by item.id"></select>
       </span>
       <span class="col-sm-12" style="float: left; width: 75%; padding-top: 7px;">
-        <p ng-bind="attr.help"></p>        
+        <p ng-bind="attr.help" ng-show="attr.help"></p>        
       </span>
     </div>
   </span>
   <span ng-switch-when="dateRangeSelect">
     <label for="{{attr.name}}" ng-bind="attr.label" class="col-sm-2 control-label text-capitalize"></label>
     <div class="col-sm-10" style="padding-top: 7px;">
-      <p ng-bind="attr.help"></p>
+      <p ng-bind="attr.help" ng-show="attr.help"></p>
       <span ng-if="attr.computed">
         <span ng-bind="attr.value"></span>
       </span>
@@ -86,7 +86,7 @@
     <label for="{{attr.name}}" ng-bind="attr.label" class="col-sm-2 control-label text-capitalize"></label>
     <div class="col-sm-10" style="padding-top: 7px;">
       <span ng-show="attr.errors" ng-bind="attr.errors" class="alert alert-danger" role="alert"></span>
-      <p ng-bind="attr.help"></p>
+      <p ng-bind="attr.help" ng-show="attr.help"></p>
       <span ng-if="attr.computed">
         <span ng-bind="attr.printValue"></span>
       </span>

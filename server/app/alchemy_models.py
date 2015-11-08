@@ -259,7 +259,7 @@ t_upload = Table(
     Column("uploadDesc", Text, nullable=False),
     Column("uploadData", MEDIUMBLOB, nullable=False),
     Column("lastModifiedBy", String(100), nullable=False),
-    Column("lastModified", DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"))
+    Column("lastModified", DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP"))
 )
 
 # class Upload(Base):
@@ -582,8 +582,8 @@ class Description(Base):
                                info={"label": "children",
                                      "attributeID": 200,
                                      "help": "For an absorbed project, enter the project ID of the surviving project. For a split project, enter the project IDs of the child projects."})
-    lastModified = Column(DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"))
-    lastModifiedBy = Column(String(100), nullable=False, server_default=text("''"))
+    lastModified = Column(DateTime, nullable=True, server_default=text("CURRENT_TIMESTAMP"), info={"label": "last updated", "attributeID": 998, "help": ""})
+    lastModifiedBy = Column(String(100), nullable=True, server_default=text("''"), info={"label": "last updated by", "attributeID": 999, "help": ""})
     
         
 class Comment(Base):
@@ -677,14 +677,10 @@ class Disposition(Base):
                              "attributeID": 365,
                              "help": ""},
                        nullable=True, server_default=text("'0'"))
-    lastModified = Column(DateTime, nullable=True, 
-                          info={"attributeID": 366,
-                                "help": "Date and time of last change."},
-                          server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"))
-    lastModifiedBy = Column(String(100), nullable=True,  
-                            info={"attributeID": 367,
-                                  "help": "User ID associated with the last change."},
-                            server_default=text("''"))
+    lastModified = Column(DateTime, nullable=True, server_default=text("CURRENT_TIMESTAMP"), 
+                          info={"label": "last updated", "attributeID": 998, "help": ""})
+    lastModifiedBy = Column(String(100), nullable=True, server_default=text("''"), 
+                            info={"label": "last updated by", "attributeID": 999, "help": ""})
 
     description = db.relationship("Description", backref="dispositions")
 
@@ -697,8 +693,10 @@ class History(Base):
     attributeName = Column(String(100), nullable=False, server_default=text("''"))
     oldValue = Column(Integer, nullable=False, server_default=text("'0'"))
     newValue = Column(Integer, nullable=False, server_default=text("'0'"))
-    lastModified = Column(DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"))
-    lastModifiedBy = Column(String(100), nullable=False, server_default=text("''"))
+    lastModified = Column(DateTime, nullable=True, server_default=text("CURRENT_TIMESTAMP"), 
+                          info={"label": "last updated", "attributeID": 998, "help": ""})
+    lastModifiedBy = Column(String(100), nullable=True, server_default=text("''"), 
+                            info={"label": "last updated by", "attributeID": 999, "help": ""})
 
 
 t_strategy = Table(
@@ -785,8 +783,10 @@ class Portfolio(Base):
                              "attributeID": 305,
                              "help": ""},
                        nullable=True, index=True, server_default=text("'0'"))
-    lastModified = Column(DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"))
-    lastModifiedBy = Column(String(100), nullable=False, server_default=text("''"))
+    lastModified = Column(DateTime, nullable=True, server_default=text("CURRENT_TIMESTAMP"), 
+                          info={"label": "last updated", "attributeID": 998, "help": ""})
+    lastModifiedBy = Column(String(100), nullable=True, server_default=text("''"), 
+                            info={"label": "last updated by", "attributeID": 999, "help": ""})
 
     description = db.relationship("Description", backref="portfolio")
 
@@ -833,8 +833,10 @@ class Project(Base):
                               "attributeID": 430,
                               "help": "The date on which the project was successfully ended, i.e., the last day of the closeout phase of the project.  Format as above."},
                         nullable=True, index=True, server_default=text("'0000-00-00'"))
-    lastModified = Column(DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"))
-    lastModifiedBy = Column(String(100), nullable=False, server_default=text("''"))
+    lastModified = Column(DateTime, nullable=True, server_default=text("CURRENT_TIMESTAMP"), 
+                          info={"label": "last updated", "attributeID": 998, "help": ""})
+    lastModifiedBy = Column(String(100), nullable=True, server_default=text("''"), 
+                            info={"label": "last updated by", "attributeID": 999, "help": ""})
     
     description = db.relationship("Description", backref="project")
 

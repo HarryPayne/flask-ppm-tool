@@ -96,7 +96,8 @@ class Description(ModelForm):
         include_primary_keys = True
         only = ["projectID", "name", "description", "rationale", "businesscase", "dependencies", 
                 "maturityID", "proposer", "customer", "sponsorID", "fundingsourceID", "finalID",
-                "hostID", "technologyID", "typeID", "created", "ended"]
+                "hostID", "technologyID", "typeID", "created", "ended", "lastModified",
+                "lastModifiedBy"]
 
     childID = QuerySelectMultipleField(query_factory=child_choices, label="children")
     driverID = QuerySelectMultipleField(query_factory=driver_choices, label="drivers")
@@ -111,17 +112,29 @@ class Portfolio(ModelForm):
     class Meta:
         model = alch.Portfolio
         include_primary_keys = True
-        only = ["flavorID", "initiativeID", "scopeID", "visibilityID", 
-                "complexityID", "risklevelID", "costlevelID", "rpu", "budgetInFY", "budgetInQ"]    
+        only = ["flavorID", "initiativeID", "scopeID", "visibilityID", "complexityID", 
+                "risklevelID", "costlevelID", "rpu", "budgetInFY", "budgetInQ", 
+                "lastModified", "lastModifiedBy"]    
 
     strategyID = QuerySelectMultipleField(query_factory=strategy_choices, allow_blank=False, label="strategies")
+
+    def __init__(self, *args, **kwargs):
+        super(Portfolio, self).__init__(*args, **kwargs)
+        read_only(self.lastModified)
+        read_only(self.lastModifiedBy)
 
 class Project(ModelForm):
     class Meta:
         model = alch.Project
         include_primary_keys = True
         only = ["proj_manager", "tech_manager", "proj_visibilityID", 
-                "project_url", "progressID", "startedOn", "finishedOn"]
+                "project_url", "progressID", "startedOn", "finishedOn", 
+                "lastModified", "lastModifiedBy"]
+
+    def __init__(self, *args, **kwargs):
+        super(Project, self).__init__(*args, **kwargs)
+        read_only(self.lastModified)
+        read_only(self.lastModifiedBy)
 
 class Disposition(ModelForm):
     class Meta:

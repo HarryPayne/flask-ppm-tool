@@ -13,6 +13,7 @@ OPENID_PROVIDERS = [
 
 #SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'app.db')
 SQLALCHEMY_DATABASE_URI = "mysql://root:stormy@localhost/projects"
+#SQLALCHEMY_DATABASE_URI = "postgresql://payne:stormy@localhost/projects"
 SQLALCHEMY_MIGRATE_REPO = os.path.join(basedir, 'db_repository')
 
 # mail server settings

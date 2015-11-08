@@ -58,6 +58,8 @@ def make_payload(user):
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    import pydevd
+    pydevd.settrace()
     form = forms.LoginForm(request.form)
     if request.method == 'POST' and form.validate():
         
@@ -183,7 +185,7 @@ def getAllAttributes():
         
 def getAttributesFromForm(form):
     """ Given a form model, gather field properties from the form widgets and 
-        the data model, and return a list of attribute objects."""
+        the data model, and return a dictionary of attribute objects."""
     tableName = getTableNameFromForm(form)
 
     attributes = {}
@@ -842,6 +844,7 @@ def projectEdit(projectID, tableName):
 
     if projectID:
         p = alch.Description.query.filter_by(projectID=projectID).first_or_404()
+        p.lastModified = datetime.now()
 
         errors = []
         success = []
@@ -849,6 +852,8 @@ def projectEdit(projectID, tableName):
         if tableName == "description":
             description_errors = []
             description_success = "Project description was updated."
+            old_maturityID = p.maturityID
+            old_finalID = p.finalID
 
             descriptionForm = forms.Description(request.form, p)
             if descriptionForm.validate_on_submit():
@@ -865,6 +870,8 @@ def projectEdit(projectID, tableName):
             if description_errors:
                 response["errors"] = description_errors
             else:
+                if not descriptionForm.maturityID == old_maturityID:
+                    pass
                 response["success"] = description_success            
 
         elif tableName == "portfolio":
@@ -892,6 +899,8 @@ def projectEdit(projectID, tableName):
         elif tableName == "project":
             pr_errors = []
             pr_success = "Project management entry was updated."
+            # old_progressID = p.progressID
+            
             pr = alch.Project.query.filter_by(projectID=projectID).first_or_404()
             projectForm = forms.Project(request.form, pr)
             if projectForm.validate_on_submit():

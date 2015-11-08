@@ -148,7 +148,7 @@
         this.attributesObj = attributesObj;
       }
       if (name in this.attributesObj) {
-        return this.attributesObj[name].value;
+        return this.attributesObj[name];
       }
     }
 
