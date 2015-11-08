@@ -21,6 +21,8 @@ def ldap_fetch(uid=None, name=None, passwd=None):
         return {
             'uid': r[0]['uid'][0],
             'name': unicode(r[0]['cn'][0]),
+            "givenName": unicode(r[0]["givenname"][0]),
+            "sn": unicode(r[0]["sn"][0]),
             "mail": r[0]["mail"][0],
             "groups": [item["cn"][0] for item in g]
         }
@@ -41,6 +43,8 @@ class User(UserMixin):
             self.id = ldapres["uid"]
             self.groups = ldapres["groups"]
             self.name = ldapres["name"]
+            self.firstname = ldapres["givenName"]
+            self.lastname = ldapres["sn"]
             self.mail = ldapres["mail"]
             self.active = True
 
@@ -53,6 +57,8 @@ class User(UserMixin):
     def get_user(self):
         return {"id": self.id,
                 "name": self.name,
+                "firstname": self.firstname,
+                "lastname": self.lastname,
                 "mail": self.mail,
                 "groups": self.groups,
                 "is_active": self.active}

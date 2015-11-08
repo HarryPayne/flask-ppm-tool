@@ -85,9 +85,12 @@
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
                   {% raw %}
-                    <li ng-hide="currentUser">
+                    <li ng-hide="currentUser" class="active">
                       <a href="#" ng-click="header.login();"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
-                    <li ng-show="currentUser"><a href="#" ng-click="header.logout();"> <span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
+                    <li ng-show="currentUser">
+                      <span class="navbar-text">Welcome {{currentUser.firstname}}</span></li>
+                    <li ng-show="currentUser" class="active">
+                      <a href="#" ng-click="header.logout();"> <span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
                    {% endraw %}
                  </ul>
             </div>

@@ -51,6 +51,8 @@ def make_payload(user):
     return {
         'id': user.id,
         'name': user.name,
+        'firstname': user.firstname,
+        'lastname': user.lastname,
         'mail': user.mail,
         'roles': user.groups,
         'active': user.active
@@ -58,8 +60,6 @@ def make_payload(user):
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    import pydevd
-    pydevd.settrace()
     form = forms.LoginForm(request.form)
     if request.method == 'POST' and form.validate():
         
