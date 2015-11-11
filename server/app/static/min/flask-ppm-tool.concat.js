@@ -1066,7 +1066,7 @@ Data attributes:
         this.attributesObj = attributesObj;
       }
       if (name in this.attributesObj) {
-        return this.attributesObj[name].value;
+        return this.attributesObj[name];
       }
     }
 
@@ -2839,6 +2839,7 @@ Data attributes:
      */
     function saveProject(tableName, keys) {
       var formData = attributesService.getFormData(tableName, keys);
+      formData.lastModifiedBy = $rootScope.currentUser.id;
       var projectID = $state.params.projectID ? $state.params.projectID : "";
       var request = {
         method: "POST",
