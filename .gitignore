@@ -89,3 +89,4 @@ server/app/static/min/flask-ppm-tool.concat.css
 server/app/static/min/flask-ppm-tool.concat.js
 server/app/static/min/flask-ppm-tool.min.css
 server/app/static/min/flask-ppm-tool.min.js
+server/app/static/min/flask-ppm-tool.min.js
