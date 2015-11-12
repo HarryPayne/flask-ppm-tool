@@ -408,13 +408,15 @@ def getBreakdownByAttribute(attributeName):
                       }
         breakdown.append(break_item)
     
-    if breakdown[0]["desc"] in ["", "none"]:
-        first = breakdown[0]
-        breakdown = breakdown[1:]
-        breakdown.sort(key = lambda item: item["desc"])
-        breakdown.insert(0, first)
-    else:
-        breakdown.sort(key = lambda item: item["desc"])
+    if len(breakdown):
+        if breakdown[0]["desc"] in ["", "none"]:
+            first = breakdown[0]
+            breakdown = breakdown[1:]
+            breakdown.sort(key = lambda item: item["desc"])
+            breakdown.insert(0, first)
+        else:
+            breakdown.sort(key = lambda item: item["desc"])
+    
     return dumps(breakdown)
 
 def truncate_gracefully(text_string, max_length):
