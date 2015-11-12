@@ -1,10 +1,17 @@
 # coding: utf-8
 import sqlalchemy as sa
 from sqlalchemy import (BLOB, Column, Date, DateTime, desc, Enum, ForeignKey, 
-                        Float, Integer, orm, SmallInteger, String, Table, Text, text)
+                        Float, Integer, orm, Integer, String, Table, Text, text)
 from sqlalchemy_utils import ChoiceType
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.dialects.mysql.base import MEDIUMBLOB
+from sqlalchemy.dialects.postgresql import BYTEA
+#     ARRAY, BIGINT, BIT, BOOLEAN, BYTEA, CHAR, CIDR, DATE, \
+#     DOUBLE_PRECISION, ENUM, FLOAT, HSTORE, INET, INTEGER, \
+#     INTERVAL, JSON, JSONB, MACADDR, NUMERIC, OID, REAL, SMALLINT, TEXT, \
+#     TIME, TIMESTAMP, UUID, VARCHAR, INT4RANGE, INT8RANGE, NUMRANGE, \
+#     DATERANGE, TSRANGE, TSTZRANGE, TSVECTOR
+
 
 from widgets import ChoicesSelect
 
@@ -14,7 +21,6 @@ from widgets import ChoicesSelect
 from app import db
 Base = db.Model
 metadata = db.metadata
-
 
 # class Attributelist(Base):
 #     __tablename__ = "newattributelist"
@@ -94,7 +100,7 @@ t_driver = Table(
 t_edit_log = Table(
     "edit_log", metadata,
     Column("user", String(100), nullable=False, index=True, server_default=text("''")),
-    Column("projectID", SmallInteger, ForeignKey("description.projectID"), nullable=False, index=True, server_default=text("'0'")),
+    Column("projectID", Integer, ForeignKey("description.projectID"), nullable=False, index=True, server_default=text("'0'")),
     Column("action", String(100), nullable=False, server_default=text("''")),
     Column("timestamp", DateTime, nullable=False, index=True, server_default=text("CURRENT_TIMESTAMP"))
 )
@@ -210,7 +216,7 @@ class Stakeholderlist(Base):
 
 t_stakeholder = Table(
     "stakeholder", metadata,
-    Column("projectID", SmallInteger, ForeignKey("description.projectID"),nullable=False, index=True, server_default=text("'0'")),
+    Column("projectID", Integer, ForeignKey("description.projectID"),nullable=False, index=True, server_default=text("'0'")),
     Column("stakeholderID", Integer, ForeignKey("stakeholderlist.stakeholderID"),nullable=False, index=True, server_default=text("'0'"))
 )
 
@@ -257,7 +263,7 @@ t_upload = Table(
     Column("uploadName", String(64), nullable=False),
     Column("uploadType", String(32), nullable=False),
     Column("uploadDesc", Text, nullable=False),
-    Column("uploadData", MEDIUMBLOB, nullable=False),
+    Column("uploadData", BYTEA, nullable=False),
     Column("lastModifiedBy", String(100), nullable=False),
     Column("lastModified", DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP"))
 )
@@ -485,22 +491,22 @@ t_child = Table(
 class Description(Base):
     __tablename__ = "description"
         
-    projectID = Column(SmallInteger, primary_key=True, nullable=True, autoincrement=True)
+    projectID = Column(Integer, primary_key=True, nullable=False, autoincrement=True)
     name = Column(String(100), nullable=False, index=True, server_default=text("''"),
                   info={"attributeID": 20,
                         "help": "A concise (<50 characters), descriptive, and unique identifying name for the proposed work (not containing the word 'project')."})
-    description = Column(Text, nullable=True, index=True,
+    description = Column(Text, nullable=True, 
                          info={"attributeID": 30,
                                "help": "A clear description of the objective/purpose of the proposed project, and if known, what it would take to complete. The first 100 characters will be used in listings, etc."})
-    rationale = Column(Text, nullable=True, index=True, server_default=text("''"),
+    rationale = Column(Text, nullable=True, 
                        info={"attributeID": 40,
                              "help": "Why is the proposed work important? Tie it to STScI, mission and division strategies, where possible. Does it save costs, avoid risks, etc? If so, also indicate this in the relevant metadata."})
     businesscase = Column(Text, 
                           info={"label": "business case",
                                 "attributeID": 50,
                                 "help": "A business case compares the costs (labor, non-labor, opportunity) of doing the work with the potential benefits, and the risk of not doing, the work to show a return on investments. For projects that require significant investments, the funding source(s) and type(s) must also be identified."},
-                          nullable=True, index=True, server_default=text("''"))
-    dependencies = Column(Text, nullable=True, index=True, server_default=text("''"),
+                          nullable=True)
+    dependencies = Column(Text, nullable=True,
                           info={"attributeID": 60,
                                 "help": "Describe any dependencies between this and other projects: must preceed, depends on, must be coordinated with, competes for unique resources with, ..."})
     maturityID = Column(Integer, ForeignKey(Maturitylist.maturityID), 
@@ -560,10 +566,10 @@ class Description(Base):
                                secondary=t_driver,
                                info={"attributeID": 160,
                                      "help": "Identify the primary drivers, or rationale, for this project."})
-    created = Column(Date, nullable=True, server_default=text("'0000-00-00'"),
+    created = Column(Date, nullable=True,
                     info={"attributeID": 170,
                           "help": "The date on which the original idea was entered into the tool. This is a computed value."})
-    ended = Column(Date, nullable=True, server_default=text("'0000-00-00'"),
+    ended = Column(Date, nullable=True,
                    info={"attributeID": 180,
                          "help": "The date on which the project was marked as ended. This is a computed value."})
     finalID = Column(Integer, ForeignKey(Finallist.finalID), 
@@ -606,7 +612,7 @@ class Comment(Base):
                              info={"label": "on",
                                    "attributeID": 460,
                                    "help": "Date that comment was written. This is a computed value."},
-                             nullable=True, index=True, server_default=text("'0000-00-00 00:00:00'"))
+                             nullable=True, index=True)
     commentEditor = Column(String(100),
                            info={"label": "last edited by",
                                  "attributeID": 470, 
@@ -615,16 +621,16 @@ class Comment(Base):
     commentEdited = Column(DateTime, info={"label": "on",
                                            "attributeID": 480,
                                            "help": "Time of last edit. This is a computed value."},
-                           nullable=True, index=True, server_default=text("'0000-00-00 00:00:00'"))
+                           nullable=True, index=True)
 
     description = db.relationship("Description", backref="comments")
 
 class Disposition(Base):
-    __tablename__ = "newdisposition"
+    __tablename__ = "disposition"
 
-    projectID = Column(SmallInteger, ForeignKey("description.projectID"), primary_key=True, 
+    projectID = Column(Integer, ForeignKey("description.projectID"), primary_key=True, 
                        nullable=False, index=True, server_default=text("'0'"))
-    disposedInFY = Column(SmallInteger, ForeignKey("fiscalyears.fiscalyearID"), primary_key=True,
+    disposedInFY = Column(Integer, ForeignKey("fiscalyears.fiscalyearID"), primary_key=True,
                           info={"choices": FY_CHOICES, 
                                 "label": "disposed in",
                                 "attributeID": 310,
@@ -641,10 +647,10 @@ class Disposition(Base):
                                  "attributeID": 320,
                                  "help": "What decision was made during the planning cycle with respect to this project?"},
                            nullable=False, index=True, server_default=text("'0'"))
-    explanation = Column(Text, nullable=True, index=True,
+    explanation = Column(Text, nullable=True, 
                          info={"attributeID": 330,
                                "help": "State the reasons behind the disposition decision."})
-    reconsiderInFY = Column(SmallInteger, ForeignKey("fiscalyears.fiscalyearID"),
+    reconsiderInFY = Column(Integer, ForeignKey("fiscalyears.fiscalyearID"),
                             info={"choices": FY_CHOICES, 
                                   "label": "reconsider in",
                                   "attributeID": 340,
@@ -655,7 +661,7 @@ class Disposition(Base):
                                  "attributeID": 345,
                                  "help": ""},
                            nullable=True, server_default=text("'0'"))
-    startInY = Column(SmallInteger, ForeignKey("calendaryears.calendaryearID"),
+    startInY = Column(Integer, ForeignKey("calendaryears.calendaryearID"),
                       info={"choices": Y_CHOICES, 
                             "label": "start in",
                             "attributeID": 350,
@@ -666,7 +672,7 @@ class Disposition(Base):
                             "attributeID": 355,
                             "help": ""},
                       nullable=True, server_default=text("'0'"))
-    finishInY = Column(SmallInteger, ForeignKey("calendaryears.calendaryearID"),
+    finishInY = Column(Integer, ForeignKey("calendaryears.calendaryearID"),
                        info={"choices": Y_CHOICES, 
                              "label": "finish in",
                              "attributeID": 360,
@@ -683,7 +689,7 @@ class Disposition(Base):
                             info={"label": "last updated by", "attributeID": 999, "help": ""})
 
     description = db.relationship("Description", backref="dispositions")
-
+    
 
 class History(Base):
     __tablename__ = "history"
@@ -711,7 +717,7 @@ t_strategy = Table(
 class Portfolio(Base):
     __tablename__ = "portfolio"
 
-    projectID = Column(SmallInteger, ForeignKey("description.projectID"), primary_key=True)
+    projectID = Column(Integer, ForeignKey("description.projectID"), primary_key=True)
     flavorID = Column(Integer, ForeignKey("flavorlist.flavorID"),
                       info={"choices": FLAVOR_CHOICES, 
                             "label": "portfolio category",
@@ -770,7 +776,7 @@ class Portfolio(Base):
                        "attributeID": 290,
                        "help": "Enter the estimated project effort in RPUs.  An  RPU (Reference Project Unit) corresponds to a level of effort of 1000 hours during the 6 month planning period, with half of those hours coming from critical resources.  A higher RPU may be assigned if the project has a high management overhead, extraordinary reporting requirements, high visibility, or any other factor likely to require above average effort in ordinary project management tasks."}, 
                  server_default=text("'0'"))
-    budgetInFY = Column(SmallInteger, ForeignKey("fiscalyears.fiscalyearID"), 
+    budgetInFY = Column(Integer, ForeignKey("fiscalyears.fiscalyearID"), 
                         info={"choices": FY_CHOICES, 
                               "coerce": int,
                               "label": "budget in",
@@ -793,7 +799,7 @@ class Portfolio(Base):
 class Project(Base):
     __tablename__ = "project"
 
-    projectID = Column(SmallInteger, ForeignKey("description.projectID"), primary_key=True, server_default=text("'0'"))
+    projectID = Column(Integer, ForeignKey("description.projectID"), primary_key=True, server_default=text("'0'"))
     project_url = Column(String(255), 
                          info={"label": "project url",
                                "attributeID": 370,
@@ -827,13 +833,13 @@ class Project(Base):
                        info={"label": "started on",
                              "attributeID": 420,
                              "help": "The actual date on which the project started running, i.e., the first day of the definition phase."},
-                       nullable=True, index=True, server_default=text("'0000-00-00'"))
+                       nullable=True, index=True)
     finishedOn = Column(Date, 
                         info={"label": "finished on",
                               "attributeID": 430,
                               "help": "The date on which the project was successfully ended, i.e., the last day of the closeout phase of the project.  Format as above."},
-                        nullable=True, index=True, server_default=text("'0000-00-00'"))
-    lastModified = Column(DateTime, nullable=True, server_default=text("CURRENT_TIMESTAMP"), 
+                        nullable=True, index=True)
+    lastModified = Column(DateTime, nullable=True, 
                           info={"label": "last updated", "attributeID": 998, "help": ""})
     lastModifiedBy = Column(String(100), nullable=True, server_default=text("''"), 
                             info={"label": "last updated by", "attributeID": 999, "help": ""})
