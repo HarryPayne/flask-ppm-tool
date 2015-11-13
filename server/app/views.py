@@ -844,8 +844,6 @@ def projectEdit(projectID, tableName):
         # Must be a Curator to edit project metadata
         abort(401)
 
-    import pydevd
-    pydevd.settrace()
     if projectID:
         p = alch.Description.query.filter_by(projectID=projectID).first_or_404()
         p.lastModified = datetime.now()
