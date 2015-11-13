@@ -94,7 +94,7 @@ class Description(ModelForm):
     class Meta:
         model = alch.Description
         include_primary_keys = True
-        only = ["projectID", "name", "description", "rationale", "businesscase", "dependencies", 
+        only = ["name", "description", "rationale", "businesscase", "dependencies", 
                 "maturityID", "proposer", "customer", "sponsorID", "fundingsourceID", "finalID",
                 "hostID", "technologyID", "typeID", "created", "ended", "lastModified",
                 "lastModifiedBy"]

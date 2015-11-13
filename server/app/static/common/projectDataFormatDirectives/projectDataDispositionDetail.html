@@ -17,6 +17,10 @@
       Finish in <span ng-bind="ctrl.detailsObj('finishInY').child.value.desc"></span>
       <span ng-bind="ctrl.detailsObj('finishInY').value.desc"></span>.
     </span>
+    </span ng-show="ctrl.detailsObj('explanation')">
+      <br/>
+      <span ng-bind-html="ctrl.detailsObj('explanation').value"></span>
+    </span>
     <span>
       <br/>
       Last modified by <span ng-bind="disp['lastModifiedBy']"></span> on <span ng-bind="disp['lastModified.printValue']"></span>

@@ -15,6 +15,9 @@
   <span ng-show="disp['finishInY'].desc || disp['finishInM'].desc">
     Finish in <span ng-bind="disp['finishInM'].desc"></span>
     <span ng-bind="disp['finishInY'].desc"></span>.
+  </span ng-show="disp['explanation']">
+    <br/>
+    <span ng-bind-html="disp['explanation']"></span>
   </span>
   <span>
     <br/>

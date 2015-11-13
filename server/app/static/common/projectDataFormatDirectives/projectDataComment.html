@@ -3,7 +3,7 @@
 </div>
 
 <div class="col-sm-10" style="padding-top: 7px;">
-  <span ng-bind="comment['comment']"></span><br/>
+  <span ng-bind-html="comment['comment']"></span><br/>
   Entered <span ng-bind="comment['commentAuthored.printValue']"></span>
   <span ng-show="comment['commentEditor']"><br/>Last edited by <span ng-bind="comment['commentEditor']"></span> on <span ng-bind="comment['commentEdited.printValue']"></span></span>
   <button type="button" 

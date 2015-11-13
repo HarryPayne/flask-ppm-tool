@@ -21,7 +21,8 @@
       "app.report",
       "app.select", 
       "app.stateLocation",
-      "app.title"
+      "app.title",
+      "ngSanitize"
     ]);
 
 }());
