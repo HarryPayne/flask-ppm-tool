@@ -1,5 +1,5 @@
 <span ng-if="ctrl.mode=='view'">
-  <span ng-bind-html="attr.value"></span>
+  <span ng-bind-html="attr.printValue"></span>
 </span>
 <span ng-if="ctrl.mode=='edit' || ctrl.mode=='edit.detail' || ctrl.mode == 'add'">
   <p ng-bind="attr.help" ng-show="attr.help"></p>

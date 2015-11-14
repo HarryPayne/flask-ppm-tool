@@ -737,7 +737,6 @@ def getAttributeValuesFromForm(form, allAttrsFromDB):
         places. Make parent/child combinations. Compute printValues that will
         just be printed in view mode.
     """
-    
     token = ""
     attributes = []
 
@@ -791,6 +790,12 @@ def getAttributeValuesFromForm(form, allAttrsFromDB):
                 attributes.append({"name": childName,
                                    "value": childValue,
                                    "printValue": childValue["desc"] if childValue else ""})
+        
+        elif dbattr["format"] == "textArea":
+            # turn a blank text line into "<br><br>" HTML blank line for output.
+            # PostgreSQL seems to spit out "\n" and MySQL sends out "\r\n" for line feed
+            data = field.data
+            printValue = "<br><br>".join(data.split("\n\n"))
         
         elif "child_for_" in dbattr["format"]:
             continue
