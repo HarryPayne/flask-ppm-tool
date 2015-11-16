@@ -358,6 +358,24 @@ CREATE TABLE initiativelist (
 ALTER TABLE initiativelist OWNER TO payne;
 
 --
+-- Name: latest_disposition; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW latest_disposition AS
+ SELECT ranked."projectID",
+    ranked."disposedInFY",
+    ranked."disposedInQ"
+   FROM ( SELECT disposition."projectID",
+            disposition."disposedInFY",
+            disposition."disposedInQ",
+            rank() OVER (PARTITION BY disposition."projectID" ORDER BY disposition."disposedInFY" DESC, disposition."disposedInQ" DESC) AS latest
+           FROM disposition) ranked
+  WHERE (ranked.latest = 1);
+
+
+ALTER TABLE latest_disposition OWNER TO postgres;
+
+--
 -- Name: maturitylist; Type: TABLE; Schema: public; Owner: payne; Tablespace: 
 --
 
