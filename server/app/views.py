@@ -356,7 +356,7 @@ def getBreakdownChoices():
     table_names = db.metadata.tables.keys()
     list_names = [name[0:-4] for name in table_names if name[-4:] == "list"]
     # Can't do disposition until I figure out the mysql query to get the most recent disposition
-    list_names = [name for name in list_names if name != "disposition"]
+    # list_names = [name for name in list_names if name != "disposition"]
     choices = []
     for name in list_names:
         list_table = getattr(alch, name.capitalize()+"list")
@@ -370,39 +370,65 @@ def getBreakdownChoices():
 @app.route("/getBreakdownByAttribute/<attributeName>")
 def getBreakdownByAttribute(attributeName):
     """ send breakdown by attribute results: # projects for each value"""
+    # Find out everything about the specified table columns
+    allAttrsFromDB = getAllAttributes()
     col_name = attributeName+"ID"
+    attr = allAttrsFromDB[col_name]
     choices = getattr(alch, attributeName.capitalize() + "list").query.all()
+    
+    # tables for query
+    d = alch.Description
+    ld = alch.Latest_disposition
+    pt = alch.Portfolio
+    pr = alch.Project
+    table = ""
 
-    if hasattr(alch.Description, col_name):
-        table = alch.Description
-    elif hasattr(alch.Portfolio, col_name):
-        table = alch.Portfolio
-    elif hasattr(alch.Project, col_name):
-        table = alch.Project
+    # start with the Description table, and join if the attribute is in another table.
+    p = db.session.query(d)
+    if attr["table"] == "disposition":
+        table = ld
+    elif attr["table"] == "portfolio":
+        table = pt
+    elif attr["table"] == "portfolio":
+        table = pr    
+    if table:
+        p = p.outerjoin(table)
+    else:
+        table = d
 
     breakdown = []
+    # add a choice for selecting the null value
+    if attr["multi"] or attr["table"] == "disposition":
+        query_string = "{}=".format(col_name)
+        query_desc = "{} is none".format(attributeName)
+        r = p.filter(getattr(table, col_name) == None).order_by("projectID").all()
+
+        break_item = {"desc": u"none",
+                      "projectList": [item.projectID for item in r],
+                      "query_desc": query_desc,
+                      "query_string": query_string
+                      }
+        breakdown.append(break_item)
+
     for choice in choices:
         val = getattr(choice, col_name)
         desc = getattr(choice, attributeName+"Desc")
-        if desc == "":
-            desc = "none"
         
         # Send a string with the selection criterion description and one with
         # the selection criterion value(s).
         
-        query_desc = "{}={}".format(attributeName, 
-                                     "'{}'".format(desc) if " " in desc else desc)
         query_string = "{}={}".format(col_name, val)
+        query_desc = "{}={}".format(attributeName, 
+                                    "'{}'".format(desc) if " " in desc else desc)
+        if attr["multi"]:
+            r = p.filter(getattr(table, col_name).contains(choice))
+        else:
+            r = p.filter(getattr(table, col_name) == val)
         
-        try:
-            p = table.query.filter(getattr(table, col_name) == val).order_by("projectID").all()
-
-        except:
-            # when column value is a list, e.g., "driver", "stakeholder"
-            p = table.query.filter(getattr(table, col_name).contains(choice)).order_by("projectID").all()
+        r = r.order_by("projectID").all()
 
         break_item = {"desc": desc,
-                      "projectList": [item.projectID for item in p],
+                      "projectList": [item.projectID for item in r],
                       "query_desc": query_desc,
                       "query_string": query_string
                       }
@@ -477,9 +503,11 @@ def getReportResults():
     
     # Base for query
     d = alch.Description
+    dp = alch.Disposition
+    ld = alch.Latest_disposition
     pt = alch.Portfolio
     pr = alch.Project
-    p = db.session.query(d).join(pt).join(pr)
+    p = db.session.query(d).join(pt).join(pr).outerjoin(ld)
     
     desc = []
     query_descs = []
@@ -497,6 +525,8 @@ def getReportResults():
                 continue
             if attr["table"] == "description":
                 table = d
+            elif attr["table"] == "disposition":
+                table = ld
             elif attr["table"] == "portfolio":
                 table = pt
             elif attr["table"] == "project":
@@ -504,9 +534,14 @@ def getReportResults():
     
             # get unique list of integer values
             raw_values = list(set(query[key]))
+            null_values = False
+            if "" in raw_values:
+                null_values = True
+                raw_values.remove("")
+                
             int_values = map(int, raw_values)
             accepted_choices = [choice for choice in attr["choices"] if choice["id"] in int_values]
-            accepted_descs = ["'{}'".format(item["desc"]) for item in accepted_choices]
+            accepted_descs = ["'{}'".format(item["desc"]) if item["desc"] else "none" for item in accepted_choices]
             accepted_values = [item["id"] for item in accepted_choices]
             
             if len(accepted_descs) > 1:
@@ -536,7 +571,12 @@ def getReportResults():
                     p = p.join(t).filter(col.in_(accepted_values))
                 else:
                     p = p.filter(getattr(table, key).in_(accepted_values))
-        
+            
+            elif null_values:
+                query_descs.append("no {}".format(attr["label"]))
+                filters.append("{}=".format(key))
+                p = p.filter(getattr(table, key) == None)
+            
         p = p.order_by(getattr(d, "projectID"))
 
     response = getReportRowsFromQuery(p, columns)
@@ -562,14 +602,21 @@ def getReportRowsFromQuery(p, columns):
         for col in columns:
             col_name = col["name"]
             col_table = col["table"]
-            if col_table == "description":
+            if col_table == "disposition":
+                if item.disposition:
+                    item = item.disposition[0]
+                else:
+                    row[col_name] = ""
+                    continue
+            
+            if col_table == "description" or col_table == "disposition":
                 value = getattr(item, col_name)
                 table_relationship = None
             else:
                 # i.e., column is not in the description table, but buried 
                 # in item in a backref relationship whose name matches the
                 # table of interest.
-                table_relationship = getattr(item, col_table)[0]
+                table_relationship = getattr(item, col_table)
                 value = getattr(table_relationship, col_name)
             
             if col["format"] == "textArea":
@@ -582,9 +629,13 @@ def getReportRowsFromQuery(p, columns):
                 if table_relationship and hasattr(table_relationship, relationship_name):
                     model = getattr(table_relationship, relationship_name)
                     value = getattr(model, relationship_name+"Desc")
+                    if not value:
+                        value = "none"
                 elif hasattr(item, relationship_name):
                     model = getattr(item, relationship_name)
                     value = getattr(model, relationship_name+"Desc")
+                    if not value:
+                        value = "none"
                 elif type(value) == type(InstrumentedList()):
                     # Multiple select fields have a relationship with a name 
                     # that has "ID" on the end, so we already have the right

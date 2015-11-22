@@ -149,6 +149,19 @@ class Disposition(ModelForm):
         read_only(self.lastModified)
         read_only(self.lastModifiedBy)
 
+class Latest_disposition(ModelForm):
+    class Meta:
+        model = alch.Latest_disposition
+        include_primary_keys = True
+        only = ["dispositionID", "explanation", "disposedInFY", "disposedInQ", 
+                "reconsiderInFY", "reconsiderInQ", "startInY", "startInM", 
+                "finishInY", "finishInM", "lastModified", "lastModifiedBy"]
+
+    def __init__(self, *args, **kwargs):
+        super(Latest_disposition, self).__init__(*args, **kwargs)
+        read_only(self.lastModified)
+        read_only(self.lastModifiedBy)
+
 class Comment(ModelForm):
     class Meta:
         model = alch.Comment

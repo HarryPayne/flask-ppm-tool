@@ -21,7 +21,8 @@
       "app.report",
       "app.select", 
       "app.stateLocation",
-      "app.title"
+      "app.title",
+      "ngSanitize"
     ]);
 
 }());
@@ -3538,7 +3539,8 @@ Data attributes:
                     {data: "name", title: "Name"},
                     {data: "description", title: "Description"},
                     {data: "maturityID", title: "Maturity"},
-                    {data: "driverID", title: "Driver"}],
+                    {data: "driverID", title: "Driver"},
+                    {data: "dispositionID", title: "Disposition"}],
         dtInstance: {},
         dtOptions: {        
           destroy: true,

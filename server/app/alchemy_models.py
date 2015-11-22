@@ -488,17 +488,6 @@ t_child = Table(
     Column("childID", Integer, ForeignKey("description.projectID"), primary_key=True)
 )
 
-t_latest_disposition = Table("latest_disposition", metadata,
-    Column("projectID", Integer, ForeignKey("disposition.projectID"), primary_key=True,
-           nullable=False, index=True, server_default=text("'0'")),
-    Column("disposedInFY", Integer, ForeignKey("disposition.disposedInFY"), primary_key=True, 
-           info={"label": "last disposed in"},
-           nullable=False, index=True, server_default=text("'0'")),
-    Column("disposedInQ", Integer, ForeignKey("disposition.disposedInQ"), primary_key=True,
-           nullable=False, index=True, server_default=text("'0'")),
-    autoload=True, autoload_with=db.engine
-)
-
 class Disposition(Base):
     __tablename__ = "disposition"
 
@@ -520,7 +509,8 @@ class Disposition(Base):
                                  "label": "disposition",
                                  "attributeID": 320,
                                  "help": "What decision was made during the planning cycle with respect to this project?"},
-                           nullable=False, index=True, server_default=text("'0'"))
+                           nullable=True, index=True, server_default=text("'0'"))
+    disposition = db.relationship("Dispositionlist", backref="disposition")
     explanation = Column(Text, nullable=True, 
                          info={"attributeID": 330,
                                "help": "State the reasons behind the disposition decision."})
@@ -565,6 +555,71 @@ class Disposition(Base):
     description = db.relationship("Description", backref="dispositions")
     
 
+class Latest_disposition(Base):
+    __tablename__ = "latest_disposition"
+    projectID = Column(Integer, ForeignKey("description.projectID"), primary_key=True, 
+                       nullable=False, index=True, server_default=text("'0'"))
+    disposedInFY = Column(Integer, ForeignKey("fiscalyears.fiscalyearID"), primary_key=True,
+                          info={"choices": FY_CHOICES, 
+                                "label": "disposed in",
+                                "attributeID": 310,
+                                "help": "In which planning cycle was this disposition made? Changing this date and pressing save will create a new disposition record.  If you don't change the date, then you will update the record you are looking at."},
+                          nullable=False, index=True, server_default=text("'0'"))
+    disposedInQ = Column(Integer, ForeignKey("quarters.quarterID"), primary_key=True,
+                         info={"choices": Q_CHOICES,
+                               "attributeID": 315,
+                               "help": ""},
+                         nullable=False, index=True, server_default=text("'0'"))
+    dispositionID = Column(Integer, ForeignKey(Dispositionlist.dispositionID),
+                           info={"choices": DISPOSITION_CHOICES,
+                                 "label": "disposition",
+                                 "attributeID": 320,
+                                 "help": "What decision was made during the planning cycle with respect to this project?"},
+                           nullable=True, index=True, server_default=text("'0'"))
+    disposition = db.relationship("Dispositionlist", backref="latest_disposition")
+    explanation = Column(Text, nullable=True, 
+                         info={"attributeID": 330,
+                               "help": "State the reasons behind the disposition decision."})
+    reconsiderInFY = Column(Integer, ForeignKey("fiscalyears.fiscalyearID"),
+                            info={"choices": FY_CHOICES, 
+                                  "label": "reconsider in",
+                                  "attributeID": 340,
+                                  "help": "For a deferred project, when will it be considered again?"},
+                            nullable=True, server_default=None)
+    reconsiderInQ = Column(Integer, ForeignKey("quarters.quarterID"),
+                           info={"choices": Q_CHOICES,
+                                 "attributeID": 345,
+                                 "help": ""},
+                           nullable=True, server_default=text("'0'"))
+    startInY = Column(Integer, ForeignKey("calendaryears.calendaryearID"),
+                      info={"choices": Y_CHOICES, 
+                            "label": "start in",
+                            "attributeID": 350,
+                            "help": "This date, and the next, are the dates agreed to by the project's host division during the sequencing stage.  They are high-level, estimated dates for the start and finish of work on the project."},
+                      nullable=True, server_default=text("'0'"))
+    startInM = Column(Integer, ForeignKey("months.monthID"),
+                      info={"choices": M_CHOICES,
+                            "attributeID": 355,
+                            "help": ""},
+                      nullable=True, server_default=text("'0'"))
+    finishInY = Column(Integer, ForeignKey("calendaryears.calendaryearID"),
+                       info={"choices": Y_CHOICES, 
+                             "label": "finish in",
+                             "attributeID": 360,
+                             "help": "What finishing month was estimated in the scheduling phase?"},
+                       nullable=True, server_default=text("'0'"))
+    finishInM = Column(Integer, ForeignKey("months.monthID"),
+                       info={"choices": M_CHOICES,
+                             "attributeID": 365,
+                             "help": ""},
+                       nullable=True, server_default=text("'0'"))
+    lastModified = Column(DateTime, nullable=True, server_default=text("CURRENT_TIMESTAMP"), 
+                          info={"label": "last updated", "attributeID": 998, "help": ""})
+    lastModifiedBy = Column(String(100), nullable=True, server_default=text("''"), 
+                            info={"label": "last updated by", "attributeID": 999, "help": ""})
+
+    description = db.relationship("Description", backref="disposition")
+    
 class Description(Base):
     __tablename__ = "description"
         
@@ -665,13 +720,6 @@ class Description(Base):
                                info={"label": "children",
                                      "attributeID": 200,
                                      "help": "For an absorbed project, enter the project ID of the surviving project. For a split project, enter the project IDs of the child projects."})
-    latest_disposition = db.relationship(Disposition,
-                                         secondary=t_latest_disposition,
-                                         primaryjoin=projectID==t_latest_disposition.c.projectID,
-                                         secondaryjoin=db.and_(t_latest_disposition.c.projectID==Disposition.projectID,\
-                                                             t_latest_disposition.c.disposedInFY==Disposition.disposedInFY,\
-                                                             t_latest_disposition.c.disposedInQ==Disposition.disposedInQ),
-                                         viewonly=True)
     lastModified = Column(DateTime, nullable=True, server_default=text("CURRENT_TIMESTAMP"), info={"label": "last updated", "attributeID": 998, "help": ""})
     lastModifiedBy = Column(String(100), nullable=True, server_default=text("''"), info={"label": "last updated by", "attributeID": 999, "help": ""})
     

@@ -175,7 +175,7 @@ CREATE TABLE disposition (
     "projectID" integer DEFAULT 0 NOT NULL,
     "disposedInFY" integer DEFAULT 0 NOT NULL,
     "disposedInQ" integer DEFAULT 0 NOT NULL,
-    "dispositionID" integer DEFAULT 0 NOT NULL,
+    "dispositionID" integer,
     explanation text,
     "reconsiderInFY" integer,
     "reconsiderInQ" integer DEFAULT 0,
@@ -364,10 +364,30 @@ ALTER TABLE initiativelist OWNER TO payne;
 CREATE VIEW latest_disposition AS
  SELECT ranked."projectID",
     ranked."disposedInFY",
-    ranked."disposedInQ"
+    ranked."disposedInQ",
+    ranked."dispositionID",
+    ranked.explanation,
+    ranked."reconsiderInFY",
+    ranked."reconsiderInQ",
+    ranked."startInY",
+    ranked."startInM",
+    ranked."finishInY",
+    ranked."finishInM",
+    ranked."lastModified",
+    ranked."lastModifiedBy"
    FROM ( SELECT disposition."projectID",
             disposition."disposedInFY",
             disposition."disposedInQ",
+            disposition."dispositionID",
+            disposition.explanation,
+            disposition."reconsiderInFY",
+            disposition."reconsiderInQ",
+            disposition."startInY",
+            disposition."startInM",
+            disposition."finishInY",
+            disposition."finishInM",
+            disposition."lastModified",
+            disposition."lastModifiedBy",
             rank() OVER (PARTITION BY disposition."projectID" ORDER BY disposition."disposedInFY" DESC, disposition."disposedInQ" DESC) AS latest
            FROM disposition) ranked
   WHERE (ranked.latest = 1);
