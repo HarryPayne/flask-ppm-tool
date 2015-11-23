@@ -400,10 +400,10 @@ def getBreakdownByAttribute(attributeName):
     # add a choice for selecting the null value
     if attr["multi"] or attr["table"] == "disposition":
         query_string = "{}=".format(col_name)
-        query_desc = "{} is none".format(attributeName)
+        query_desc = "no {}".format(attributeName)
         r = p.filter(getattr(table, col_name) == None).order_by("projectID").all()
 
-        break_item = {"desc": u"none",
+        break_item = {"desc": query_desc,
                       "projectList": [item.projectID for item in r],
                       "query_desc": query_desc,
                       "query_string": query_string
@@ -413,6 +413,8 @@ def getBreakdownByAttribute(attributeName):
     for choice in choices:
         val = getattr(choice, col_name)
         desc = getattr(choice, attributeName+"Desc")
+        if desc == "":
+            desc = "none"
         
         # Send a string with the selection criterion description and one with
         # the selection criterion value(s).
@@ -434,14 +436,14 @@ def getBreakdownByAttribute(attributeName):
                       }
         breakdown.append(break_item)
     
-    if len(breakdown):
-        if breakdown[0]["desc"] in ["", "none"]:
-            first = breakdown[0]
-            breakdown = breakdown[1:]
-            breakdown.sort(key = lambda item: item["desc"])
-            breakdown.insert(0, first)
-        else:
-            breakdown.sort(key = lambda item: item["desc"])
+#     if len(breakdown):
+#         if breakdown[0]["desc"] in ["", "none"]:
+#             first = breakdown[0]
+#             breakdown = breakdown[1:]
+#             breakdown.sort(key = lambda item: item["desc"])
+#             breakdown.insert(0, first)
+#         else:
+#             breakdown.sort(key = lambda item: item["desc"])
     
     return dumps(breakdown)
 
@@ -846,7 +848,7 @@ def getAttributeValuesFromForm(form, allAttrsFromDB):
             # turn a blank text line into "<br><br>" HTML blank line for output.
             # PostgreSQL seems to spit out "\n" and MySQL sends out "\r\n" for line feed
             data = field.data
-            printValue = "<br><br>".join(data.split("\n\n"))
+            printValue = "<br><br>".join(data.split("\n\n")) if data else ""
         
         elif "child_for_" in dbattr["format"]:
             continue
