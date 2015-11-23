@@ -66,7 +66,7 @@ COPY fundingsourcelist ("fundingsourceID", "fundingsourceDesc", "fundingsourceTe
 --
 
 COPY hostlist ("hostID", "hostDesc", "hostText") FROM stdin;
-0	none	
+0		
 1	CPT/ITS	
 2	CPT/TIM	
 3	CPT/TS	
@@ -102,7 +102,7 @@ COPY maturitylist ("maturityID", "maturityDesc", "maturityText") FROM stdin;
 --
 
 COPY sponsorlist ("sponsorID", "sponsorDesc", "sponsorText") FROM stdin;
-0	none	
+0		
 1	HST	The HST mission
 2	JWST	The JWST mission
 3	CMO	The Community Missions Office
@@ -152,7 +152,7 @@ COPY technologylist ("technologyID", "technologyDesc", "technologyText", "techno
 --
 
 COPY typelist ("typeID", "typeDesc", "typeText") FROM stdin;
-0	none	
+0		
 1	process engineering	These are projects that focus on people and systems processes. These may include migration, upgrade, or new functionality type work in an implementation phase (or follow-on project).
 2	maintenance	These are "keep the lights on" projects. Most maintenance work is not run as projects, however. Maintenance would include items like OS patching, servicing jukebox mechanics, or replacing faulty memory, power supplies, or UPS. Replacing a broken system with an identical replacement without making any significant changes to the infrastructure may be maintenance, but see below under upgrade. Maintenance projects do not add any new systems or functionality to the environment. 
 3	migration	These are projects that rearrange existing hardware, software or processes, and may consist of re-configuration, consolidation, optimization, porting, or physical relocation.  Examples include consolidating storage on the EMC, or moving the last processing off of VMS. Although they do not necessarily add new things, these projects do change the infrastructure. 
@@ -655,7 +655,7 @@ SELECT pg_catalog.setval('"description_projectID_seq"', 1, false);
 
 COPY dispositionlist ("dispositionID", "dispositionDesc", "dispositionText") FROM stdin;
 0		
-2	deferred	This project will be reconsidered in a future planning cycle. 
+2			This project will be reconsidered in a future planning cycle. 
 4	committed	This project is scheduled in the next implementation plan and a good-faith commitment to execute it has been made.
 5	short list	This project has passed the filter being used in this portfolio planning cycle, and is being scrutinized for fit in the next implementation plan.
 \.

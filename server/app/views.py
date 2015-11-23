@@ -355,9 +355,8 @@ def getBreakdownChoices():
     """ send choices for breakdown by attribute dropdown """
     table_names = db.metadata.tables.keys()
     list_names = [name[0:-4] for name in table_names if name[-4:] == "list"]
-    # Can't do disposition until I figure out the mysql query to get the most recent disposition
-    # list_names = [name for name in list_names if name != "disposition"]
     choices = []
+    
     for name in list_names:
         list_table = getattr(alch, name.capitalize()+"list")
         choice = {"id": name,
@@ -374,7 +373,12 @@ def getBreakdownByAttribute(attributeName):
     allAttrsFromDB = getAllAttributes()
     col_name = attributeName+"ID"
     attr = allAttrsFromDB[col_name]
-    choices = getattr(alch, attributeName.capitalize() + "list").query.all()
+    
+    # attr["choices"] represents the options, but for the filter operation
+    # below we need actual SQLAlchemy objects. In alchemy_models we saved
+    # the raw options table results in objects with names like TYPES_RESULTS.
+    #choices = getattr(alch, attributeName.capitalize() + "list").query.all()
+    choices = getattr(alch, attributeName.upper() + "_RESULTS")
     
     # tables for query
     d = alch.Description
@@ -389,7 +393,7 @@ def getBreakdownByAttribute(attributeName):
         table = ld
     elif attr["table"] == "portfolio":
         table = pt
-    elif attr["table"] == "portfolio":
+    elif attr["table"] == "project":
         table = pr    
     if table:
         p = p.outerjoin(table)

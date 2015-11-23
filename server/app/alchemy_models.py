@@ -322,162 +322,209 @@ class Month(Base):
     monthDesc = Column(String(12), nullable=False, server_default=text("''"))
 
 # vocabularies for rendering IDs as a select dropdown.
+COMPLEXITY_RESULTS = []
 COMPLEXITY_CHOICES = []
 try:
-    for row in Complexitylist.query.order_by("complexityID").all():
+    COMPLEXITY_RESULTS = Complexitylist.query.order_by("complexityID").all()
+    for row in COMPLEXITY_RESULTS:
         COMPLEXITY_CHOICES.append((row.complexityID, row.complexityDesc))
 except:
     pass
 
-
-COST_CHOICES = []
+COSTLEVEL_RESULTS = []
+COSTLEVEL_CHOICES = []
 try:
-    for row in Costlevellist.query.order_by("costlevelID").all():
-        COST_CHOICES.append((row.costlevelID, row.costlevelDesc))
+    COSTLEVEL_RESULTS = Costlevellist.query.order_by("costlevelID").all()
+    for row in COSTLEVEL_CHOICES:
+        COSTLEVEL_CHOICES.append((row.costlevelID, row.costlevelDesc))
 except:
     pass
+
+DISPOSITION_RESULTS = []
 DISPOSITION_CHOICES = []
 try:
-    for row in Dispositionlist.query.order_by("dispositionID").all():
+    DISPOSITION_RESULTS = Dispositionlist.query.order_by("dispositionDesc").all()
+    for row in DISPOSITION_RESULTS:
         DISPOSITION_CHOICES.append((row.dispositionID, row.dispositionDesc))
 except:
     pass
 
+DRIVER_RESULTS = []
 DRIVER_CHOICES = []
 try:
-    for row in Driverlist.query.order_by("driverDesc").all():
+    DRIVER_RESULTS = Driverlist.query.order_by("driverDesc").all()
+    for row in DRIVER_RESULTS:
         DRIVER_CHOICES.append((row.driverID, row.driverDesc))
 except:
     pass
 
+FINAL_RESULTS = []
 FINAL_CHOICES = []
 try:
-    for row in Finallist.query.order_by("finalID").all():
+    FINAL_RESULTS = Finallist.query.order_by("finalID").all()
+    for row in FINAL_RESULTS:
         FINAL_CHOICES.append((row.finalID, row.finalDesc))
 except:
     pass
 
+FLAVOR_RESULTS = []
 FLAVOR_CHOICES = []
 try:
-    for row in Flavorlist.query.order_by("flavorID").all():
+    FLAVOR_RESULTS = Flavorlist.query.order_by("flavorID").all()
+    for row in FLAVOR_RESULTS:
         FLAVOR_CHOICES.append((row.flavorID, row.flavorDesc))
 except:
     pass
 
+FUNDINGSOURCE_RESULTS = []
 FUNDINGSOURCE_CHOICES = []
 try:
-    for row in Fundingsourcelist.query.order_by("fundingsourceID").all():
+    FUNDINGSOURCE_RESULTS = Fundingsourcelist.query.order_by("fundingsourceID").all()
+    for row in FUNDINGSOURCE_RESULTS:
         FUNDINGSOURCE_CHOICES.append((row.fundingsourceID, row.fundingsourceDesc))
 except:
     pass
 
+FY_RESULTS = []
 FY_CHOICES = []
 try:
-    for row in Fiscalyear.query.order_by(desc("fiscalyearID")).all():
+    FY_RESULTS = Fiscalyear.query.order_by(desc("fiscalyearID")).all()
+    for row in FY_RESULTS:
         FY_CHOICES.append((row.fiscalyearID, row.fiscalyearDesc))
 except:
     pass
 
+HOST_RESULTS = []
 HOST_CHOICES = []
 try:
-    for row in Hostlist.query.order_by("hostDesc").all():
+    HOST_RESULTS = Hostlist.query.order_by("hostDesc").all()
+    for row in HOST_RESULTS:
        HOST_CHOICES.append((row.hostID, row.hostDesc))
 except:
     pass
 
+INITIATIVE_RESULTS = []
 INITIATIVE_CHOICES = []
 try:
-    for row in Initiativelist.query.order_by("initiativeDesc").all():
+    INITIATIVE_RESULTS = Initiativelist.query.order_by("initiativeDesc").all()
+    for row in INITIATIVE_RESULTS:
         INITIATIVE_CHOICES.append((row.initiativeID, row.initiativeDesc))
 except:
     pass
 
+M_RESULTS = []
 M_CHOICES = []
 try:
-    for row in Month.query.order_by("monthID").all():
+    M_RESULTS = Month.query.order_by("monthID").all()
+    for row in M_RESULTS:
         M_CHOICES.append((row.monthID, row.monthDesc))
 except:
     pass
 
+MATURITY_RESULTS = []
 MATURITY_CHOICES = []
 try:
-    for row in Maturitylist.query.order_by("maturityID").all():
+    MATURITY_RESULTS = Maturitylist.query.order_by("maturityID").all()
+    for row in MATURITY_RESULTS:
         MATURITY_CHOICES.append((row.maturityID, row.maturityDesc))
 except:
     pass
 
-PROJECT_CHOICES = []
+PROGRESS_RESULTS = []
+PROGRESS_CHOICES = []
 try:
-    for row in Progresslist.query.order_by("progressID").all():
-        PROJECT_CHOICES.append((row.progressID, row.progressDesc))
+    PROGRESS_RESULTS = Progresslist.query.order_by("progressID").all()
+    for row in PROGRESS_RESULTS:
+        PROGRESS_CHOICES.append((row.progressID, row.progressDesc))
 except:
     pass
 
+PROJ_VISIBILITY_RESULTS = []
 PROJ_VISIBILITY_CHOICES = []
 try:
-    for row in Proj_visibilitylist.query.order_by("proj_visibilityID").all():
+    PROJ_VISIBILITY_RESULTS = Proj_visibilitylist.query.order_by("proj_visibilityID").all()
+    for row in PROJ_VISIBILITY_RESULTS:
         PROJ_VISIBILITY_CHOICES.append((row.proj_visibilityID, row.proj_visibilityDesc))
 except:
     pass
 
+Q_RESULTS = []
 Q_CHOICES = []
 try:
-    for row in Quarter.query.order_by("quarterID").all():
+    Q_RESULTS = Quarter.query.order_by("quarterID").all()
+    for row in Q_RESULTS:
         Q_CHOICES.append((row.quarterID, row.quarterDesc))
 except:
     pass
 
-RISK_CHOICES = []
+RISKLEVEL_RESULTS = []
+RISKLEVEL_CHOICES = []
 try:
-    for row in Risklevellist.query.order_by("risklevelID").all():
-        RISK_CHOICES.append((row.risklevelID, row.risklevelDesc))
+    RISKLEVEL_RESULTS = Risklevellist.query.order_by("risklevelID").all()
+    for row in RISKLEVEL_RESULTS:
+        RISKLEVEL_CHOICES.append((row.risklevelID, row.risklevelDesc))
 except:
     pass
 
+SCOPE_RESULTS = []
 SCOPE_CHOICES = []
 try:
-    for row in Scopelist.query.order_by("scopeID").all():
+    SCOPE_RESULTS = Scopelist.query.order_by("scopeID").all()
+    for row in SCOPE_RESULTS:
         SCOPE_CHOICES.append((row.scopeID, row.scopeDesc))
 except:
     pass
 
+SPONSOR_RESULTS = []
 SPONSOR_CHOICES = []
 try:
-    for row in Sponsorlist.query.order_by("sponsorDesc").all():
+    SPONSOR_RESULTS = Sponsorlist.query.order_by("sponsorDesc").all()
+    for row in SPONSOR_RESULTS:
         SPONSOR_CHOICES.append((row.sponsorID, row.sponsorDesc))
 except:
     pass
 
+STAKEHOLDER_RESULTS = []
 STAKEHOLDER_CHOICES = []
 try:
-    for row in Stakeholderlist.query.order_by("stakeholderDesc").all():
+    STAKEHOLDER_RESULTS = Stakeholderlist.query.order_by("stakeholderDesc").all()
+    for row in STAKEHOLDER_RESULTS:
         STAKEHOLDER_CHOICES.append((row.stakeholderID, row.stakeholderDesc))
 except:
     pass
+
+TECHNOLOGY_RESULTS = []
 TECHNOLOGY_CHOICES = []
 try:
-    for row in Technologylist.query.order_by("technologyID").all():
+    TECHNOLOGY_RESULTS = Technologylist.query.order_by("technologyID").all()
+    for row in TECHNOLOGY_RESULTS:
         TECHNOLOGY_CHOICES.append((row.technologyID, row.technologyDesc))
 except:
     pass
 
+TYPE_RESULTS = []
 TYPE_CHOICES = []
 try:
-    for row in Typelist.query.order_by("typeDesc").all():
+    TYPE_RESULTS = Typelist.query.order_by("typeDesc").all()
+    for row in TYPE_RESULTS:
         TYPE_CHOICES.append((row.typeID, row.typeDesc))
 except:
     pass
 
+VISIBILITY_RESULTS = []
 VISIBILITY_CHOICES = []
 try:
-    for row in Visibilitylist.query.order_by("visibilityID").all():
+    VISIBILITY_RESULTS = Visibilitylist.query.order_by("visibilityID").all()
+    for row in VISIBILITY_RESULTS:
         VISIBILITY_CHOICES.append((row.visibilityID, row.visibilityDesc))
 except:
     pass
 
+Y_RESULTS = []
 Y_CHOICES = []
 try:
-    for row in Calendaryear.query.order_by(desc("calendaryearID")).all():
+    Y_RESULTS = Calendaryear.query.order_by(desc("calendaryearID")).all()
+    for row in Y_RESULTS:
         Y_CHOICES.append((row.calendaryearID, row.calendaryearDesc))
 except:
     pass
@@ -824,14 +871,14 @@ class Portfolio(Base):
                           nullable=True, index=True, server_default=text("'0'"))
     visibility = db.relationship("Visibilitylist", backref="portfolio")
     risklevelID = Column(Integer, ForeignKey("risklevellist.risklevelID"),
-                         info={"choices": RISK_CHOICES, 
+                         info={"choices": RISKLEVEL_CHOICES, 
                                "label": "risk level",
                                "attributeID": 270,
                                "help": "Characterize the level of risk associated with not doing this project."},
                          nullable=True, index=True, server_default=text("'0'"))
     risklevel = db.relationship("Risklevellist", backref="portfolio")
     costlevelID = Column(Integer, ForeignKey("costlevellist.costlevelID"),
-                         info={"choices": COST_CHOICES, 
+                         info={"choices": COSTLEVEL_CHOICES, 
                                "label": "cost level",
                                "attributeID": 280,
                                "help": "Characterize the cost level of this project."},
@@ -872,7 +919,7 @@ class Project(Base):
                                "help": "The full URL of the project page. The project page is where project status is reported, such as on the CPT project wiki. Limited to 255 characters."},
                          nullable=True, server_default=text("''"))
     progressID = Column(Integer, ForeignKey("progresslist.progressID"),
-                        info={"choices": PROJECT_CHOICES, 
+                        info={"choices": PROGRESS_CHOICES, 
                               "label": "progress",
                               "attributeID": 380,
                               "help": "Where is this project in the Project Management Framework?"},
