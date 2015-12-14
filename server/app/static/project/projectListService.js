@@ -198,20 +198,22 @@
     /**
      *  @name initModel
      *  @desc Initialize the masterList object to make it ready for receiving
-     *        data
+     *        data. The masterList holds the service state data, which gets
+     *        saved as JSON to local storage when updated and restored when
+     *        necessary.
      */
-    function initModel( ){
+    function initModel() {
       service.masterList = {
         allProjects: [],
         description: "none",
-        sql: "",
         index: -1,
         next: -1,
         previous: -1,
         projectID: -1,
         projectName: "",
         selectedIds: [],
-        selectedProjects: []
+        selectedProjects: [],
+        sql: ""
       };
     };
 
@@ -260,6 +262,10 @@
         .then(function(projectID) {
           service.setDescription("none");
           service.setSql("");
+          service.masterList.selectedProjects = service.masterList.allProjects;
+          service.masterList.selectedIds = _.map(service.masterList.allProjects, function(project) {
+            return project.projectID;
+          });
         });
     }
 
@@ -382,7 +388,6 @@
             }); 
         }
 
-        //var index = selectedIds.indexOf(projectID);
         if (index > -1) {
           service.masterList.index = index;
           if (index > 0) {

@@ -19,6 +19,7 @@ from widgets import ChoicesSelect
 
 # added by hand:
 from app import db
+from sqlalchemy.ext.hybrid import hybrid_property
 Base = db.Model
 metadata = db.metadata
 
@@ -542,7 +543,7 @@ class Disposition(Base):
                        nullable=False, index=True, server_default=text("'0'"))
     disposedInFY = Column(Integer, ForeignKey("fiscalyears.fiscalyearID"), primary_key=True,
                           info={"choices": FY_CHOICES, 
-                                "label": "disposed in",
+                                "label": "disposed",
                                 "attributeID": 310,
                                 "help": "In which planning cycle was this disposition made? Changing this date and pressing save will create a new disposition record.  If you don't change the date, then you will update the record you are looking at."},
                           nullable=False, index=True, server_default=text("'0'"))
@@ -563,7 +564,7 @@ class Disposition(Base):
                                "help": "State the reasons behind the disposition decision."})
     reconsiderInFY = Column(Integer, ForeignKey("fiscalyears.fiscalyearID"),
                             info={"choices": FY_CHOICES, 
-                                  "label": "reconsider in",
+                                  "label": "reconsider",
                                   "attributeID": 340,
                                   "help": "For a deferred project, when will it be considered again?"},
                             nullable=True, server_default=None)
@@ -574,7 +575,7 @@ class Disposition(Base):
                            nullable=True, server_default=text("'0'"))
     startInY = Column(Integer, ForeignKey("calendaryears.calendaryearID"),
                       info={"choices": Y_CHOICES, 
-                            "label": "start in",
+                            "label": "start",
                             "attributeID": 350,
                             "help": "This date, and the next, are the dates agreed to by the project's host division during the sequencing stage.  They are high-level, estimated dates for the start and finish of work on the project."},
                       nullable=True, server_default=text("'0'"))
@@ -585,7 +586,7 @@ class Disposition(Base):
                       nullable=True, server_default=text("'0'"))
     finishInY = Column(Integer, ForeignKey("calendaryears.calendaryearID"),
                        info={"choices": Y_CHOICES, 
-                             "label": "finish in",
+                             "label": "finish",
                              "attributeID": 360,
                              "help": "What finishing month was estimated in the scheduling phase?"},
                        nullable=True, server_default=text("'0'"))
@@ -608,7 +609,7 @@ class Latest_disposition(Base):
                        nullable=False, index=True, server_default=text("'0'"))
     disposedInFY = Column(Integer, ForeignKey("fiscalyears.fiscalyearID"), primary_key=True,
                           info={"choices": FY_CHOICES, 
-                                "label": "disposed in",
+                                "label": "disposed",
                                 "attributeID": 310,
                                 "help": "In which planning cycle was this disposition made? Changing this date and pressing save will create a new disposition record.  If you don't change the date, then you will update the record you are looking at."},
                           nullable=False, index=True, server_default=text("'0'"))
@@ -617,6 +618,11 @@ class Latest_disposition(Base):
                                "attributeID": 315,
                                "help": ""},
                          nullable=False, index=True, server_default=text("'0'"))
+    
+    @hybrid_property
+    def disposedIn(self):
+        return "FY" + str(self.disposedInFY)[-2:] + " Q" + str(self.disposedInQ)
+    
     dispositionID = Column(Integer, ForeignKey(Dispositionlist.dispositionID),
                            info={"choices": DISPOSITION_CHOICES,
                                  "label": "disposition",
@@ -629,7 +635,7 @@ class Latest_disposition(Base):
                                "help": "State the reasons behind the disposition decision."})
     reconsiderInFY = Column(Integer, ForeignKey("fiscalyears.fiscalyearID"),
                             info={"choices": FY_CHOICES, 
-                                  "label": "reconsider in",
+                                  "label": "reconsider",
                                   "attributeID": 340,
                                   "help": "For a deferred project, when will it be considered again?"},
                             nullable=True, server_default=None)
@@ -638,9 +644,16 @@ class Latest_disposition(Base):
                                  "attributeID": 345,
                                  "help": ""},
                            nullable=True, server_default=text("'0'"))
+    
+    @hybrid_property
+    def reconsiderIn(self):
+        response = "FY" + str(self.reconsiderInFY)[-2:] if self.reconsiderInFY else ""
+        response += " Q" + str(self.reconsiderInQ) if self.reconsiderInQ else ""
+        return response
+
     startInY = Column(Integer, ForeignKey("calendaryears.calendaryearID"),
                       info={"choices": Y_CHOICES, 
-                            "label": "start in",
+                            "label": "start",
                             "attributeID": 350,
                             "help": "This date, and the next, are the dates agreed to by the project's host division during the sequencing stage.  They are high-level, estimated dates for the start and finish of work on the project."},
                       nullable=True, server_default=text("'0'"))
@@ -649,9 +662,19 @@ class Latest_disposition(Base):
                             "attributeID": 355,
                             "help": ""},
                       nullable=True, server_default=text("'0'"))
+    startMChoice = db.relationship("Month", 
+                                   primaryjoin=startInM==Month.monthID,
+                                   backref="latest_disposition_start")
+    
+    @hybrid_property
+    def startIn(self):
+        response = self.startMChoice.monthDesc if self.startMChoice.monthDesc else ""
+        response += " {}".format(str(self.startInY)) if self.startInY else ""
+        return response
+        
     finishInY = Column(Integer, ForeignKey("calendaryears.calendaryearID"),
                        info={"choices": Y_CHOICES, 
-                             "label": "finish in",
+                             "label": "finish",
                              "attributeID": 360,
                              "help": "What finishing month was estimated in the scheduling phase?"},
                        nullable=True, server_default=text("'0'"))
@@ -660,6 +683,16 @@ class Latest_disposition(Base):
                              "attributeID": 365,
                              "help": ""},
                        nullable=True, server_default=text("'0'"))
+    finishMChoice = db.relationship("Month", 
+                                    primaryjoin=finishInM==Month.monthID,
+                                    backref="latest_disposition_finish")
+    
+    @hybrid_property
+    def finishIn(self):
+        response = self.finishMChoice[0].finishInMDesc if self.finishMChoice[0].finishInMDesc else ""
+        response += " {}".format(str(self.finishInY)) if self.finishInY else ""
+        return response
+        
     lastModified = Column(DateTime, nullable=True, server_default=text("CURRENT_TIMESTAMP"), 
                           info={"label": "last updated", "attributeID": 998, "help": ""})
     lastModifiedBy = Column(String(100), nullable=True, server_default=text("''"), 
@@ -757,7 +790,7 @@ class Description(Base):
                            "attributeID": 190,
                            "help": "If this project has come to an end, one way or the other, what is that final state?"}, 
                      nullable=True, index=True, server_default=text("'0'"))
-    final = db.relationship("Finallist", backref="description")
+    finalChoice = db.relationship("Finallist", backref="description")
     childID = db.relationship("Description", 
                                secondary=t_child,
                                primaryjoin=projectID==t_child.c.projectID,
@@ -892,7 +925,7 @@ class Portfolio(Base):
     budgetInFY = Column(Integer, ForeignKey("fiscalyears.fiscalyearID"), 
                         info={"choices": FY_CHOICES, 
                               "coerce": int,
-                              "label": "budget in",
+                              "label": "budget",
                               "attributeID": 300,
                               "help": "For projects whose budget needs to be planned (e.g., ED-05), when will that happen?"},
                         nullable=True, index=True, server_default=None)

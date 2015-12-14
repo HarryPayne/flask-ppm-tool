@@ -1440,6 +1440,7 @@ Data attributes:
   
 }());
 
+
 (function() {
   
   angular
@@ -3127,20 +3128,22 @@ Data attributes:
     /**
      *  @name initModel
      *  @desc Initialize the masterList object to make it ready for receiving
-     *        data
+     *        data. The masterList holds the service state data, which gets
+     *        saved as JSON to local storage when updated and restored when
+     *        necessary.
      */
-    function initModel( ){
+    function initModel() {
       service.masterList = {
         allProjects: [],
         description: "none",
-        sql: "",
         index: -1,
         next: -1,
         previous: -1,
         projectID: -1,
         projectName: "",
         selectedIds: [],
-        selectedProjects: []
+        selectedProjects: [],
+        sql: ""
       };
     };
 
@@ -3189,6 +3192,10 @@ Data attributes:
         .then(function(projectID) {
           service.setDescription("none");
           service.setSql("");
+          service.masterList.selectedProjects = service.masterList.allProjects;
+          service.masterList.selectedIds = _.map(service.masterList.allProjects, function(project) {
+            return project.projectID;
+          });
         });
     }
 
@@ -3311,7 +3318,6 @@ Data attributes:
             }); 
         }
 
-        //var index = selectedIds.indexOf(projectID);
         if (index > -1) {
           service.masterList.index = index;
           if (index > 0) {
@@ -3531,6 +3537,7 @@ Data attributes:
       setReportResults: setReportResults,
       setReportTableData: setReportTableData,
       tableColumns: tableColumns,
+      title: "View Project List as Table",
       master: {
         dtColumns: [{data: "projectID",
                         title: "ID",
@@ -3540,7 +3547,9 @@ Data attributes:
                     {data: "description", title: "Description"},
                     {data: "maturityID", title: "Maturity"},
                     {data: "driverID", title: "Driver"},
-                    {data: "dispositionID", title: "Disposition"}],
+                    {data: "dispositionID", title: "Disposition"},
+                    {data: "disposedInFY", title: "Disposed in"},
+                    {data: "startInY", title: "Start in"}],
         dtInstance: {},
         dtOptions: {        
           destroy: true,
@@ -3938,9 +3947,11 @@ Data attributes:
   
   angular
     .module("app.select")
-    .filter("nameSearch", nameSearch);
+    .filter("nameSearch", NameSearch);
   
-  function nameSearch() {
+  NameSearch.$inject = ["projectListService"]
+  
+  function NameSearch(projectListService) {
     return function(projects, searchText, nameLogic, finalID) {
       /* return everything if no search string */
       if (!searchText) return projects;
@@ -3952,17 +3963,24 @@ Data attributes:
       var bailout, j;
       
       var out = projects;
-
+      var descriptionList = [];
+      var sqlList = [];
+      
       if (finalID == "0") {
         out = _.filter(out, function(project) {
           return project.finalID == "0";
         });
+        descriptionList.push("final state='still alive'");
+        sqlList.push("finalID=0");
       }
       
       if (nameLogic == "phrase") {
         out = _.filter(out, function(project) {
           return (project.name + " " + project.description).toLowerCase().match(st);
         });
+        descriptionList.push("name or description contains " + "'" + searchText + "'");
+        sqlList.push("name=" + searchText);
+        sqlList.push("nameLogic=phrase");
       }
       else if (nameLogic == "and") {
         _.map(words, function(word) {
@@ -3970,6 +3988,9 @@ Data attributes:
             return (project.name + " " + project.description).toLowerCase().match(this);
           }, word);
         });
+        descriptionList.push("name contains " + words.join(" and "));
+        sqlList.push("name=" + searchText);
+        sqlList.push("nameLogic=and");
       }
       else if (nameLogic == "or") {
         var matches = [], partial;
@@ -3980,8 +4001,18 @@ Data attributes:
           matches = _.union(partial, matches);
         });
         out = _.intersection(out, matches);
+        descriptionList.push("name contains " + words.join(" or "));
+        sqlList.push("name=" + searchText);
+        sqlList.push("nameLogic=or");
       }
 
+      var projectIDs = _.map(out, function(project){
+        return project.projectID;
+      });
+      projectListService.setList(projectIDs);
+      projectListService.setDescription(descriptionList.join(", "));
+      projectListService.setSql(sqlList.join("&"));
+      
       return out;
     };
   };
@@ -4040,10 +4071,12 @@ Data attributes:
       
     /**
      * @name clearBreakdown
-     * @desc Hide Breakdown by attribute results
+     * @desc Hide Breakdown by attribute results and reset the list of selected
+     *       projects
      */
     function clearBreakdown() {
       service.masterList.breakdownAttr = "";
+      projectListService.resetList();
     }
 
     /**
@@ -4054,6 +4087,7 @@ Data attributes:
      */
     function clearSearchText() {
       service.masterList.searchText = "";
+      projectListService.resetList();
     }
 
     /**

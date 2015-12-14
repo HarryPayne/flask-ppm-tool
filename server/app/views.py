@@ -440,15 +440,6 @@ def getBreakdownByAttribute(attributeName):
                       }
         breakdown.append(break_item)
     
-#     if len(breakdown):
-#         if breakdown[0]["desc"] in ["", "none"]:
-#             first = breakdown[0]
-#             breakdown = breakdown[1:]
-#             breakdown.sort(key = lambda item: item["desc"])
-#             breakdown.insert(0, first)
-#         else:
-#             breakdown.sort(key = lambda item: item["desc"])
-    
     return dumps(breakdown)
 
 def truncate_gracefully(text_string, max_length):
@@ -524,11 +515,20 @@ def getReportResults():
         query = parse_qs(unquote(query_string), True, True)
         
         for key in query.keys():
-            if key not in attr_names:
+            # Look for the attributes that match the keys in the query, making
+            # allowance for hybrid property columns, which are the date range 
+            # select values.
+            if key in attr_names:
+                attr = allAttrsFromDB[key]
+            elif key+"FY" in attr_names:
+                attr = allAttrsFromDB[key+"FY"]
+            elif key+"Y" in attr_names:
+                attr = allAttrsFromDB[key+"Y"]
+            else:
                 continue
-            attr = allAttrsFromDB[key]
-            if attr["format"] != "multipleSelect":
-                continue
+            
+            
+            # Find the table to be filtered
             if attr["table"] == "description":
                 table = d
             elif attr["table"] == "disposition":
@@ -538,51 +538,105 @@ def getReportResults():
             elif attr["table"] == "project":
                 table = pr
     
-            # get unique list of integer values
-            raw_values = list(set(query[key]))
-            null_values = False
-            if "" in raw_values:
-                null_values = True
-                raw_values.remove("")
+            if attr["format"] == "multipleSelect":
+                # Filter on matches to controlled vocabulary choices
                 
-            int_values = map(int, raw_values)
-            accepted_choices = [choice for choice in attr["choices"] if choice["id"] in int_values]
-            accepted_descs = ["'{}'".format(item["desc"]) if item["desc"] else "none" for item in accepted_choices]
-            accepted_values = [item["id"] for item in accepted_choices]
+                # get unique list of null and integer values in query
+                raw_values = list(set(query[key]))
+                null_values = False
+                if "" in raw_values:
+                    null_values = True
+                    raw_values.remove("")
+                    
+                int_values = map(int, raw_values)
+                accepted_choices = [choice for choice in attr["choices"] if choice["id"] in int_values]
+                accepted_descs = ["'{}'".format(item["desc"]) if item["desc"] else "none" for item in accepted_choices]
+                accepted_values = [item["id"] for item in accepted_choices]
+                
+                if len(accepted_descs) > 1:
+                    accepted_descs.sort()
+                    desc = "{} is {}".format(attr["label"], " or ".join(accepted_descs))
+                elif len(accepted_descs) == 1:
+                    desc = "{}={}".format(attr["label"], accepted_descs[0])
+                
+                if len(accepted_values) > 1:
+                    filts = []
+                    accepted_values.sort()
+                    for val in accepted_values:
+                        filt = "{}={}".format(key, val)
+                        filts.append(filt)
+                    filter = "&".join(filts)
+                elif len(accepted_values) == 1:
+                    filter = "{}={}".format(key, accepted_values[0])
+    
+                if len(accepted_values):
+                    query_descs.append(desc)
+                    filters.append(filter)
+                    if attr["multi"]:
+                        # join with the relationship table and filter on its key column
+                        table_name = "t_" + key[:-2]    # trim off "ID"
+                        t = getattr(alch, table_name)
+                        col = getattr(t.c, key)
+                        p = p.join(t).filter(col.in_(accepted_values))
+                    else:
+                        p = p.filter(getattr(table, key).in_(accepted_values))
+                
+                elif null_values:
+                    query_descs.append("no {}".format(attr["label"]))
+                    filters.append("{}=".format(key))
+                    p = p.filter(getattr(table, key) == None)
             
-            if len(accepted_descs) > 1:
-                accepted_descs.sort()
-                desc = "{} is {}".format(attr["label"], " or ".join(accepted_descs))
-            elif len(accepted_descs) == 1:
-                desc = "{}={}".format(attr["label"], accepted_descs[0])
-            
-            if len(accepted_values) > 1:
-                filts = []
-                accepted_values.sort()
-                for val in accepted_values:
-                    filt = "{}={}".format(key, val)
-                    filts.append(filt)
-                filter = "&".join(filts)
-            elif len(accepted_values) == 1:
-                filter = "{}={}".format(key, accepted_values[0])
-
-            if len(accepted_values):
-                query_descs.append(desc)
-                filters.append(filter)
-                if attr["multi"]:
-                    # join with the relationship table and filter on its key column
-                    table_name = "t_" + key[:-2]    # trim off "ID"
-                    t = getattr(alch, table_name)
-                    col = getattr(t.c, key)
-                    p = p.join(t).filter(col.in_(accepted_values))
-                else:
-                    p = p.filter(getattr(table, key).in_(accepted_values))
-            
-            elif null_values:
-                query_descs.append("no {}".format(attr["label"]))
-                filters.append("{}=".format(key))
-                p = p.filter(getattr(table, key) == None)
-            
+            elif attr["name"] == "name":
+                # Special handling for name search. Return the union of results
+                # from both "name" and "description" attributes, to match the
+                # behavior of the home page search.
+                searchString = query[key][0]
+                if searchString == "":
+                    continue
+                
+                logic = query[attr["name"] + "Logic"][0]
+                if logic == "phrase":
+                    query_descs.append("name or description contains '{}'".format(searchString))
+                    filters.append("name={}".format(searchString))
+                    p = p.filter(db.or_(getattr(table, "name").ilike("%{}%".format(searchString)),
+                                        getattr(table, "description").ilike("%{}%".format(searchString))))
+                elif logic == "and":
+                    words = searchString.split(" ")
+                    desc_list = []
+                    
+                    for word in words:
+                        if not word:
+                            continue
+                        desc_list.append("'{}'".format(word))
+                        filters.append("name={}".format(word))
+                        p = p.filter(db.or_(getattr(table, "name").ilike("%{}%".format(word)),
+                                            getattr(table, "description").ilike("%{}%".format(word))))
+                    
+                    query_descs.append("name or description contains {}".format(" and ".join(desc_list)))
+                
+                elif logic == "or":
+                    # create a partial for each word, form the union of those,
+                    # and join that to the query so far.
+                    words = searchString.split(" ")
+                    desc_list = []
+                    partials = []
+                    
+                    for word in words:
+                        if not word:
+                            continue
+                        desc_list.append("'{}'".format(word))
+                        filters.append("name={}".format(word))
+                        partials.append(p.filter(db.or_(getattr(table, "name").ilike("%{}%".format(word)),
+                                                        getattr(table, "description").ilike("%{}%".format(word)))))
+                    
+                    query_descs.append("name or description contains {}".format(" or ".join(desc_list)))
+                    if partials:
+                        p0 = partials[0]
+                        for partial in partials[1:]:
+                            p0 = p0.union(partial)
+                        p = p.join(p0.subquery())
+                        
+                                    
         p = p.order_by(getattr(d, "projectID"))
 
     response = getReportRowsFromQuery(p, columns)
@@ -608,22 +662,29 @@ def getReportRowsFromQuery(p, columns):
         for col in columns:
             col_name = col["name"]
             col_table = col["table"]
-            if col_table == "disposition":
-                if item.disposition:
-                    item = item.disposition[0]
-                else:
-                    row[col_name] = ""
-                    continue
+#             if col_table == "disposition":
+#                 if item.disposition:
+#                     item = item.disposition[0]
+#                 else:
+#                     row[col_name] = ""
+#                     continue
             
-            if col_table == "description" or col_table == "disposition":
+            #if col_table == "description" or col_table == "disposition":
+            if col_table == "description":
                 value = getattr(item, col_name)
-                table_relationship = None
+                table_relationship = item
             else:
                 # i.e., column is not in the description table, but buried 
                 # in item in a backref relationship whose name matches the
                 # table of interest.
                 table_relationship = getattr(item, col_table)
-                value = getattr(table_relationship, col_name)
+                if isinstance(table_relationship, InstrumentedList):
+                    if len(table_relationship):
+                        table_relationship = table_relationship[0]
+                        value = getattr(table_relationship, col_name)
+                    else:
+                        row[col_name] = ""
+                        continue
             
             if col["format"] == "textArea":
                 value = truncate_gracefully(value, 100)                
@@ -640,14 +701,28 @@ def getReportRowsFromQuery(p, columns):
                 elif hasattr(item, relationship_name):
                     model = getattr(item, relationship_name)
                     value = getattr(model, relationship_name+"Desc")
-                    if not value:
-                        value = "none"
+#                     if not value:
+#                         value = "none"
                 elif type(value) == type(InstrumentedList()):
                     # Multiple select fields have a relationship with a name 
                     # that has "ID" on the end, so we already have the right
                     # value, but the value is a list. Dig into the list to get
                     # the descriptions, and then join them with commas.
                     value = ", ".join([getattr(val, relationship_name+"Desc") for val in value])
+            elif col_name[-4:] == "InFY":
+                # Get the value of the corresponding hybrid property, which 
+                # includes both a FY value and a quarter or month value.
+                hybrid_name = col_name[:-2]
+                if table_relationship and hasattr(table_relationship, hybrid_name):
+                    value = getattr(table_relationship, hybrid_name)
+                elif hasattr(item, hybrid_name):
+                    value = getattr(item, hybrid_name)
+            elif col_name[-3:] == "InY":
+                hybrid_name = col_name[:-1]
+                if table_relationship and hasattr(table_relationship, hybrid_name):
+                    value = getattr(table_relationship, hybrid_name)
+                elif hasattr(item, hybrid_name):
+                    value = getattr(item, hybrid_name)
             row[col_name] = value
         rows.append(row)
     

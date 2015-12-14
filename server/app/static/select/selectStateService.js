@@ -50,10 +50,12 @@
       
     /**
      * @name clearBreakdown
-     * @desc Hide Breakdown by attribute results
+     * @desc Hide Breakdown by attribute results and reset the list of selected
+     *       projects
      */
     function clearBreakdown() {
       service.masterList.breakdownAttr = "";
+      projectListService.resetList();
     }
 
     /**
@@ -64,6 +66,7 @@
      */
     function clearSearchText() {
       service.masterList.searchText = "";
+      projectListService.resetList();
     }
 
     /**

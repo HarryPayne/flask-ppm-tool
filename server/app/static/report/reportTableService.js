@@ -43,6 +43,7 @@
       setReportResults: setReportResults,
       setReportTableData: setReportTableData,
       tableColumns: tableColumns,
+      title: "View Project List as Table",
       master: {
         dtColumns: [{data: "projectID",
                         title: "ID",
@@ -52,7 +53,9 @@
                     {data: "description", title: "Description"},
                     {data: "maturityID", title: "Maturity"},
                     {data: "driverID", title: "Driver"},
-                    {data: "dispositionID", title: "Disposition"}],
+                    {data: "dispositionID", title: "Disposition"},
+                    {data: "disposedInFY", title: "Disposed in"},
+                    {data: "startInY", title: "Start in"}],
         dtInstance: {},
         dtOptions: {        
           destroy: true,
