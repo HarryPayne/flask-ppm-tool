@@ -104,20 +104,20 @@
           </span>
           <span class="radio-inline">
             <label>
-              <input type="radio" name="nameLogic" id="nameLogic_or" value="or" 
-                ng-model="select.ss.getMasterList().nameLogic"> with 'or'
+              <input type="radio" name="name_descLogic" id="name_descLogic_or" value="or" 
+                ng-model="select.ss.getMasterList().name_descLogic"> with 'or'
             </label>
           </span>
           <span class="radio-inline">
             <label>
-              <input type="radio" name="nameLogic" id="nameLogic_and" value="and" 
-                ng-model="select.ss.getMasterList().nameLogic"> with 'and'
+              <input type="radio" name="name_descLogic" id="name_descLogic_and" value="and" 
+                ng-model="select.ss.getMasterList().name_descLogic"> with 'and'
             </label> or
           </span>
           <span class="radio-inline">
             <label>
-              <input type="radio" name="nameLogic" id="nameLogic_phrase" value="phrase" 
-                ng-model="select.ss.getMasterList().nameLogic">
+              <input type="radio" name="name_descLogic" id="name_descLogic_phrase" value="phrase" 
+                ng-model="select.ss.getMasterList().name_descLogic">
               as a phrase.
             </label>
           </span>
@@ -146,7 +146,7 @@
 
   <div id="searchTextResult" ng-show="select.ss.getMasterList().searchText" class="col-xs-offset-2 col-lg-offset-2 col-xs-10 col-lg-10">
     <p>There are {{ filtered.length }} matches:</p>
-    <dl ng-repeat="project in filtered = (select.masterList().allProjects | nameSearch:select.ss.getMasterList().searchText:select.ss.getMasterList().nameLogic:select.ss.getMasterList().finalID)"> 
+    <dl ng-repeat="project in filtered = (select.masterList().allProjects | nameSearch:select.ss.getMasterList().searchText:select.ss.getMasterList().name_descLogic:select.ss.getMasterList().finalID)"> 
       <dt>{{project.projectID}}. <a href="" ng-click="select.jumpToProject(project.projectID)">{{project.name}}</a>
       </dt>
       <dd read-more content="{{ project.description }}" limit="200"></dd>

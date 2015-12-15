@@ -510,6 +510,9 @@ def getReportResults():
     query_descs = []
     filters = []
     
+    import pydevd
+    pydevd.settrace()
+    
     if query_string != "":
         # Apply the filters specified in the query_string
         query = parse_qs(unquote(query_string), True, True)
@@ -524,6 +527,11 @@ def getReportResults():
                 attr = allAttrsFromDB[key+"FY"]
             elif key+"Y" in attr_names:
                 attr = allAttrsFromDB[key+"Y"]
+            elif key == "name_desc":
+                # special case for home page search through names and descriptions
+                attr = {"name": "name_desc",
+                        "table": "description",
+                        "format": ""}
             else:
                 continue
             
@@ -586,8 +594,9 @@ def getReportResults():
                     filters.append("{}=".format(key))
                     p = p.filter(getattr(table, key) == None)
             
-            elif attr["name"] == "name":
-                # Special handling for name search. Return the union of results
+            elif attr["name"] == "name_desc":
+                # Special handling for name plus description searching, which
+                # happens on the home page search. Return the union of results
                 # from both "name" and "description" attributes, to match the
                 # behavior of the home page search.
                 searchString = query[key][0]
@@ -597,7 +606,7 @@ def getReportResults():
                 logic = query[attr["name"] + "Logic"][0]
                 if logic == "phrase":
                     query_descs.append("name or description contains '{}'".format(searchString))
-                    filters.append("name={}".format(searchString))
+                    filters.append("{}={}".format(attr["name"], searchString))
                     p = p.filter(db.or_(getattr(table, "name").ilike("%{}%".format(searchString)),
                                         getattr(table, "description").ilike("%{}%".format(searchString))))
                 elif logic == "and":
@@ -608,7 +617,7 @@ def getReportResults():
                         if not word:
                             continue
                         desc_list.append("'{}'".format(word))
-                        filters.append("name={}".format(word))
+                        filters.append("{}={}".format(attr["name"], word))
                         p = p.filter(db.or_(getattr(table, "name").ilike("%{}%".format(word)),
                                             getattr(table, "description").ilike("%{}%".format(word))))
                     
@@ -625,7 +634,7 @@ def getReportResults():
                         if not word:
                             continue
                         desc_list.append("'{}'".format(word))
-                        filters.append("name={}".format(word))
+                        filters.append("{}={}".format(attr["name"], word))
                         partials.append(p.filter(db.or_(getattr(table, "name").ilike("%{}%".format(word)),
                                                         getattr(table, "description").ilike("%{}%".format(word)))))
                     
@@ -635,7 +644,52 @@ def getReportResults():
                         for partial in partials[1:]:
                             p0 = p0.union(partial)
                         p = p.join(p0.subquery())
-                        
+                 
+            elif attr["format"] in ["string", "textArea"]:       
+                searchString = query[key][0]
+                if searchString == "":
+                    # empty search string means don't filter at all
+                    continue
+                
+                logic = query[attr["name"] + "Logic"][0]
+                if logic == "phrase":
+                    query_descs.append("{} contains '{}'".format(attr["name"], searchString))
+                    filters.append("{}={}".format(attr["name"], searchString))
+                    p = p.filter(getattr(table, attr["name"]).ilike("%{}%".format(searchString)))
+                elif logic == "and":
+                    words = searchString.split(" ")
+                    desc_list = []
+                    
+                    for word in words:
+                        if not word:
+                            continue
+                        desc_list.append("'{}'".format(word))
+                        filters.append("{}={}".format(attr["name"], word))
+                        p = p.filter(getattr(table, attr["name"]).ilike("%{}%".format(word)))
+                    
+                    query_descs.append("{} contains {}".format(attr["name"], 
+                                                               " and ".join(desc_list)))
+                elif logic == "or":
+                    words = searchString.split(" ")
+                    desc_list = []
+                    partials = []
+                    
+                    # create a partial for each word
+                    for word in words:
+                        if not word:
+                            continue
+                        desc_list.append("'{}'".format(word))
+                        filters.append("{}={}".format(attr["name"], word))
+                        partials.append(p.filter(getattr(table, attr["name"]).ilike("%{}%".format(word))))
+                    
+                    query_descs.append("{} contains {}".format(attr["name"], 
+                                                               " or ".join(desc_list)))
+                    if partials:
+                        # form the union of the partials and join with the query so far.
+                        p0 = partials[0]
+                        for partial in partials[1:]:
+                            p0 = p0.union(partial)
+                        p = p.join(p0.subquery())
                                     
         p = p.order_by(getattr(d, "projectID"))
 

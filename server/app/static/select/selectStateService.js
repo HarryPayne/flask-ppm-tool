@@ -21,7 +21,7 @@
     var service = {
       masterList: {
         searchText: "",
-        nameLogic: "or",
+        name_descLogic: "or",
         finalID: "0",
         breakdownAttr: null
       },
