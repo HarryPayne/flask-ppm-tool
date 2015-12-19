@@ -499,19 +499,22 @@ def getReportResults():
     attr_names = allAttrsFromDB.keys()
     
     # Base for query
+    c = alch.Comment
     d = alch.Description
     dp = alch.Disposition
     ld = alch.Latest_disposition
     pt = alch.Portfolio
     pr = alch.Project
+    source_table = {"comment": c,
+                    "description": d,
+                    "disposition": ld,
+                    "portfolio": pt,
+                    "project": pr}
     p = db.session.query(d).join(pt).join(pr).outerjoin(ld)
     
     desc = []
     query_descs = []
     filters = []
-    
-    import pydevd
-    pydevd.settrace()
     
     if query_string != "":
         # Apply the filters specified in the query_string
@@ -523,10 +526,9 @@ def getReportResults():
             # select values.
             if key in attr_names:
                 attr = allAttrsFromDB[key]
-            elif key+"FY" in attr_names:
-                attr = allAttrsFromDB[key+"FY"]
-            elif key+"Y" in attr_names:
-                attr = allAttrsFromDB[key+"Y"]
+            elif key[-5:] == "start" and key[:-5] in attr_names:
+                attr = allAttrsFromDB[key[:-5]]
+                usesFY = True if key[-9:-5] == "InFY" else False
             elif key == "name_desc":
                 # special case for home page search through names and descriptions
                 attr = {"name": "name_desc",
@@ -535,16 +537,8 @@ def getReportResults():
             else:
                 continue
             
-            
             # Find the table to be filtered
-            if attr["table"] == "description":
-                table = d
-            elif attr["table"] == "disposition":
-                table = ld
-            elif attr["table"] == "portfolio":
-                table = pt
-            elif attr["table"] == "project":
-                table = pr
+            table = source_table[attr["table"]]
     
             if attr["format"] == "multipleSelect":
                 # Filter on matches to controlled vocabulary choices
@@ -594,6 +588,84 @@ def getReportResults():
                     filters.append("{}=".format(key))
                     p = p.filter(getattr(table, key) == None)
             
+            elif attr["format"] == "date":
+
+                startDateString = query.get(attr["name"] + "start", [""])[0]
+                endDateString = query.get(attr["name"] + "end", [""])[0]
+                if startDateString:
+                    startYear, startMonth, startDay = map(int, startDateString.split("-"))
+                    startDate = datetime(startYear, startMonth, startDay).date()
+                    p = p.filter(getattr(table, attr["name"]) >= startDate)
+                if endDateString:
+                    endYear, endMonth, endDay = map(int, endDateString.split("-"))
+                    endDate = datetime(endYear, endMonth, endDay).date()
+                    p = p.filter(getattr(table, attr["name"]) <= endDate)
+                
+            elif attr["format"] == "dateRangeSelect":
+                # dateRangeSelect attributes combine a parent and child field.
+                # The parent is a year (maybe fiscal) and the child is a fiscal
+                # quarter or month. Each attribute has start and end values in
+                # the query. The parent start value can be zero but cannot be
+                # missing from the query, due to the way the attribute is 
+                # selected to match the query keys above.
+                startY = int(query.get(attr["name"] + "start", [0])[0])
+                startChild = int(query.get(attr["child"]["name"] + "start", [0])[0])
+                endY = int(query.get(attr["name"] + "end", [0])[0])
+                endChild = int(query.get(attr["child"]["name"] + "end", [0])[0])
+
+                if startY:
+                    filters.append("{}={}".format(key, startY))
+                    startDesc = "FY{}".format(str(startY)[-2:]) if usesFY else str(startY)
+
+                    if startChild:
+                        filters.append("{}={}".format(attr["child"]["name"] + "start", 
+                                                      startChild))
+                        p = p.filter(100*getattr(table, attr["name"]) + getattr(table, attr["child"]["name"]) >= 100*startY + startChild)
+                        if usesFY:
+                            startChildDesc = "Q{}".format(startChild) if startChild else ""
+                        else:
+                            startChildDesc = [item[1] for item in alch.M_CHOICES if item[0] == startChild][0]
+                    else:
+                        p = p.filter(getattr(table, attr["name"]) >= startY)
+                        startChildDesc = ""
+                if endY:
+                    filters.append("{}={}".format(key, endY))
+                    endDesc = "FY{}".format(str(endY)[-2:]) if usesFY else str(endY)
+
+                    if endChild:
+                        filters.append("{}={}".format(attr["child"]["name"] + "end", 
+                                                      endChild))
+                        p = p.filter(100*getattr(table, attr["name"]) + getattr(table, attr["child"]["name"]) <= 100*endY +endChild)
+                        if usesFY:
+                            endChildDesc = "Q{}".format(endChild) if endChild else ""
+                        else:
+                            endChildDesc = [item[1] for item in alch.M_CHOICES if item[0] == endChild][0]
+                    else:
+                        p = p.filter(getattr(table, attr["name"]) <= endY)
+                        endChildDesc = ""
+
+                if startY==endY and startChild==endChild:
+                    query_descs.append("{} in {} {}".format(attr["label"],
+                        startDesc if usesFY else startChildDesc,
+                        startChildDesc if usesFY else startDesc))
+                
+                elif startY and endY:
+                    query_descs.append("{} between {} {} and {} {}".format(attr["label"],
+                        startDesc if usesFY else startChildDesc,
+                        startChildDesc if usesFY else startDesc,
+                        endDesc if usesFY else endChildDesc,
+                        endChildDesc if usesFY else endDesc))
+                
+                elif startY:
+                    query_descs.append("{} in or after {} {}".format(attr["label"],
+                        startDesc if usesFY else startChildDesc,
+                        startChildDesc if usesFY else startDesc))
+                
+                elif endY:
+                    query_descs.append("{} before or in {} {}".format(attr["label"],
+                        endDesc if usesFY else endChildDesc,
+                        endChildDesc if usesFY else endDesc))
+                
             elif attr["name"] == "name_desc":
                 # Special handling for name plus description searching, which
                 # happens on the home page search. Return the union of results
@@ -690,7 +762,7 @@ def getReportResults():
                         for partial in partials[1:]:
                             p0 = p0.union(partial)
                         p = p.join(p0.subquery())
-                                    
+            
         p = p.order_by(getattr(d, "projectID"))
 
     response = getReportRowsFromQuery(p, columns)
@@ -1022,9 +1094,11 @@ def getTableNameFromForm(form):
     return tableName
     
 # Update database from request. The request will have data for only a single 
-# table, and only updated data from that table is returned. 
+# table, and only updated data from that table are returned (?). 
 #
-# Check the jwt, csrf token, and the user's roles before doing anything.
+# Allow cross origin sources (to make AJAX work), check the jwt and the user's 
+# roles before doing anything. CSRF token checking happens at form validation
+# time.
 
 @app.route("/projectEdit/<projectID>/<tableName>", methods=["GET", "POST"])
 @cross_origin(headers=['Content-Type', 'Authorization'])
