@@ -55,7 +55,8 @@
                     {data: "driverID", title: "Driver"},
                     {data: "dispositionID", title: "Disposition"},
                     {data: "disposedInFY", title: "Disposed in"},
-                    {data: "startInY", title: "Start in"}],
+                    {data: "startInY", title: "Start in"},
+                    {data: "startedOn", title: "Started"}],
         dtInstance: {},
         dtOptions: {        
           destroy: true,

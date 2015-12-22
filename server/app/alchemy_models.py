@@ -976,12 +976,12 @@ class Project(Base):
                                nullable=True, index=True, server_default=text("'0'"))
     proj_visibility = db.relationship("Proj_visibilitylist", backref="project")
     startedOn = Column(Date, 
-                       info={"label": "started on",
+                       info={"label": "started",
                              "attributeID": 420,
                              "help": "The actual date on which the project started running, i.e., the first day of the definition phase."},
                        nullable=True, index=True)
     finishedOn = Column(Date, 
-                        info={"label": "finished on",
+                        info={"label": "finished",
                               "attributeID": 430,
                               "help": "The date on which the project was successfully ended, i.e., the last day of the closeout phase of the project.  Format as above."},
                         nullable=True, index=True)

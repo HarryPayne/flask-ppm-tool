@@ -150,7 +150,7 @@ def getAllAttributesJSON():
     return dumps(getAllAttributes())
 
 def getAllAttributes():
-    """ Return value-less attribute objects for all project atributes, grouped
+    """ Return value-less attribute objects for all project attributes, grouped
         by table"""
     attributes = {}
     attributes["csrf_token"] = {"name": "csrf_token",
@@ -592,14 +592,41 @@ def getReportResults():
 
                 startDateString = query.get(attr["name"] + "start", [""])[0]
                 endDateString = query.get(attr["name"] + "end", [""])[0]
+                
                 if startDateString:
                     startYear, startMonth, startDay = map(int, startDateString.split("-"))
                     startDate = datetime(startYear, startMonth, startDay).date()
+                    startDesc = startDate.strftime("%m/%d/%Y")
+                    filters.append("{}={}".format(attr["name"] + "start", 
+                                                   startDesc.replace("/", "-")))
                     p = p.filter(getattr(table, attr["name"]) >= startDate)
+                else:
+                    startDesc = ""
+                    startDate = None
+                
                 if endDateString:
                     endYear, endMonth, endDay = map(int, endDateString.split("-"))
                     endDate = datetime(endYear, endMonth, endDay).date()
+                    endDesc = endDate.strftime("%m/%d/%Y")
+                    filters.append("{}={}".format(attr["name"] + "end", 
+                                                   endDesc.replace("/", "-")))
                     p = p.filter(getattr(table, attr["name"]) <= endDate)
+                else:
+                    endDesc = ""
+                    endDate = None
+                
+                if startDate == endDate:
+                    query_descs.append("{} on {}".format(attr["label"], startDesc))
+                elif startDate and endDate:
+                    query_descs.append("{} between {} and {}".format(attr["label"],
+                        startDesc,
+                        endDesc))
+                
+                elif startDate:
+                    query_descs.append("{} on or after {}".format(attr["label"], startDesc))
+                
+                elif endDate:
+                    query_descs.append("{} on or before {}".format(attr["label"], endDesc))
                 
             elif attr["format"] == "dateRangeSelect":
                 # dateRangeSelect attributes combine a parent and child field.
@@ -614,7 +641,7 @@ def getReportResults():
                 endChild = int(query.get(attr["child"]["name"] + "end", [0])[0])
 
                 if startY:
-                    filters.append("{}={}".format(key, startY))
+                    filters.append("{}={}".format(attr["name"] + "start", startY))
                     startDesc = "FY{}".format(str(startY)[-2:]) if usesFY else str(startY)
 
                     if startChild:
@@ -629,7 +656,7 @@ def getReportResults():
                         p = p.filter(getattr(table, attr["name"]) >= startY)
                         startChildDesc = ""
                 if endY:
-                    filters.append("{}={}".format(key, endY))
+                    filters.append("{}={}".format(attr["name"] + "end", endY))
                     endDesc = "FY{}".format(str(endY)[-2:]) if usesFY else str(endY)
 
                     if endChild:
@@ -645,8 +672,9 @@ def getReportResults():
                         endChildDesc = ""
 
                 if startY==endY and startChild==endChild:
+                    # e.g., "in FY15 Q1" if usesFY else "Oct 2014" 
                     query_descs.append("{} in {} {}".format(attr["label"],
-                        startDesc if usesFY else startChildDesc,
+                        startDesc if usesFY else startChildDesc,    
                         startChildDesc if usesFY else startDesc))
                 
                 elif startY and endY:
@@ -813,7 +841,10 @@ def getReportRowsFromQuery(p, columns):
                         continue
             
             if col["format"] == "textArea":
-                value = truncate_gracefully(value, 100)                
+                value = truncate_gracefully(value, 100)
+            elif col["format"] == "date":
+                if value:
+                    value = value.strftime("%m/%d/%Y")
             elif col_name[-2:] == "ID":
                 # Look in the relationship with the controlled vocabulary table
                 # for a description instead what you have at this point, which
