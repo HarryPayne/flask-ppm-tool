@@ -85,7 +85,6 @@ def logout():
 def not_found_error(error):
     return render_template('404.html'), 404
 
-
 @app.errorhandler(500)
 def internal_error(error):
     db.session.rollback()
@@ -1131,178 +1130,104 @@ def getTableNameFromForm(form):
 # roles before doing anything. CSRF token checking happens at form validation
 # time.
 
+def updateFromForm(model, result):
+    """utility for updating db model from json and query result"""
+    errors = []
+    form = model.from_json(request.json, result)
+    if form.validate_on_submit():
+        try:
+            form.populate_obj(result)
+            db.session.add(result)
+            db.session.commit()
+        except:
+            errors.append(sys.exc_info()[0])
+    else:
+        errors = form.errors
+    return form, errors
+    
 @app.route("/projectEdit/<projectID>/<tableName>", methods=["GET", "POST"])
 @cross_origin(headers=['Content-Type', 'Authorization'])
 @jwt_required()
 def projectEdit(projectID, tableName):
     """ update specified table for specified project"""
+
     if 'Curator' not in current_user.groups:
         # Must be a Curator to edit project metadata
         abort(401)
 
     if projectID:
         p = alch.Description.query.filter_by(projectID=projectID).first_or_404()
-        p.lastModified = datetime.now()
+        p.lastModified = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        errors = []
-        success = []
-        
         if tableName == "description":
-            description_errors = []
-            description_success = "Project description was updated."
-            old_maturityID = p.maturityID
-            old_finalID = p.finalID
-
-            descriptionForm = forms.Description(request.form, p)
-            if descriptionForm.validate_on_submit():
-                try:
-                    descriptionForm.populate_obj(p)
-                    db.session.add(p)
-                    db.session.commit()
-                except:
-                    description_errors.append(sys.exc_info()[0])
-            else:
-                description_errors = descriptionForm.errors
-        
-            response = getProjectAttributes(projectID, tableName)
-            if description_errors:
-                response["errors"] = description_errors
-            else:
-                if not descriptionForm.maturityID == old_maturityID:
-                    pass
-                response["success"] = description_success            
+            form, errors = updateFromForm(forms.Description, p)
+            
+            # What is this with maturityID?
+            # old_maturityID = p.maturityID
+            # if not errors and not descriptionForm.maturityID == old_maturityID:
+            if not errors:
+                success = "Project description was updated."
 
         elif tableName == "portfolio":
-            pt_errors = []
-            pt_success = "Project portfolio entry was updated."
-            pt = alch.Portfolio.query.filter_by(projectID=projectID).first_or_404()
-            portfolioForm = forms.Portfolio(request.form, pt)
-            if portfolioForm.validate_on_submit():
-                try:
-                    portfolioForm.populate_obj(pt)
-                    db.session.add(pt)
-                    db.session.commit()
-                    projectID = pt.projectID
-                except:
-                    pt_errors.append(sys.exc_info()[0])
-            else:
-                pt_errors = portfolioForm.errors
-
-            response = getProjectAttributes(projectID, tableName)
-            if pt_errors:
-                response["errors"] = pt_errors
-            else:
-                response["success"] = pt_success
+            form, errors = updateFromForm(forms.Portfolio, p.portfolio[0])
+            if not errors:
+                success = "Project portfolio entry was updated."
 
         elif tableName == "project":
-            pr_errors = []
-            pr_success = "Project management entry was updated."
-            # old_progressID = p.progressID
-            
-            pr = alch.Project.query.filter_by(projectID=projectID).first_or_404()
-            projectForm = forms.Project(request.form, pr)
-            if projectForm.validate_on_submit():
-                try:
-                    projectForm.populate_obj(pr)
-                    db.session.add(pr)
-                    db.session.commit()
-                    projectID = pr.projectID
-                except:
-                    pr_errors.append(sys.exc_info()[0])
-            else:
-                pr_errors = projectForm.errors
-
-            response = getProjectAttributes(projectID, tableName)
-            if pr_errors:
-                response["errors"] = pr_errors
-            else:
-                response["success"] = pr_success
+            form, errors = updateFromForm(forms.Project, p.project[0])
+            if not errors:
+                success = "Project management entry was updated."
 
         elif tableName == "disposition":
-            d_errors = []
-            disposedInFY = request.form.get("disposedInFY")
-            disposedInQ = request.form.get("disposedInQ")
+            request.json["projectID"] = int(projectID)
+            request.json["lastModifiedBy"] = current_user.get_id()
+            request.json["lastModified"] = p.lastModified
+            disposedInFY = request.json["disposedInFY"]
+            disposedInQ = request.json["disposedInQ"]
             d = alch.Disposition.query.filter_by(projectID=projectID)\
                                       .filter_by(disposedInFY=disposedInFY)\
                                       .filter_by(disposedInQ=disposedInQ).first()
             if not d:
-                # No matching primary key. Generate model from request and insert.
-                d = alch.Disposition(disposedInFY = disposedInFY,
-                                     disposedInQ = disposedInQ,
-                                     dispositionID = request.form.get("dispositionID"),
-                                     explanation = request.form.get("explanation"),
-                                     finishInM = request.form.get("finishInM"),
-                                     finishInY = request.form.get("finishInY"),
-                                     projectID = projectID,
-                                     reconsiderInFY = request.form.get("reconsiderInFY"),
-                                     reconsiderInQ= request.form.get("reconsiderInQ"),
-                                     startInM = request.form.get("startInM"),
-                                     startInY = request.form.get("requestInY"),
-                                     lastModifiedBy = current_user.get_id())
+                d = alch.Disposition(projectID=projectID)
                 d_success = "A new project disposition was created for cycle "
             else:
                 d_success = "Updated project disposition for cycle "
             
-            dispositionForm = forms.Disposition(request.form, d)
-            if dispositionForm.validate_on_submit():
-                try:
-                    dispositionForm.populate_obj(d)
-                    db.session.add(d)
-                    db.session.commit()
-                except:
-                    d_errors.append(sys.exc_info()[0])
-            else:
-                d_errors.append(dispositionForm.errors)
-
-            response = getProjectAttributes(projectID, tableName)
-            if d_errors:
-                response["errors"] = d_errors
-            else:
-                disposedInFY = dispositionForm["disposedInFY"].data
-                FY = [item[1] for item in dispositionForm["disposedInFY"].choices if item[0] == disposedInFY][0]
-                disposedInQ = dispositionForm["disposedInQ"].data
-                Q = [item[1] for item in dispositionForm["disposedInQ"].choices if item[0] == disposedInQ][0]
-                cycle = "{FY} {Q}.".format( FY = FY,
-                                           Q = Q)
-                response["success"] = d_success + cycle
+            form, errors = updateFromForm(forms.Disposition, d)
+            if not errors:
+                disposedInFY = form["disposedInFY"].data
+                FY = [item[1] for item in form["disposedInFY"].choices if item[0] == disposedInFY][0]
+                disposedInQ = form["disposedInQ"].data
+                Q = [item[1] for item in form["disposedInQ"].choices if item[0] == disposedInQ][0]
+                cycle = "{FY} {Q}.".format( FY = FY, Q = Q)
+                success = d_success + cycle
 
         elif tableName == "comment":
-            c_errors = []
-            commentID = int(request.form.get("commentID"))
-            
+            commentID = int(request.json["commentID"])
             if commentID:
                 c = alch.Comment.query.filter_by(projectID = projectID)\
                                       .filter_by(commentID = commentID).first_or_404()
-                commentForm = forms.Comment(request.form, c)
                 c_success = "The comment was updated."
 
             else:
                 c = alch.Comment(projectID=projectID)
-                mock_form = ImmutableMultiDict([("csrf_token", request.form.get("csrf_token")),
-                                                ("comment", request.form.get("comment")),
-                                                ("commentAuthor", current_user.get_id()),
-                                                ("commentAuthored", datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
-                                                ("commentEditor", None),
-                                                ("commentEdited", None)])
-                commentForm = forms.Comment(mock_form, c)
+                request.json["commentID"] = None
+                request.json["commentAuthor"] = current_user.get_id()
+                request.json["commentAuthored"] = p.lastModified
+                request.json["commentEditor"] = None
+                request.json["commentEdited"] = None
                 c_success = "A new comment was created."
             
-            if commentForm.validate_on_submit():
-                try:
-                    commentForm.populate_obj(c)
-                    db.session.add(c)
-                    db.session.commit()
-                except:
-                    c_errors.append(sys.exc_info()[0])
-            else:
-                c_errors.append(commentForm.errors)
-        
-            response = getProjectAttributes(projectID, tableName)
-            if c_errors:
-                response["errors"] = c_errors
-            else:
-                response["success"] = c_success
+            form, errors = updateFromForm(forms.Comment, c)
+            if not errors:
+                success = c_success
 
+        response = getProjectAttributes(projectID, tableName)
+        if errors:
+            response["errors"] = errors
+        else:
+            response["success"] = success 
+                       
         return dumps(response)
 
 # Check the jwt, csrf token, and the user's roles before doing anything.

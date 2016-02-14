@@ -391,9 +391,10 @@
         method: "POST",
         url: "/projectEdit/" + $state.params.projectID + "/" + tableName,
         headers: {
-          "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+          //"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+          "Content-Type": "application/json; charset=UTF-8"
         },
-        data: jQuery.param(formData, true)
+        data: formData // jQuery.param(formData, true)
       };
       $http(request)
         .then(function (request) {
