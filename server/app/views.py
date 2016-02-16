@@ -1,7 +1,12 @@
 from copy import deepcopy
 from datetime import datetime
 import hashlib
-from json import dumps
+# try:
+#     import simplejson as json
+# except:
+#     import json
+from flask import json
+    
 import sys
 from urllib2 import unquote
 from urlparse import parse_qs
@@ -146,7 +151,7 @@ def index():
 @app.route("/getAllAttributes")
 def getAllAttributesJSON():
     """ Send allAttributes data as JSON """
-    return dumps(getAllAttributes())
+    return json.dumps(getAllAttributes())
 
 def getAllAttributes():
     """ Return value-less attribute objects for all project attributes, grouped
@@ -223,21 +228,7 @@ def getAttributesFromForm(form):
     return attributes
 
 def getTableNameFromForm(form):
-    
-    if isinstance(form, forms.Description):
-        return "description"
-    elif isintance(form, forms.Portfolio):
-        return "portfolio"
-    elif isinstance(form, forms.Disposition):
-        return "disposition"
-    elif isinstance(form, forms.Project):
-        return "project"
-    elif isinstance(form, forms.Comment):
-        return "comment"
-    elif isinstance(form, forms.Upload):
-        return "upload"
-    else:
-        return ""
+    return form.meta.model.__tablename__
 
 def getFormatFromField(field):
     if field.name == "childID":
@@ -333,15 +324,14 @@ def getRequiredFromField(field):
 
 @app.route("/getBriefDescriptions", methods=["GET", "POST"])
 def getBriefDescriptions():
-    """ return list of project descriptions """
+    """ return list of project brief descriptions """
     columns = ["projectID", "name", "description", "finalID"]
+    d = alch.Description
+    results = d.query.with_entities(d.projectID, d.name, d.description, d.finalID).all()
     descriptions = []
-    for item in alch.Description.query.order_by("projectID").all():
-        d = {}
-        for col in columns:
-            d[col] = getattr(item, col)
-        descriptions.append(d)
-    return dumps(descriptions)
+    for result in results:
+        descriptions.append(result._asdict())
+    return json.dumps(descriptions)
 
 # Under the Select tab there is an option for the user to select one of the
 # controlled vocabulary attributes and get a count of projects for each value
@@ -363,7 +353,7 @@ def getBreakdownChoices():
         choices.append(choice)
     
     choices.sort(key = lambda item: item["desc"])
-    return dumps(choices)  
+    return json.dumps(choices)  
     
 @app.route("/getBreakdownByAttribute/<attributeName>")
 def getBreakdownByAttribute(attributeName):
@@ -439,7 +429,7 @@ def getBreakdownByAttribute(attributeName):
                       }
         breakdown.append(break_item)
     
-    return dumps(breakdown)
+    return json.dumps(breakdown)
 
 def truncate_gracefully(text_string, max_length):
     """ 
@@ -478,7 +468,7 @@ def getReportTableJSON():
     p = alch.Description.query.filter(alch.Description.projectID.in_(projectIDList)).all()
     
     response = getReportRowsFromQuery(p, columns)
-    return dumps(response)
+    return json.dumps(response)
 
 @app.route("/getReportResults", methods=["POST"])
 def getReportResults():
@@ -797,7 +787,7 @@ def getReportResults():
     response["query_desc"] = ", and ".join(query_descs) if len(query_descs) else "none"
     response["query_string"] = "&".join(filters)
     
-    return dumps(response)
+    return json.dumps(response)
     
 def getReportRowsFromQuery(p, columns):
     """ Given query result object and columns list, produce rows 
@@ -949,7 +939,7 @@ def getProjectAttributesJSON(projectID):
     """ send attribute values for project as JSON """
     attributes = getProjectAttributes(projectID)
     
-    return dumps(attributes)
+    return json.dumps(attributes)
 
 def getProjectAttributes(projectID, tableName=None):
     """ Render a WT Forms form from the request/db, pick out the data from the
@@ -962,6 +952,7 @@ def getProjectAttributes(projectID, tableName=None):
     formData = []
     
     p = alch.Description.query.filter_by(projectID=projectID).first()
+    ret = p.serialize()
     if not p:
         # send back forms with no data (for creating a new project)
         p = alch.Description()
@@ -1028,7 +1019,7 @@ def getAttributeValuesFromForm(form, allAttrsFromDB):
     token = ""
     attributes = []
 
-    tableName = getTableNameFromForm(form)
+    tableName = form.meta.model.__tablename__
     for field in form:
         if field.name in ["projectID","csrf_token"]:
             continue
@@ -1104,24 +1095,24 @@ def getAttributeValuesFromForm(form, allAttrsFromDB):
 
     return {"tableName": tableName, "attributes": attributes}
     
-def getTableNameFromForm(form):
-    """ compare form with prototype instances to find the match """
-    if isinstance(form, forms.Description):
-        tableName = "description"
-    
-    elif isinstance(form, forms.Portfolio):
-        tableName = "portfolio"
-    
-    elif isinstance(form, forms.Project):
-        tableName = "project"
-    
-    elif isinstance(form, forms.Disposition):
-        tableName = "disposition"
-    
-    elif isinstance(form, forms.Comment):
-        tableName = "comment"
-    
-    return tableName
+# def getTableNameFromForm(form):
+#     """ compare form with prototype instances to find the match """
+#     if isinstance(form, forms.Description):
+#         tableName = "description"
+#     
+#     elif isinstance(form, forms.Portfolio):
+#         tableName = "portfolio"
+#     
+#     elif isinstance(form, forms.Project):
+#         tableName = "project"
+#     
+#     elif isinstance(form, forms.Disposition):
+#         tableName = "disposition"
+#     
+#     elif isinstance(form, forms.Comment):
+#         tableName = "comment"
+#     
+#     return tableName
     
 # Update database from request. The request will have data for only a single 
 # table, and only updated data from that table are returned (?). 
@@ -1228,7 +1219,7 @@ def projectEdit(projectID, tableName):
         else:
             response["success"] = success 
                        
-        return dumps(response)
+        return json.dumps(response)
 
 # Check the jwt, csrf token, and the user's roles before doing anything.
 #
@@ -1267,7 +1258,7 @@ def projectCreate():
     if description_errors:
         response = getProjectAttributes(p.projectID or 0, "description")
         response["errors"] = description_errors
-        return dumps(response)
+        return json.dumps(response)
 
     pt = alch.Portfolio(projectID = p.projectID,
                         lastModifiedBy = current_user.get_id())
@@ -1296,7 +1287,7 @@ def projectCreate():
         response["success"] = "Created new project"            
         response["projectID"] = projectID
 
-    return dumps(response)
+    return json.dumps(response)
          
     
     

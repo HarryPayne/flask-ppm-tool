@@ -3,35 +3,36 @@ import simpleldap
 
 from hashlib import md5
 from app import db
-from config import (LDAP_HOST, LDAP_SEARCH_BASE, LDAP_GROUP_SEARCH_BASE, LDAP_OBJECTS_DN, 
-                    LDAP_GROUP_OBJECT_FILTER, LDAP_GROUP_MEMBERS_FIELD)
+from config import (LDAP_HOST, LDAP_SEARCH_BASE, LDAP_GROUP_SEARCH_BASE, LDAP_USER_OBJECTS_RDN, 
+                    LDAP_GROUP_OBJECT_FILTER, LDAP_GROUP_MEMBERS_FIELD, LDAP_GROUP_RDN)
 
 def ldap_fetch(uid=None, name=None, passwd=None):
     try:
-        dn = "uid={0},{1}".format(uid, LDAP_SEARCH_BASE)
+        dn = "{0}={1},{2}".format(LDAP_USER_OBJECTS_RDN, uid, LDAP_SEARCH_BASE)
 
         if uid is not None and passwd is not None:
             l = simpleldap.Connection(LDAP_HOST, dn=dn, password=passwd)
         else:
             l = simpleldap.Connection(LDAP_HOST)
-        r = l.search('uid={0}'.format(uid), base_dn=LDAP_SEARCH_BASE)
+        r = l.search('{0}={1}'.format(LDAP_USER_OBJECTS_RDN, uid), 
+                     base_dn=LDAP_SEARCH_BASE)
         g = l.search("(&({0})({1}={2}))".format(LDAP_GROUP_OBJECT_FILTER, 
-                                                LDAP_GROUP_MEMBERS_FIELD, dn), 
-                                                base_dn=LDAP_GROUP_SEARCH_BASE)
+                                                LDAP_GROUP_MEMBERS_FIELD, 
+                                                dn), 
+                     base_dn=LDAP_GROUP_SEARCH_BASE)
         return {
-            'uid': r[0]['uid'][0],
+            'uid': r[0][LDAP_USER_OBJECTS_RDN][0],
             'name': unicode(r[0]['cn'][0]),
             "givenName": unicode(r[0]["givenname"][0]),
             "sn": unicode(r[0]["sn"][0]),
             "mail": r[0]["mail"][0],
-            "groups": [item["cn"][0] for item in g]
+            "groups": [item[LDAP_GROUP_RDN][0] for item in g]
         }
     except:
         return None
 
 class User(UserMixin):
     def __init__(self, id=None, name=None, passwd=None, groups=None, mail=None):
-        
         self.id = id
         self.name = name
         self.groups = groups

@@ -1,3 +1,4 @@
+from dateutil.relativedelta import relativedelta
 import os
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -21,16 +22,24 @@ MAIL_PORT = 25
 MAIL_USERNAME = None
 MAIL_PASSWORD = None
 
-# LDAP authentication
+# LDAP authentication and authorization by group roles
+# Users whose user name matches a distinguished name under LDAP_SEARCH_BASE and
+# are the right kind of member of the right kind of group are granted the role
+# 
 LDAP_HOST = "localhost"
 LDAP_SEARCH_BASE = "ou=people,o=test"
+LDAP_USER_OBJECTS_RDN = "uid"
 LDAP_GROUP_SEARCH_BASE = "ou=ZopeRoles,ou=groups,o=test"
-LDAP_OBJECTS_DN = "uid"
 LDAP_GROUP_OBJECT_FILTER = "objectclass=groupOfUniqueNames"
 LDAP_GROUP_MEMBERS_FIELD = "uniquemember"
+LDAP_GROUP_RDN = "cn"
 
 # administrator list
 ADMINS = ['you@example.com']
 
 # JWT options
 JWT_EXPIRATION_DELTA = 36000    # 10 hours, maybe get renewal working.
+
+# Offset to be added to calendar date to get FY date. Database dates are
+# calendar dates.
+FY_OFFSET = relativedelta(months=+3)    # FY2008 Q1 starts 10/01/2007

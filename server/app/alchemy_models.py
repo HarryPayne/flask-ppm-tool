@@ -1,7 +1,9 @@
 # coding: utf-8
+from datetime import date, datetime
 import sqlalchemy as sa
 from sqlalchemy import (BLOB, Column, Date, DateTime, desc, Enum, ForeignKey, 
                         Float, Integer, orm, Integer, String, Table, Text, text)
+from sqlalchemy.inspection import inspect
 from sqlalchemy_utils import ChoiceType
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.dialects.mysql.base import MEDIUMBLOB
@@ -20,8 +22,37 @@ from widgets import ChoicesSelect
 # added by hand:
 from app import db
 from sqlalchemy.ext.hybrid import hybrid_property
-Base = db.Model
 metadata = db.metadata
+Base = db.Model
+
+class Serializer(object):
+    """ json serialization mixin class """
+    
+    def serialize(self):
+        map = inspect(self).mapper
+        response = dict()
+        
+        # serialize table columns
+        keys = map.columns.keys()
+        for key in keys:
+            value = getattr(self, key)
+            if type(value) in (date, datetime):
+                response[key] = value.isoformat()
+            else:
+                response[key] = value
+        
+        # serialize one to many relationships
+        relationships = map.relationships.keys()
+        for relationship in relationships:
+            value = getattr(self, relationship)
+            if type(value) == sa.orm.collections.InstrumentedList:
+                response[relationship] = self.serialize_list(value)
+        return response
+    
+    @staticmethod
+    def serialize_list(results):
+        return [result.serialize() for result in results]
+        
 
 # class Attributelist(Base):
 #     __tablename__ = "newattributelist"
@@ -78,7 +109,7 @@ class Dispositionlist(Base):
 # )
 
 
-class Driverlist(Base):
+class Driverlist(Base, Serializer):
     __tablename__ = "driverlist"
     info = {"label": "driver"}
 
@@ -206,7 +237,7 @@ class Sponsorlist(Base):
     sponsorText = Column(Text, nullable=False)
 
 
-class Stakeholderlist(Base):
+class Stakeholderlist(Base, Serializer):
     __tablename__ = "stakeholderlist"
     info = {"label": "stakeholder"}
 
@@ -229,7 +260,7 @@ t_stakeholder = Table(
 #     statusDesc = Column(String(100), nullable=False, server_default=text("''"))
 
 
-class Strategylist(Base):
+class Strategylist(Base, Serializer):
     __tablename__ = "strategylist"
     info = {"label": "strategy"}
 
@@ -238,7 +269,7 @@ class Strategylist(Base):
     strategyText = Column(Text, nullable=False)
 
 
-class Technologylist(Base):
+class Technologylist(Base, Serializer):
     __tablename__ = "technologylist"
     info = {"label": "technology"}
 
@@ -536,7 +567,7 @@ t_child = Table(
     Column("childID", Integer, ForeignKey("description.projectID"), primary_key=True)
 )
 
-class Disposition(Base):
+class Disposition(Base, Serializer):
     __tablename__ = "disposition"
 
     projectID = Column(Integer, ForeignKey("description.projectID"), primary_key=True, 
@@ -603,7 +634,7 @@ class Disposition(Base):
     description = db.relationship("Description", backref="dispositions")
     
 
-class Latest_disposition(Base):
+class Latest_disposition(Base, Serializer):
     __tablename__ = "latest_disposition"
     projectID = Column(Integer, ForeignKey("description.projectID"), primary_key=True, 
                        nullable=False, index=True, server_default=text("'0'"))
@@ -700,7 +731,7 @@ class Latest_disposition(Base):
 
     description = db.relationship("Description", backref="disposition")
     
-class Description(Base):
+class Description(Base, Serializer):
     __tablename__ = "description"
         
     projectID = Column(Integer, primary_key=True, nullable=False, autoincrement=True)
@@ -804,7 +835,7 @@ class Description(Base):
     lastModifiedBy = Column(String(100), nullable=True, server_default=text("''"), info={"label": "last updated by", "attributeID": 999, "help": ""})
     
         
-class Comment(Base):
+class Comment(Base, Serializer):
     __tablename__ = "comment"
 
     commentID = Column(Integer, primary_key=True, nullable=True, autoincrement=True,
@@ -860,7 +891,7 @@ t_strategy = Table(
            nullable=False, index=True, server_default=text("'0'"))
 )
 
-class Portfolio(Base):
+class Portfolio(Base, Serializer):
     __tablename__ = "portfolio"
 
     projectID = Column(Integer, ForeignKey("description.projectID"), primary_key=True)
@@ -942,7 +973,7 @@ class Portfolio(Base):
 
     description = db.relationship("Description", backref="portfolio")
 
-class Project(Base):
+class Project(Base, Serializer):
     __tablename__ = "project"
 
     projectID = Column(Integer, ForeignKey("description.projectID"), primary_key=True, server_default=text("'0'"))
