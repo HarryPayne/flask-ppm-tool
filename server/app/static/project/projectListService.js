@@ -311,7 +311,7 @@
      *  changing the list of selected projects or the current project.
      */
     function setAllProjectResults(response, projectID) {
-      service.masterList.allProjects = response.data;
+      service.masterList.allProjects = response.data.descriptions;
       if (typeof projectID == "undefined" || projectID < 0) {
         if (typeof service.masterList.selectIds != "undefined" && 
             service.masterList.selectIds.length) {

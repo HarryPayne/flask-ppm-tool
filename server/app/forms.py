@@ -1,31 +1,149 @@
-from wtforms_alchemy import ModelForm, ModelFormField, ModelFieldList
-from wtforms import (StringField, BooleanField, TextAreaField, SelectField, 
-                     TextField, PasswordField, validators, FormField)
-from wtforms_components import read_only
-from wtforms.ext.sqlalchemy.fields import QuerySelectField, QuerySelectMultipleField
-from wtforms.validators import DataRequired, Length
-import alchemy_models as alch
+import re
+from operator import itemgetter
 
 from flask.ext.wtf import Form
-from wtforms_alchemy import model_form_factory
-# The variable db here is a SQLAlchemy object instance from
-# Flask-SQLAlchemy package
+from sqlalchemy.inspection import inspect
+from wtforms import (StringField, BooleanField, TextAreaField, SelectField, 
+                     TextField, PasswordField, validators, FormField)
+from wtforms_alchemy import (ModelForm, ModelFormField, ModelFieldList,
+                             model_form_factory)
+from wtforms_components import read_only
+from wtforms_components.widgets import ReadOnlyWidgetProxy
+from wtforms.ext.sqlalchemy.fields import QuerySelectField, QuerySelectMultipleField
+from wtforms.validators import DataRequired, Length
 
 from app import db
 from widgets import ChoicesSelect
-
+import alchemy_models as alch
 
 BaseModelForm = model_form_factory(Form)
 
 class ModelForm(BaseModelForm):
     @classmethod
-    def get_session(self):
+    def get_session(cls):
         return db.session
+    
+    def formly_attributes(self):
+        """ return a list of angular-formly fields for the form
+        
+        
+        """
+        model = inspect(self.Meta.model)
+        attrs = []
+        # get keys from table model to preserve order
+        for key in model.mapper.columns.keys():
+            self._get_attr_from_column(key, model, attrs)
+        for key in model.mapper.relationships.keys():
+            self._get_attr_from_relationship(key, model, attrs)
+        
+        # order list by attributeID
+        attrs = sorted(attrs, key=itemgetter("attributeID"))
+        return attrs
+            
+    def _get_attr_from_column(self, key, model, attrs):
+        """ parse formly attribute properties from a column
+        """
+        try:
+            field = getattr(self, key)
+        except:
+            return
+        column = model.mapper.attrs[key]
+        info = model.columns[key].info
+        attr = dict()
+        attr["attributeID"] = info["attributeID"]
+        attr["key"] = key
+        attr["type"] = re.sub("Field\\b", "", field.type).lower()
+        attr["read_only"] = isinstance(field.widget, ReadOnlyWidgetProxy)
+        attr["required"] = field.flags.required
+        opt = dict()
+        opt["label"] = info["label"] if info.has_key("label") else key
+        opt["description"] = info["help"] if info.has_key("help") else ""
+        try:
+            opt["options"] = [{"id": c[0], "label": c[1]} 
+                                for c in field.choices]
+            opt["valueProp"] = "id"
+            opt["labelProp"] = "label"
+
+        except:
+            pass
+        attr["templateOptions"] = opt
+        
+        attrs.append(attr)
+
+    def _get_attr_from_relationship(self, key, model, attrs):
+        """ parse additional formly attribute properties from a relationship
+        """
+        try:
+            field = getattr(self, key)
+        except:
+            return
+        if field.type == "QuerySelectMultipleField":
+            relationship = model.mapper.attrs[key]
+            info = model.relationships[key].info
+            attr = dict()
+            attr["attributeID"] = info["attributeID"]
+            attr["key"] = key
+            attr["type"] = "multiselect"
+            attr["read_only"] = isinstance(field.widget, ReadOnlyWidgetProxy)
+            attr["required"] = field.flags.required
+            
+            opt = dict()
+            opt["label"] = info["label"] if info.has_key("label") else key
+            opt["description"] = info["help"] if info.has_key("help") else ""
+            choices = list(field.iter_choices())
+            tablename = relationship.table.name
+            if tablename.endswith("list"):
+                desc_name = re.sub("list", "Desc", tablename)
+                opt["options"] = [{"id": c[0], "label": getattr(c[1], desc_name)} 
+                                  for c in list(choices)]
+            elif tablename == "description":
+                # for childID relationship that self-references the 
+                # description table
+                desc_name = "name"
+                opt["options"] = [{"id": c[0], 
+                                   "label": "{}: {}".format(
+                                        c[0],
+                                        getattr(c[1], "name"))
+                                  } 
+                                  for c in list(choices)]
+            opt["valueProp"] = "id"
+            opt["labelProp"] = "label"
+            attr["templateOptions"] = opt
+            
+            attrs.append(attr)
+#         if field.type == "QuerySelectMultipleField":
+#             attr["type"] = "multiselect"
+#             choices = list(field.iter_choices())
+#             # Each choice is a tuple of (value, list table object, boolean)
+#             # Look at the object 
+#             choice_obj = choices[0][1]
+#         return attr
+    
+    def getChoices(self, column): 
+        """ return choices for select elements
+        """
+        if field.type == "SelectField":
+            options = field.choices
+    
+    def serialize_iter_choices(self, choices, tablename, optional=True):
+        """ serialize choices for a field for a multiple select relationship
+        
+        A choice is a tuple: (value, object, selected). We need to get the
+        description from the object. The object properties follow a naming
+        convention based on the name of the table.
+        """
+        if choices:
+            desc_name = re.sub("list", "Desc", tablename)
+            ret = [{"id": c[0], "desc": getattr(c[1], desc_name)} 
+                    for c in list(choices)]
+            return ret
+        else:
+            return None
 
 # Forms for select field choices
-class CalendaryearForm(ModelForm):
+class CalendaryearsForm(ModelForm):
     class Meta:
-        model = alch.Calendaryear
+        model = alch.Calendaryears
         only= ["calendaryearID", "calendaryearDesc"]
         
 class DriverlistForm(ModelForm): 
@@ -37,9 +155,9 @@ class FinallistForm(ModelForm):
         model = alch.Finallist
         only = ["finalID", "finalDesc"]
         
-class FiscalyearForm(ModelForm):
+class FiscalyearsForm(ModelForm):
     class Meta:
-        model = alch.Fiscalyear
+        model = alch.Fiscalyears
         only = ["fiscalyearID", "fiscalyearDesc"]
         
 class FundingsourcelistForm(ModelForm):
@@ -153,9 +271,10 @@ class Latest_disposition(ModelForm):
     class Meta:
         model = alch.Latest_disposition
         include_primary_keys = True
-        only = ["dispositionID", "explanation", "disposedInFY", "disposedInQ", 
-                "reconsiderInFY", "reconsiderInQ", "startInY", "startInM", 
-                "finishInY", "finishInM", "lastModified", "lastModifiedBy"]
+        only = ["dispositionID", "explanation", "disposedInFY", 
+                "disposedInQ", "reconsiderInFY", "reconsiderInQ", "startInY",
+                "startInM", "finishInY", "finishInM", "lastModified", 
+                "lastModifiedBy"]
 
     def __init__(self, *args, **kwargs):
         super(Latest_disposition, self).__init__(*args, **kwargs)

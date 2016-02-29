@@ -6,7 +6,7 @@
     .module("app.select")
     .filter("nameSearch", NameSearch);
   
-  NameSearch.$inject = ["projectListService"]
+  NameSearch.$inject = ["projectListService"];
   
   function NameSearch(projectListService) {
     return function(projects, searchText, name_descLogic, finalID) {

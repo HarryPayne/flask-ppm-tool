@@ -56,7 +56,8 @@
                     {data: "dispositionID", title: "Disposition"},
                     {data: "disposedInFY", title: "Disposed in"},
                     {data: "startInY", title: "Start in"},
-                    {data: "startedOn", title: "Started"}],
+                    {data: "startedOn", title: "Started"},
+                    {data: "bogus", title:"Bogus"}],
         dtInstance: {},
         dtOptions: {        
           destroy: true,
@@ -237,9 +238,9 @@
     }
 
     function setReportResults(response) {
-      projectListService.setList(response.data.projectList);
-      projectListService.setDescription(response.data.query_desc);
-      projectListService.setSql(response.data.query_string);
+      projectListService.setList(response.data.response.projectList);
+      projectListService.setDescription(response.data.response.query_desc);
+      projectListService.setSql(response.data.response.query_string);
       projectListService.SaveState();
       setReportTableData(response);
       //service.master.dtInstance.rerender();
@@ -252,12 +253,12 @@
       /** initial data to be replaced when the promise is resolved */
       service.master.dtOptions.withOption("data", []); 
 
-      _.each(Object.keys(response.data.options), function(key) {
-         service.master.dtOptions.withOption(key, response.data.options[key]);
+      _.each(Object.keys(response.data.response.options), function(key) {
+         service.master.dtOptions.withOption(key, response.data.response.options[key]);
       });
       service.master.dtOptions.withOption("createdRow", createdRow);
-      service.master.dtColumns = [service.projectIDColumn].concat(response.data.columns);
-      service.master.dtOptions.data = response.data.data;
+      service.master.dtColumns = [service.projectIDColumn].concat(response.data.response.columns);
+      service.master.dtOptions.data = response.data.response.data;
       //service.master.dtInstance.rerender();
       //var path = $location.path().split("/");
       //path.pop();

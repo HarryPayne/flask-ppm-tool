@@ -151,7 +151,7 @@
      *        of the selected attribute.
      */
     function setBreakdownByAttribute(result) {
-      service.breakdownByAttribute = result.data;
+      service.breakdownByAttribute = result.data.breakdown;
     }
 
     /**
@@ -159,7 +159,7 @@
      * @desc Save the results of a request for breakdown by attribute choices.
      */
     function setBreakdownChoices(result) {
-      service.breakdownChoicesList = result.data;
+      service.breakdownChoicesList = result.data.choices;
       service.SaveState();
     }
     
